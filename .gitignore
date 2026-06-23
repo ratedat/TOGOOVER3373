@@ -44,3 +44,5 @@ CLAUDE.md
 PLANS.md
 # Generated data update reports
 review/update-runs/
+outputs/
+*.inspect.ndjson
