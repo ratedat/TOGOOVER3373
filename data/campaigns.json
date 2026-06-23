@@ -8,7 +8,151 @@
     "specialFields": [],
     "bossFlags": {
       "derivedFromRelics": true,
-      "manualOverride": true
+      "manualOverride": true,
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%83%95%E3%82%A1%E3%83%B3%E3%83%88%E3%83%A0%E3%81%A8%E7%B7%8B%E3%81%8D%E8%B2%B4%E7%9F%B3%E3%80%8D#c9d84a5f",
+      "floor3": {
+        "field": "floor3BossId",
+        "label": "3層ボス",
+        "mode": "manual",
+        "options": [
+          {
+            "id": "is2_f3_giant",
+            "floor": 3,
+            "bossName": "迷子の巨像",
+            "stageName": "敷居に注意を",
+            "image": {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/WDG.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5744472E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/WDG.jpg"
+            }
+          },
+          {
+            "id": "is2_f3_jetman",
+            "floor": 3,
+            "bossName": "ジェットマン",
+            "stageName": "天翔ける怪盗・劇団篇",
+            "image": {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/JTM.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4A544D2E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/JTM.jpg"
+            }
+          },
+          {
+            "id": "is2_f3_forsaken",
+            "floor": 3,
+            "bossName": "「見棄てし者」",
+            "stageName": "恐怖の都市伝説",
+            "image": {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/FSK.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_46534B2E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/FSK.jpg"
+            }
+          },
+          {
+            "id": "is2_f3_automaton",
+            "floor": 3,
+            "bossName": "流浪のオートマトン",
+            "stageName": "殺戮の調べ",
+            "image": {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/MSC.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4D53432E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/MSC.jpg"
+            }
+          },
+          {
+            "id": "is2_f3_deer",
+            "floor": 3,
+            "bossName": "「霜の牡鹿」・「雪の牝鹿」",
+            "stageName": "酷寒の惜別",
+            "images": [
+              {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/ICM.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_49434D2E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/ICM.jpg"
+              },
+              {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/ICR.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4943522E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/ICR.jpg"
+              }
+            ]
+          }
+        ]
+      },
+      "defaultBosses": [
+        {
+          "id": "is2_f5_lucian",
+          "floor": 5,
+          "label": "標準5層",
+          "bossName": "「クリムゾンソリティア」ルシアン",
+          "stageName": "戻る道なし",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/PTM.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_50544D2E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/PTM.jpg"
+          }
+        }
+      ],
+      "relicRoutes": [
+        {
+          "id": "is2_route_big_sad_lock",
+          "floor": 5,
+          "label": "5層裏ボス",
+          "triggerRelicId": "is2_phantom_relic_208",
+          "triggerRelicNumber": 208,
+          "triggerRelicName": "ボロボロのぬいぐるみ",
+          "replacesDefaultFloor": 5,
+          "bossName": "傷心の巨錠",
+          "stageName": "最期の願い",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/DOL.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_444F4C2E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/DOL.jpg"
+          }
+        },
+        {
+          "id": "is2_route_mouthpiece",
+          "floor": 6,
+          "label": "6層追加",
+          "triggerRelicId": "is2_phantom_relic_213",
+          "triggerRelicNumber": 213,
+          "triggerRelicName": "インスピレーション",
+          "addsFloor": 6,
+          "bossName": "「劇団の喉舌」",
+          "stageName": "茶番の終わり",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/HST.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4853542E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/HST.jpg"
+          }
+        },
+        {
+          "id": "is2_route_playwright",
+          "floor": 6,
+          "label": "6層裏ボス",
+          "triggerRelicId": "is2_phantom_relic_215",
+          "triggerRelicNumber": 215,
+          "triggerRelicName": "初幕",
+          "addsFloor": 6,
+          "bossName": "「劇作家」",
+          "stageName": "新章の起稿",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/WRT.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5752542E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/WRT.jpg"
+          }
+        }
+      ]
     }
   },
   {
@@ -21,12 +165,303 @@
       {
         "id": "rejectionReaction",
         "label": "拒絶反応",
-        "type": "text"
+        "type": "effectSelect",
+        "effectSlot": "rejectionReaction"
+      },
+      {
+        "id": "revelations",
+        "label": "啓示",
+        "type": "effectMultiSelect",
+        "effectSlot": "revelation"
+      },
+      {
+        "id": "hordeCalls",
+        "label": "大群の呼び声",
+        "type": "effectMultiSelect",
+        "effectSlot": "hordeCall"
       }
     ],
     "bossFlags": {
       "derivedFromRelics": true,
-      "manualOverride": true
+      "manualOverride": true,
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%83%9F%E3%83%85%E3%82%AD%E3%81%A8%E7%B4%BA%E7%A2%A7%E3%81%AE%E6%A8%B9%E3%80%8D#c9d84a5f",
+      "manualSections": [
+        {
+          "id": "floor3",
+          "field": "floor3BossId",
+          "label": "3層ボス",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is3_f3_carmen",
+              "floor": 3,
+              "sortOrder": 3.1,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "聖徒カルメン",
+              "stageName": "永遠の安らぎ",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/UGF.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5547462E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/UGF.jpg"
+              }
+            },
+            {
+              "id": "is3_f3_bishop",
+              "floor": 3,
+              "sortOrder": 3.2,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "験潮の司教 / 験潮の蔑死者",
+              "stageName": "分離と統一",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SEV.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5345562E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SEV.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SMF.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_534D462E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SMF.jpg"
+                }
+              ]
+            },
+            {
+              "id": "is3_f3_pathfinder",
+              "floor": 3,
+              "sortOrder": 3.3,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "パスファインダー / パスファインダーの影",
+              "stageName": "修正",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SRF.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5352462E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SRF.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SY6.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5359362E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SY6.jpg"
+                }
+              ]
+            },
+            {
+              "id": "is3_f3_carmen_hard",
+              "floor": 3,
+              "sortOrder": 3.4,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "聖徒イベリア",
+              "stageName": "永遠の怒り",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/UGS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5547532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/UGS.jpg"
+              }
+            },
+            {
+              "id": "is3_f3_bishop_hard",
+              "floor": 3,
+              "sortOrder": 3.5,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "験潮の司教 / 験潮の斥死者",
+              "stageName": "異体同心",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SEV.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5345562E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SEV.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SMS.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_534D532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SMS.jpg"
+                }
+              ]
+            },
+            {
+              "id": "is3_f3_pathfinder_hard",
+              "floor": 3,
+              "sortOrder": 3.6,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "延命するパスファインダー / パスファインダーの影",
+              "stageName": "訂正",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SRS.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5352532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SRS.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/SY6.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5359362E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/SY6.jpg"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "isomeric",
+          "field": "isomericBossId",
+          "label": "異相 / 第？層",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is3_iso_rusthammer",
+              "floorLabel": "異相",
+              "sortOrder": 4.1,
+              "label": "第？層",
+              "bossName": "錆鎚の戦士",
+              "stageName": "荒野の猟師",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/RSH.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5253482E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/RSH.jpg"
+              }
+            },
+            {
+              "id": "is3_iso_frostnova",
+              "floorLabel": "異相",
+              "sortOrder": 4.2,
+              "label": "第？層",
+              "bossName": "「寒災」",
+              "stageName": "寒災の呪い",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/FZM.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_465A4D2E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/FZM.jpg"
+              }
+            },
+            {
+              "id": "is3_iso_tombstone",
+              "floorLabel": "異相",
+              "sortOrder": 4.3,
+              "label": "第？層",
+              "bossName": "「墓碑」",
+              "stageName": "危うきに近寄るべからず",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/GST.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4753542E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/GST.jpg"
+              }
+            }
+          ]
+        }
+      ],
+      "defaultBosses": [
+        {
+          "id": "is3_f5_paranoia",
+          "floor": 5,
+          "sortOrder": 5,
+          "label": "5層表ボス",
+          "bossName": "「偏執の泡沫」",
+          "stageName": "認知とは負担なり",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/GIR.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4749522E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/GIR.jpg"
+          }
+        }
+      ],
+      "relicRoutes": [
+        {
+          "id": "is3_route_last_knight",
+          "floor": 5,
+          "sortOrder": 5.1,
+          "label": "5層裏ボス",
+          "triggerRelicNumber": 222,
+          "triggerRelicName": "潮の香り",
+          "replacesDefaultFloor": 5,
+          "bossName": "最後の騎士",
+          "stageName": "「運命の寵児」",
+          "requiredNote": "猟潮の騎士が撃破されず4層突破で確定。No.223「退行したロシナンテ」所持時は無効。No.225「騎士の血肉」は任意補助。",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/DOQ.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_444F512E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/DOQ.jpg"
+          },
+          "triggerRelicIds": [
+            "is3_mizuki_relic_222"
+          ],
+          "triggerMode": "any",
+          "disabledByRelicIds": [
+            "is3_mizuki_relic_223"
+          ],
+          "disabledByRelicName": "退行したロシナンテ"
+        },
+        {
+          "id": "is3_route_isharmla",
+          "floor": 6,
+          "sortOrder": 6.1,
+          "label": "6層表ボス",
+          "triggerRelicIds": [
+            "is3_mizuki_relic_221"
+          ],
+          "triggerMode": "any",
+          "triggerRelicName": "紺碧の心",
+          "addsFloor": 6,
+          "bossName": "イシャームラ、腐蝕された心",
+          "stageName": "大群の向かう先",
+          "requiredNote": "No.221「紺碧の心」で6層表ルート表示。No.226「絶唱」は任意。",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/SKA.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_534B412E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/SKA.jpg"
+          }
+        },
+        {
+          "id": "is3_route_izumik",
+          "floor": 6,
+          "sortOrder": 6.2,
+          "label": "6層裏ボス",
+          "triggerRelicIds": [
+            "is3_mizuki_relic_238",
+            "is3_mizuki_relic_239",
+            "is3_mizuki_relic_240"
+          ],
+          "triggerMode": "any",
+          "triggerRelicName": "決心 / 観望 / 躊躇",
+          "addsFloor": 6,
+          "bossName": "イズミック、生態の源 / イズミックの後裔",
+          "stageName": "人たる存在の輝き",
+          "images": [
+            {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/MZK.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4D5A4B2E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/MZK.jpg"
+            },
+            {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/SY8.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5359382E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/SY8.jpg"
+            }
+          ]
+        }
+      ]
     }
   },
   {
@@ -37,24 +472,278 @@
     "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%8E%A2%E7%B4%A2%E8%80%85%E3%81%A8%E9%8A%80%E6%B0%B7%E3%81%AE%E6%9E%9C%E3%81%A6%E3%80%8D",
     "specialFields": [
       {
-        "id": "paradox",
-        "label": "パラドックス",
-        "type": "number"
-      },
-      {
-        "id": "revelation",
-        "label": "啓示",
-        "type": "text"
-      },
-      {
         "id": "collapseValue",
         "label": "崩壊値",
         "type": "number"
+      },
+      {
+        "id": "paradigmLost",
+        "label": "パラダイムロスト",
+        "type": "effectRankedMultiSelect",
+        "effectSlot": "paradigmLost"
+      },
+      {
+        "id": "revelation",
+        "label": "啓示板",
+        "type": "text"
       }
     ],
     "bossFlags": {
-      "derivedFromRelics": true,
-      "manualOverride": true
+      "derivedFromRelics": false,
+      "manualOverride": true,
+      "sourceUrl": "https://arknights.wikiru.jp/?cmd=read&page=%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%8E%A2%E7%B4%A2%E8%80%85%E3%81%A8%E9%8A%80%E6%B0%B7%E3%81%AE%E6%9E%9C%E3%81%A6%E3%80%8D#boss_battle",
+      "manualSections": [
+        {
+          "id": "floor3",
+          "field": "floor3BossId",
+          "label": "3層ボス",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is4_f3_demon_blade",
+              "floor": 3,
+              "sortOrder": 3.1,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "「悪魔の利刃」",
+              "stageName": "利刃の示す先",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/DB.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_44422E6A7067.jpg"
+              }
+            },
+            {
+              "id": "is4_f3_snow_priest",
+              "floor": 3,
+              "sortOrder": 3.2,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "堕ちたる雪祭司",
+              "stageName": "新たな部族",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/FSP.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4653502E6A7067.jpg"
+              }
+            },
+            {
+              "id": "is4_f3_vine",
+              "floor": 3,
+              "sortOrder": 3.3,
+              "optionLabel": "通常",
+              "label": "3層通常",
+              "bossName": "絡まるツル",
+              "stageName": "大自然の怒り",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/WVC.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5756432E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/WVC.jpg"
+              }
+            },
+            {
+              "id": "is4_f3_demon_blade_hard",
+              "floor": 3,
+              "sortOrder": 3.4,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "「悪魔の利刃」、彷徨える者",
+              "stageName": "呼吸",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/DBV.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4442562E6A7067.jpg"
+              }
+            },
+            {
+              "id": "is4_f3_snow_priest_hard",
+              "floor": 3,
+              "sortOrder": 3.5,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "虚ろなる雪祭司",
+              "stageName": "族樹の破壊者",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/HSP.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4853502E6A7067.jpg"
+              }
+            },
+            {
+              "id": "is4_f3_vine_hard",
+              "floor": 3,
+              "sortOrder": 3.6,
+              "optionLabel": "強化",
+              "label": "3層強化",
+              "bossName": "いにしえのツル",
+              "stageName": "大地の目覚め",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/EVC.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4556432E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/EVC.jpg"
+              }
+            }
+          ]
+        },
+        {
+          "id": "floor5",
+          "field": "floor5BossId",
+          "label": "5層ボス",
+          "helper": "5層表と5層裏は排他。大会用にステージ単位で選択。",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is4_f5_sami_will_silverfrost",
+              "floor": 5,
+              "sortOrder": 5.01,
+              "optionLabel": "5層表",
+              "label": "5層表ボス",
+              "bossName": "「サーミの意志」",
+              "stageName": "そびえ立つ銀霜",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/SAM.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_53414D2E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_f5_sami_will_polar",
+              "floor": 5,
+              "sortOrder": 5.02,
+              "optionLabel": "5層表・強化",
+              "label": "5層表ボス",
+              "bossName": "「サーミの意志」",
+              "stageName": "極寒が造りしもの",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/SAM.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_53414D2E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_f5_eikthyrnir_entropy",
+              "floor": 5,
+              "sortOrder": 5.11,
+              "optionLabel": "5層裏",
+              "label": "5層裏ボス",
+              "bossName": "「凍裂」エイクティルニル",
+              "stageName": "サーミのエントロピー",
+              "requiredNote": "5層裏ルート。サーミの意志とは排他。",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/EIK.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_45494B2E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_f5_eikthyrnir_idol",
+              "floor": 5,
+              "sortOrder": 5.12,
+              "optionLabel": "5層裏・強化",
+              "label": "5層裏ボス",
+              "bossName": "「凍裂」エイクティルニル",
+              "stageName": "虚無の偶像",
+              "requiredNote": "5層裏ルート。サーミの意志とは排他。",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/EIK.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_45494B2E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            }
+          ]
+        },
+        {
+          "id": "manualRoutes",
+          "field": "manualRouteBossIds",
+          "label": "6層 / ¬ΔS層フラグ",
+          "helper": "5層ボスとは別枠。クレイズセオンとハランドゥハンは両立可。大会用にステージ単位でON。",
+          "mode": "multi",
+          "options": [
+            {
+              "id": "is4_route_crazelyseon_gardener",
+              "floor": 6,
+              "sortOrder": 6.11,
+              "label": "6層ボス",
+              "bossName": "天地に揺蕩う、クレイズセオン",
+              "stageName": "庭師",
+              "requiredNote": "6層ルート。¬ΔS層と両立可能。",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/CES.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4345532E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_route_crazelyseon_sentinel",
+              "floor": 6,
+              "sortOrder": 6.12,
+              "label": "6層ボス・強化",
+              "bossName": "天地に揺蕩う、クレイズセオン",
+              "stageName": "歩哨",
+              "requiredNote": "6層ルート。¬ΔS層と両立可能。",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/CES.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4345532E6A7067.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_route_haranduhan_sand",
+              "floorLabel": "¬ΔS層",
+              "sortOrder": 7.11,
+              "label": "¬ΔS層ボス",
+              "bossName": "「大地の鞭」ハランドゥハン / 「暦法の王」ルガサルグス",
+              "stageName": "時の砂",
+              "requiredNote": "終始ルート。クレイズセオンと両立可能。",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/KSL.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4B534C2E6A7067.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/LOA.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4C4F412E6A7067.jpg"
+                }
+              ],
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is4_route_haranduhan_eternal",
+              "floorLabel": "¬ΔS層",
+              "sortOrder": 7.12,
+              "label": "¬ΔS層ボス・強化",
+              "bossName": "「大地の鞭」ハランドゥハン / 「暦法の王」ルガサルグス",
+              "stageName": "永遠へと踏み入る",
+              "requiredNote": "終始ルート。クレイズセオンと両立可能。",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/KSL.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4B534C2E6A7067.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/LOA.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4C4F412E6A7067.jpg"
+                }
+              ],
+              "primaryDisplay": "stage"
+            }
+          ]
+        }
+      ],
+      "defaultBosses": [],
+      "relicRoutes": []
     }
   },
   {
@@ -72,12 +761,427 @@
       {
         "id": "age",
         "label": "時代",
-        "type": "text"
+        "type": "effectSelect",
+        "effectSlot": "age"
       }
     ],
     "bossFlags": {
       "derivedFromRelics": true,
-      "manualOverride": true
+      "manualOverride": true,
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%23treasure",
+      "manualSections": [
+        {
+          "id": "floor3",
+          "field": "floor3BossId",
+          "label": "3層悪路強敵",
+          "helper": "ステージ名基準で選択。大会では同じボスでもステージ違いを別扱い。",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is5_f3_watchful_river",
+              "floor": 3,
+              "sortOrder": 3.01,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "ラケラマリン",
+              "stageName": "見守りの河水",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E8%A6%8B%E5%AE%88%E3%82%8A%E3%81%AE%E6%B2%B3%E6%B0%B4",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/LMR.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4C4D522E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/LMR.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_silent_merits",
+              "floor": 3,
+              "sortOrder": 3.02,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "ゴリアテ",
+              "stageName": "武勲を語らず",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%AD%A6%E5%8B%B2%E3%82%92%E8%AA%9E%E3%82%89%E3%81%9A",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/GLT.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_474C542E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/GLT.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_battle_survival",
+              "floor": 3,
+              "sortOrder": 3.03,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "Kal'tsit / Mon2tr",
+              "stageName": "存亡の戦い",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E5%AD%98%E4%BA%A1%E3%81%AE%E6%88%A6%E3%81%84",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/KST.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4B53542E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/KST.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/M2T.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4D32542E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/M2T.jpg"
+                }
+              ],
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_probable_veil",
+              "floor": 3,
+              "sortOrder": 3.04,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "涙を織りし術師",
+              "stageName": "蓋然のベール",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E8%93%8B%E7%84%B6%E3%81%AE%E3%83%99%E3%83%BC%E3%83%AB",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/LMS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4C4D532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/LMS.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_for_a_friend",
+              "floor": 3,
+              "sortOrder": 3.05,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "傷を忘れし戦士",
+              "stageName": "友に捧げる",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E5%8F%8B%E3%81%AB%E6%8D%A7%E3%81%92%E3%82%8B",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/GLS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_474C532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/GLS.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_beheading",
+              "floor": 3,
+              "sortOrder": 3.06,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "終末を予見せし賢者 / 世代交代を重ねし怪物",
+              "stageName": "斬首",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%96%AC%E9%A6%96",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/KSS.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4B53532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/KSS.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/M2S.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4D32532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/M2S.jpg"
+                }
+              ],
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_farewell_garden",
+              "floor": 3,
+              "sortOrder": 3.07,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "涙を織りし術師",
+              "stageName": "別れの歌の庭",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E5%88%A5%E3%82%8C%E3%81%AE%E6%AD%8C%E3%81%AE%E5%BA%AD",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/LMS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4C4D532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/LMS.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_face_the_enemy",
+              "floor": 3,
+              "sortOrder": 3.08,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "傷を忘れし戦士",
+              "stageName": "敵に立ち向かう者",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%95%B5%E3%81%AB%E7%AB%8B%E3%81%A1%E5%90%91%E3%81%8B%E3%81%86%E8%80%85",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/GLS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_474C532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/GLS.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f3_under_the_crown",
+              "floor": 3,
+              "sortOrder": 3.09,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "終末を予見せし賢者 / 世代交代を重ねし怪物",
+              "stageName": "王冠のもとに",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E7%8E%8B%E5%86%A0%E3%81%AE%E3%82%82%E3%81%A8%E3%81%AB",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/KSS.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4B53532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/KSS.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/M2S.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4D32532E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/M2S.jpg"
+                }
+              ],
+              "primaryDisplay": "stage"
+            }
+          ]
+        },
+        {
+          "id": "floor5",
+          "field": "floor5BossId",
+          "label": "5層悪路強敵",
+          "helper": "ローリング先祖を所持している場合、選択した5層ステージを対応する置換先へ自動変更。",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is5_f5_emergency_class",
+              "floor": 5,
+              "sortOrder": 5.01,
+              "optionLabel": "5層",
+              "label": "5層悪路強敵",
+              "bossName": "「迷想の解」フレモント",
+              "stageName": "緊急授業",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E7%B7%8A%E6%80%A5%E6%8E%88%E6%A5%AD",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/FMT.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_464D542E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/FMT.jpg"
+              },
+              "primaryDisplay": "stage"
+            },
+            {
+              "id": "is5_f5_audience",
+              "floor": 5,
+              "sortOrder": 5.02,
+              "optionLabel": "5層",
+              "label": "5層悪路強敵",
+              "bossName": "「黒き王冠の主」テレシス",
+              "stageName": "謁見",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E8%AC%81%E8%A6%8B",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/TRS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5452532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/TRS.jpg"
+              },
+              "primaryDisplay": "stage"
+            }
+          ]
+        }
+      ],
+      "manualReplacementRoutes": [
+        {
+          "id": "is5_rolling_ancestor_floor5_replace",
+          "triggerRelicId": "is5_sarkaz_relic_232",
+          "sectionId": "floor5",
+          "selectedIds": [
+            "is5_f5_emergency_class",
+            "is5_f5_audience"
+          ],
+          "requiredNote": "ローリング先祖: 第Ⅴ層の悪路強敵を置換",
+          "variants": [
+            {
+              "selectedIds": [
+                "is5_f5_emergency_class"
+              ],
+              "id": "is5_f5_thought_correction",
+              "floor": 5,
+              "sortOrder": 5.21,
+              "label": "5層置換",
+              "bossName": "「迷想の解」フレモント",
+              "stageName": "思考矯正",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%80%9D%E8%80%83%E7%9F%AF%E6%AD%A3",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/FMT.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_464D542E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/FMT.jpg"
+              },
+              "primaryDisplay": "stage",
+              "requiredNote": "ローリング先祖で緊急授業から置換"
+            },
+            {
+              "selectedIds": [
+                "is5_f5_audience"
+              ],
+              "id": "is5_f5_soul_audience",
+              "floor": 5,
+              "sortOrder": 5.22,
+              "label": "5層置換",
+              "bossName": "「黒き王冠の主」テレシス",
+              "stageName": "魂の謁見",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E9%AD%82%E3%81%AE%E8%AC%81%E8%A6%8B",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/TRS.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5452532E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/TRS.jpg"
+              },
+              "primaryDisplay": "stage",
+              "requiredNote": "ローリング先祖で謁見から置換"
+            }
+          ]
+        }
+      ],
+      "defaultBosses": [],
+      "relicRoutes": [
+        {
+          "id": "is5_route_city_of_laws",
+          "floorLabel": "Γ層",
+          "sortOrder": 6.1,
+          "label": "追加ボス",
+          "bossName": "「聖衛の銃騎士」ボジョカスティ",
+          "stageName": "聖都",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E8%81%96%E9%83%BD",
+          "triggerRelicId": "is5_sarkaz_relic_250",
+          "requiredNote": "時と光で追加されるルート",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/SPT.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5350542E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/SPT.jpg"
+          },
+          "primaryDisplay": "stage"
+        },
+        {
+          "id": "is5_route_sermon",
+          "floorLabel": "୬層",
+          "sortOrder": 6.2,
+          "label": "追加ボス",
+          "bossName": "「摩訶薩の権化」クイロン",
+          "stageName": "説法",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E8%AA%AC%E6%B3%95",
+          "triggerRelicId": "is5_sarkaz_relic_252",
+          "requiredNote": "アナサのカルマで追加されるルート",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/QLN.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_514C4E2E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/QLN.jpg"
+          },
+          "primaryDisplay": "stage"
+        },
+        {
+          "id": "is5_route_refusal_base",
+          "floorLabel": "Ω層",
+          "sortOrder": 7,
+          "label": "終局フラグ",
+          "bossName": "「アーミヤ」、炉心の終曲",
+          "stageName": "拒絶は許さぬ",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%8B%92%E7%B5%B6%E3%81%AF%E8%A8%B1%E3%81%95%E3%81%AC",
+          "triggerRelicId": "is5_sarkaz_relic_254",
+          "disabledByRelicIds": [
+            "is5_sarkaz_relic_255",
+            "is5_sarkaz_relic_256",
+            "is5_sarkaz_relic_257"
+          ],
+          "requiredNote": "エンドレスキー単体時の終局ルート",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/AFF.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4146462E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/AFF.jpg"
+          },
+          "primaryDisplay": "stage"
+        },
+        {
+          "id": "is5_route_refusal_despair",
+          "floorLabel": "Ω層",
+          "sortOrder": 7.1,
+          "label": "終局フラグ",
+          "bossName": "絶望",
+          "stageName": "拒絶は許さぬ",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%8B%92%E7%B5%B6%E3%81%AF%E8%A8%B1%E3%81%95%E3%81%AC",
+          "triggerMode": "all",
+          "triggerRelicIds": [
+            "is5_sarkaz_relic_254",
+            "is5_sarkaz_relic_255"
+          ],
+          "requiredNote": "エンドレスキー + 終結の骨組み",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/AFF.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4146462E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/AFF.jpg"
+          },
+          "combineGroupId": "is5_endless_wish"
+        },
+        {
+          "id": "is5_route_refusal_salvation",
+          "floorLabel": "Ω層",
+          "sortOrder": 7.2,
+          "label": "終局フラグ",
+          "bossName": "救済",
+          "stageName": "拒絶は許さぬ",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%8B%92%E7%B5%B6%E3%81%AF%E8%A8%B1%E3%81%95%E3%81%AC",
+          "triggerMode": "all",
+          "triggerRelicIds": [
+            "is5_sarkaz_relic_254",
+            "is5_sarkaz_relic_256"
+          ],
+          "requiredNote": "エンドレスキー + 終結の肉体",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/AFF.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4146462E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/AFF.jpg"
+          },
+          "combineGroupId": "is5_endless_wish"
+        },
+        {
+          "id": "is5_route_refusal_stasis",
+          "floorLabel": "Ω層",
+          "sortOrder": 7.3,
+          "label": "終局フラグ",
+          "bossName": "停止",
+          "stageName": "拒絶は許さぬ",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D%2F%E6%8B%92%E7%B5%B6%E3%81%AF%E8%A8%B1%E3%81%95%E3%81%AC",
+          "triggerMode": "all",
+          "triggerRelicIds": [
+            "is5_sarkaz_relic_254",
+            "is5_sarkaz_relic_257"
+          ],
+          "requiredNote": "エンドレスキー + 終結の実相",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/AFF.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4146462E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/AFF.jpg"
+          },
+          "combineGroupId": "is5_endless_wish"
+        }
+      ]
     }
   },
   {
@@ -91,11 +1195,303 @@
         "id": "coins",
         "label": "銭",
         "type": "number"
+      },
+      {
+        "id": "seasonalHours",
+        "label": "歳時",
+        "type": "effectRankedMultiSelect",
+        "effectSlot": "seasonalHours"
       }
     ],
     "bossFlags": {
       "derivedFromRelics": true,
-      "manualOverride": true
+      "manualOverride": true,
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D#maplist",
+      "manualSections": [
+        {
+          "id": "floor3",
+          "field": "floor3BossId",
+          "label": "3層悪路強敵",
+          "helper": "ステージ名基準で選択。大会では同じボスでもステージ違いを別扱い。",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is6_f3_moonlit_chill",
+              "floor": 3,
+              "sortOrder": 3.01,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "夕娥",
+              "stageName": "月華の寒気",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%9C%88%E8%8F%AF%E3%81%AE%E5%AF%92%E6%B0%97",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/XE.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_58452E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/XE.jpg"
+              }
+            },
+            {
+              "id": "is6_f3_sword_saber_spear",
+              "floor": 3,
+              "sortOrder": 3.02,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "玉双剣 / 棗大刀 / 炭長矛",
+              "stageName": "剣・刀・矛",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E5%89%A3%E3%83%BB%E5%88%80%E3%83%BB%E7%9F%9B",
+              "primaryDisplay": "stage",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/YM.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_594D2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/YM.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/ZM.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5A4D2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/ZM.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/TM.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_544D2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/TM.jpg"
+                }
+              ]
+            },
+            {
+              "id": "is6_f3_teach_guidance",
+              "floor": 3,
+              "sortOrder": 3.03,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "師祖",
+              "stageName": "教え導く",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%95%99%E3%81%88%E5%B0%8E%E3%81%8F",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/JSZ.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4A535A2E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/JSZ.jpg"
+              }
+            },
+            {
+              "id": "is6_f3_memories_of_xi_e",
+              "floor": 3,
+              "sortOrder": 3.04,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "双月の同君",
+              "stageName": "夕娥の記憶",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E5%A4%95%E5%A8%A5%E3%81%AE%E8%A8%98%E6%86%B6",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/YZ.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_595A2E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/YZ.jpg"
+              }
+            },
+            {
+              "id": "is6_f3_ren_yi_wu",
+              "floor": 3,
+              "sortOrder": 3.05,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "昭烈君 / 文衡君 / 桓君",
+              "stageName": "仁・義・武",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E4%BB%81%E3%83%BB%E7%BE%A9%E3%83%BB%E6%AD%A6",
+              "primaryDisplay": "stage",
+              "images": [
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/ZLJ.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5A4C4A2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/ZLJ.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/WHJ.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_57484A2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/WHJ.jpg"
+                },
+                {
+                  "source": "arknights.wikiru.jp",
+                  "sourcePath": "img/HJ.jpg",
+                  "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_484A2E6A7067.jpg",
+                  "localPath": "assets/bosses/wikiru/img/HJ.jpg"
+                }
+              ]
+            },
+            {
+              "id": "is6_f3_seek_the_way",
+              "floor": 3,
+              "sortOrder": 3.06,
+              "optionLabel": "3層",
+              "label": "3層悪路強敵",
+              "bossName": "太公",
+              "stageName": "求道",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%B1%82%E9%81%93",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/JTG.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4A54472E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/JTG.jpg"
+              }
+            }
+          ]
+        },
+        {
+          "id": "floor5",
+          "field": "floor5BossId",
+          "label": "5層悪路強敵",
+          "helper": "END2はイベント選択が絡むため手動で選択。墨のない長巻を所持している場合、対応する強化ステージへ自動変更。",
+          "mode": "manual",
+          "options": [
+            {
+              "id": "is6_f5_sui_breaking_array",
+              "floor": 5,
+              "sortOrder": 5.01,
+              "optionLabel": "5層",
+              "label": "5層悪路強敵",
+              "bossName": "易",
+              "stageName": "歳破りし陣を祀る",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%AD%B3%E7%A0%B4%E3%82%8A%E3%81%97%E9%99%A3%E3%82%92%E7%A5%80%E3%82%8B",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/YI.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_59492E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/YI.jpg"
+              }
+            },
+            {
+              "id": "is6_f5_ancient_words_smoke",
+              "floor": 5,
+              "sortOrder": 5.02,
+              "optionLabel": "5層",
+              "label": "5層裏/END2",
+              "bossName": "「歳」",
+              "stageName": "古き文字は煙の如し",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E5%8F%A4%E3%81%8D%E6%96%87%E5%AD%97%E3%81%AF%E7%85%99%E3%81%AE%E5%A6%82%E3%81%97",
+              "primaryDisplay": "stage",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/SUI_3.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5355495F332E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/SUI_3.jpg"
+              }
+            }
+          ]
+        }
+      ],
+      "manualReplacementRoutes": [
+        {
+          "id": "is6_long_scroll_floor5_replace",
+          "triggerRelicId": "is6_sui_relic_218",
+          "sectionId": "floor5",
+          "selectedIds": [
+            "is6_f5_sui_breaking_array",
+            "is6_f5_ancient_words_smoke"
+          ],
+          "requiredNote": "墨のない長巻: 【見字祠】の悪路強敵を強化",
+          "variants": [
+            {
+              "selectedIds": [
+                "is6_f5_sui_breaking_array"
+              ],
+              "id": "is6_f5_fate_changes",
+              "floor": 5,
+              "sortOrder": 5.21,
+              "label": "5層強化",
+              "bossName": "易",
+              "stageName": "天命将に易えんとす",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E5%A4%A9%E5%91%BD%E5%B0%86%E3%81%AB%E6%98%93%E3%81%88%E3%82%93%E3%81%A8%E3%81%99",
+              "primaryDisplay": "stage",
+              "requiredNote": "墨のない長巻で歳破りし陣を祀るから置換",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/YI.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_59492E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/YI.jpg"
+              }
+            },
+            {
+              "selectedIds": [
+                "is6_f5_ancient_words_smoke"
+              ],
+              "id": "is6_f5_past_hard_to_remember",
+              "floor": 5,
+              "sortOrder": 5.22,
+              "label": "5層強化",
+              "bossName": "「歳」",
+              "stageName": "往昔は憶い難し",
+              "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E5%BE%80%E6%98%94%E3%81%AF%E6%86%B6%E3%81%84%E9%9B%A3%E3%81%97",
+              "primaryDisplay": "stage",
+              "requiredNote": "墨のない長巻で古き文字は煙の如しから置換",
+              "image": {
+                "source": "arknights.wikiru.jp",
+                "sourcePath": "img/SUI_3.jpg",
+                "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_5355495F332E6A7067.jpg",
+                "localPath": "assets/bosses/wikiru/img/SUI_3.jpg"
+              }
+            }
+          ]
+        }
+      ],
+      "defaultBosses": [],
+      "relicRoutes": [
+        {
+          "id": "is6_route_end3_black_white",
+          "floorLabel": "陸層",
+          "sortOrder": 6.1,
+          "label": "END3",
+          "bossName": "「望」",
+          "stageName": "歳を謀る者",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%AD%B3%E3%82%92%E8%AC%80%E3%82%8B%E8%80%85",
+          "triggerRelicId": "is6_sui_relic_215",
+          "requiredNote": "雲と漆: 第6層へ進むフラグ（忘生の珍瓏→明瞭勝利後）",
+          "primaryDisplay": "stage",
+          "image": {
+            "source": "arknights.wikiru.jp",
+            "sourcePath": "img/WAN.jpg",
+            "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_57414E2E6A7067.jpg",
+            "localPath": "assets/bosses/wikiru/img/WAN.jpg"
+          }
+        },
+        {
+          "id": "is6_route_end4_nonbeing",
+          "floorLabel": "拾弐層",
+          "sortOrder": 12.1,
+          "label": "END4",
+          "bossName": "後獣 / 矩獣",
+          "stageName": "末狩",
+          "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D%2F%E6%9C%AB%E7%8B%A9",
+          "triggerRelicId": "is6_sui_relic_218",
+          "requiredNote": "墨のない長巻: 拾弐層へ進むフラグ",
+          "primaryDisplay": "stage",
+          "images": [
+            {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/HOU.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_484F552E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/HOU.jpg"
+            },
+            {
+              "source": "arknights.wikiru.jp",
+              "sourcePath": "img/JU.jpg",
+              "sourceUrl": "https://arknights.wikiru.jp/attach2/696D67_4A552E6A7067.jpg",
+              "localPath": "assets/bosses/wikiru/img/JU.jpg"
+            }
+          ]
+        }
+      ]
     }
   }
 ]
