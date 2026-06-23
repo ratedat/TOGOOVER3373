@@ -56,6 +56,15 @@ function stableOverlayStateJson(value) {
 const normalizeText = (value) => String(value ?? "").toLowerCase().replace(/\s+/g, "");
 const assetUrl = (localPath) => localPath ? `/${String(localPath).replaceAll("\\", "/")}` : "";
 const stars = (rarity) => "★".repeat(Number(rarity) || 0);
+const mizukiCursedRelicIds = new Set([
+  "is3_mizuki_relic_215",
+  "is3_mizuki_relic_216",
+  "is3_mizuki_relic_217",
+  "is3_mizuki_relic_218",
+  "is3_mizuki_relic_219",
+  "is3_mizuki_relic_220",
+  "is3_mizuki_relic_221",
+]);
 const overlayScrollSpeedDefaults = {
   compactRelicScrollSpeed: 9,
   verticalRelicScrollSpeed: 11,
@@ -485,6 +494,13 @@ function addEffectTextToMetrics(metrics, text) {
   addTextMetrics(text, metrics.operatorMetrics, metrics.enemyMetrics);
 }
 
+function addSpecialRelicMetrics(metrics, relic, ownedRelics) {
+  if (relic.id !== "is3_mizuki_relic_254") return false;
+  const cursedRelicCount = ownedRelics.filter((item) => mizukiCursedRelicIds.has(item.id)).length;
+  addMetric(metrics.operatorMetrics, "【味方全員】", "攻撃速度", cursedRelicCount * 35);
+  return true;
+}
+
 function summarizeEffectMetrics(sourceType, metrics) {
   const summaries = [];
   const runSummary = formatMetricSummary(metrics.runMetrics).replace(/^ラン\s*/, "");
@@ -500,7 +516,11 @@ function summarizeEffectMetrics(sourceType, metrics) {
 
 function summarizeRelicEffects() {
   const metrics = createEffectMetricSet();
-  for (const relic of getOwnedRelics()) addEffectTextToMetrics(metrics, relicEffectForDisplay(relic));
+  const ownedRelics = getOwnedRelics();
+  for (const relic of ownedRelics) {
+    if (addSpecialRelicMetrics(metrics, relic, ownedRelics)) continue;
+    addEffectTextToMetrics(metrics, relicEffectForDisplay(relic));
+  }
   return summarizeEffectMetrics("秘宝", metrics);
 }
 
