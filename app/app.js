@@ -293,6 +293,56 @@ function relicEffectForDisplay(relic) {
   return variant?.effect || relic.effect || "";
 }
 
+function isPureRecruitmentRelicEffect(text) {
+  const recruitmentPattern = /(招集|昇進|臨時加入|編成可能|支援に駆けつける|希望消費)/;
+  const combatModifierPattern = /(攻撃力|防御力|最大HP|HP|術耐性|攻撃速度|SP|ブロック|配置コスト|再配置|被ダメージ|与ダメージ|ダメージ|レジスト|迷彩|バリア|シールド|回避|元素損傷|元素ダメージ)/;
+  return recruitmentPattern.test(text) && !combatModifierPattern.test(text);
+}
+
+function isOperatorCombatRelicEffect(text) {
+  if (!text || isPureRecruitmentRelicEffect(text)) return false;
+  const targetPattern = /(オペレーター|味方(?:ユニット)?|近距離|遠距離|配置待機エリア|地面マスに遠距離|戦場中のオペレーター|【(?:先鋒|前衛|重装|狙撃|術師|医療|補助|特殊|伺燭客)】|化境マスに(?:配置|いる)|防衛ラインの周囲\d+マスにいるオペレーター)/;
+  const modifierPattern = /(攻撃力|防御力|最大HP|HP|術耐性|攻撃速度|SP|ストックSP|ブロック数|配置コスト|再配置|物理・術回避|回避|レジスト|迷彩|バリア|シールド|加護|回復|被ダメージ|与ダメージ|ダメージ|元素損傷|スキル|攻撃範囲|配置後|配置した|配置するたび|コスト)/;
+  return targetPattern.test(text) && modifierPattern.test(text);
+}
+
+function isEnemyCombatRelicEffect(text) {
+  if (!text) return false;
+  const targetPattern = /(敵|BOSS|ボス|エリート|【化物】|彫像器鬼)/i;
+  const modifierPattern = /(HP|最大HP|防御力|術耐性|攻撃力|攻撃速度|移動速度|命中率|被ダメージ|受ける(?:物理・術|元素|術|確定)?ダメージ|与えるダメージ|ダメージ(?:[-+]|を|が)|スタン|寒冷|凍結|恐怖|バインド|浮遊|反重力|ステルス|無効|ブロック|元素ダメージ|元素損傷|状態|出現後)/;
+  const nonTargetPattern = /(敵出現地点|新たな敵が出現|敵に触れられた際|敵が撃破された際.*味方|戦場に残っている.*耐久値|さらに手強くなる|探索を違う方向)/;
+  return targetPattern.test(text) && modifierPattern.test(text) && !nonTargetPattern.test(text);
+}
+
+function summarizeRelicCombatEffects() {
+  const buckets = { both: [], operator: [], enemy: [] };
+  for (const relic of getOwnedRelics()) {
+    const effect = relicEffectForDisplay(relic);
+    const affectsOperator = isOperatorCombatRelicEffect(effect);
+    const affectsEnemy = isEnemyCombatRelicEffect(effect);
+    if (!affectsOperator && !affectsEnemy) continue;
+    const entry = { name: relic.name, effect };
+    if (affectsOperator && affectsEnemy) buckets.both.push(entry);
+    else if (affectsOperator) buckets.operator.push(entry);
+    else buckets.enemy.push(entry);
+  }
+
+  const summaries = [];
+  const pushBucket = (title, items) => {
+    if (!items.length) return;
+    summaries.push({
+      type: "秘宝",
+      title: `${title} ${items.length}件`,
+      effect: items.map((item) => `${item.name}: ${item.effect}`).join(" / "),
+      items,
+    });
+  };
+  pushBucket("オペレーター/敵作用", buckets.both);
+  pushBucket("オペレーター作用", buckets.operator);
+  pushBucket("敵作用", buckets.enemy);
+  return summaries;
+}
+
 function getActiveEffects({ includeRelics = true } = {}) {
   const effects = [];
   const pushEffect = (type, title, effect) => {
@@ -305,16 +355,21 @@ function getActiveEffects({ includeRelics = true } = {}) {
   pushEffect("分隊", squad?.name, squad?.effect);
   pushEffect("分隊追加", option?.label || "ランダム効果", option?.effect);
   pushEffect("演目", performance?.name || performance?.title, performance?.effect);
-  if (includeRelics) {
-    for (const relic of getOwnedRelics()) pushEffect("秘宝", relic.name, relicEffectForDisplay(relic));
-  }
+  if (includeRelics) effects.push(...summarizeRelicCombatEffects());
   return effects;
+}
+
+function renderEffectText(item) {
+  if (Array.isArray(item.items) && item.items.length) {
+    return `<span class="effect-text effect-text-list">${item.items.map((source) => `<span class="effect-source"><span class="effect-source-name">${html(source.name)}</span>: ${html(source.effect)}</span>`).join("")}</span>`;
+  }
+  return `<span class="effect-text">${html(item.effect)}</span>`;
 }
 
 function renderEffectList(effects, className = "", emptyText = "発動効果はありません。") {
   if (!effects.length) return `<div class="empty-state effect-empty">${html(emptyText)}</div>`;
   return `<div class="effect-list ${className}">
-    ${effects.map((item) => `<div class="effect-row"><span class="effect-type">${html(item.type)}</span><strong class="effect-title">${html(item.title)}</strong><span class="effect-text">${html(item.effect)}</span></div>`).join("")}
+    ${effects.map((item) => `<div class="effect-row"><span class="effect-type">${html(item.type)}</span><strong class="effect-title">${html(item.title)}</strong>${renderEffectText(item)}</div>`).join("")}
   </div>`;
 }
 

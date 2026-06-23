@@ -213,6 +213,9 @@ a:hover { text-decoration: underline; }
 .effect-type { color: var(--accent-2); font-size: 11px; font-weight: 800; white-space: nowrap; }
 .effect-title { min-width: 0; color: #fff7e2; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
 .effect-text { min-width: 0; color: #ded6c9; font-size: 12px; line-height: 1.35; overflow-wrap: anywhere; }
+.effect-text-list { display: grid; gap: 4px; }
+.effect-source { display: block; min-width: 0; }
+.effect-source-name { color: #fff7e2; font-weight: 700; }
 .effect-empty { padding: 12px; }
 .list-area { display: grid; gap: 10px; max-height: calc(100vh - 260px); overflow: auto; padding-right: 4px; }
 .operator-pick-grid { grid-template-columns: repeat(var(--operator-grid-columns, 2), minmax(0, 1fr)); align-items: stretch; }
@@ -332,6 +335,7 @@ a:hover { text-decoration: underline; }
 .compact-effect-list .effect-type { font-size: 9px; }
 .compact-effect-list .effect-title { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .compact-effect-list .effect-text { grid-column: 1 / -1; font-size: 9px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.compact-effect-list .effect-text-list { display: grid; -webkit-line-clamp: unset; -webkit-box-orient: initial; overflow: visible; }
 .compact-relic-scroll { max-height: 72px; }
 .compact-relic-strip { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
 .compact-relic-strip img { width: 30px; height: 30px; object-fit: contain; border-radius: 5px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); }
@@ -464,6 +468,7 @@ a:hover { text-decoration: underline; }
 .stream-effect-list .effect-type { font-size: 9px; }
 .stream-effect-list .effect-title { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .stream-effect-list .effect-text { grid-column: 1 / -1; font-size: 9px; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.stream-effect-list .effect-text-list { display: grid; -webkit-line-clamp: unset; -webkit-box-orient: initial; overflow: visible; }
 .stream-horizontal .stream-effect-scroll { max-height: 50px; }
 .stream-section-head { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 6px; color: var(--muted); font-size: 10px; text-transform: uppercase; }
 .stream-section-head strong { color: var(--accent-2); }
