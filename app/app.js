@@ -293,53 +293,177 @@ function relicEffectForDisplay(relic) {
   return variant?.effect || relic.effect || "";
 }
 
-function isPureRecruitmentRelicEffect(text) {
-  const recruitmentPattern = /(招集|昇進|臨時加入|編成可能|支援に駆けつける|希望消費)/;
-  const combatModifierPattern = /(攻撃力|防御力|最大HP|HP|術耐性|攻撃速度|SP|ブロック|配置コスト|再配置|被ダメージ|与ダメージ|ダメージ|レジスト|迷彩|バリア|シールド|回避|元素損傷|元素ダメージ)/;
-  return recruitmentPattern.test(text) && !combatModifierPattern.test(text);
+function addMetric(metrics, target, stat, value, unit = "") {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) return;
+  const key = `${target}|${stat}|${unit}`;
+  const current = metrics.get(key) || { target, stat, unit, value: 0 };
+  current.value += numeric;
+  metrics.set(key, current);
 }
 
-function isOperatorCombatRelicEffect(text) {
-  if (!text || isPureRecruitmentRelicEffect(text)) return false;
-  const targetPattern = /(オペレーター|味方(?:ユニット)?|近距離|遠距離|配置待機エリア|地面マスに遠距離|戦場中のオペレーター|【(?:先鋒|前衛|重装|狙撃|術師|医療|補助|特殊|伺燭客)】|化境マスに(?:配置|いる)|防衛ラインの周囲\d+マスにいるオペレーター)/;
-  const modifierPattern = /(攻撃力|防御力|最大HP|HP|術耐性|攻撃速度|SP|ストックSP|ブロック数|配置コスト|再配置|物理・術回避|回避|レジスト|迷彩|バリア|シールド|加護|回復|被ダメージ|与ダメージ|ダメージ|元素損傷|スキル|攻撃範囲|配置後|配置した|配置するたび|コスト)/;
-  return targetPattern.test(text) && modifierPattern.test(text);
+function signedValue(value) {
+  const rounded = Math.round(value * 100) / 100;
+  return `${rounded > 0 ? "+" : ""}${Number.isInteger(rounded) ? rounded : rounded.toFixed(2).replace(/0+$/, "").replace(/\.$/, "")}`;
 }
 
-function isEnemyCombatRelicEffect(text) {
-  if (!text) return false;
-  const targetPattern = /(敵|BOSS|ボス|エリート|【化物】|彫像器鬼)/i;
-  const modifierPattern = /(HP|最大HP|防御力|術耐性|攻撃力|攻撃速度|移動速度|命中率|被ダメージ|受ける(?:物理・術|元素|術|確定)?ダメージ|与えるダメージ|ダメージ(?:[-+]|を|が)|スタン|寒冷|凍結|恐怖|バインド|浮遊|反重力|ステルス|無効|ブロック|元素ダメージ|元素損傷|状態|出現後)/;
-  const nonTargetPattern = /(敵出現地点|新たな敵が出現|敵に触れられた際|敵が撃破された際.*味方|戦場に残っている.*耐久値|さらに手強くなる|探索を違う方向)/;
-  return targetPattern.test(text) && modifierPattern.test(text) && !nonTargetPattern.test(text);
+function formatMetricValue(metric) {
+  return `${metric.stat}${signedValue(metric.value)}${metric.unit || ""}`;
 }
 
-function summarizeRelicCombatEffects() {
-  const buckets = { both: [], operator: [], enemy: [] };
+function detectOperatorTarget(text) {
+  if (/【先鋒】/.test(text)) return "先鋒";
+  if (/【前衛】/.test(text)) return "前衛";
+  if (/【重装】/.test(text)) return "重装";
+  if (/【狙撃】/.test(text)) return "狙撃";
+  if (/【術師】/.test(text)) return "術師";
+  if (/【医療】/.test(text)) return "医療";
+  if (/【補助】/.test(text)) return "補助";
+  if (/【特殊】/.test(text)) return "特殊";
+  if (/近距離/.test(text)) return "近距離";
+  if (/遠距離/.test(text)) return "遠距離";
+  if (/伺燭客/.test(text)) return "伺燭客";
+  if (/化境マス/.test(text)) return "化境マス";
+  if (/配置待機エリア/.test(text)) return "配置待機";
+  if (/味方全員|全オペレーター|全てのオペレーター|オペレーター全員|味方ユニット|味方/.test(text)) return "全員";
+  return null;
+}
+
+function detectEnemyTarget(text) {
+  if (/エリート|ボス|BOSS/.test(text)) return "敵エリート/ボス";
+  if (/敵全員|全ての敵/.test(text)) return "敵全員";
+  if (/【化物】/.test(text)) return "敵【化物】";
+  if (/敵/.test(text)) return "敵";
+  return null;
+}
+
+function metricStatsFromPhrase(phrase, domain) {
+  const stats = [];
+  const add = (pattern, label) => {
+    if (pattern.test(phrase) && !stats.includes(label)) stats.push(label);
+  };
+  add(/SP自然回復速度/, "SP自然回復");
+  add(/ストックSP/, "初期SP");
+  add(/スキル発動必要SP/, "必要SP");
+  add(/再配置時間/, "再配置");
+  add(/配置コスト/, "配置コスト");
+  add(/ブロック数?/, "ブロック");
+  add(/攻撃速度/, "攻撃速度");
+  add(/攻撃力/, "攻撃力");
+  add(/防御力/, "防御力");
+  add(/術耐性/, "術耐性");
+  add(/最大HP|(?<!最大)HP/, "最大HP");
+  add(/移動速度/, "移動速度");
+  add(/命中率/, "命中率");
+  add(/物理・術回避/, "物理・術回避");
+  add(/術回避/, "術回避");
+  add(/物理回避/, "物理回避");
+  if (!/物理・術回避/.test(phrase)) add(/回避/, "回避");
+  if (domain === "enemy") {
+    add(/物理ダメージ/, "物理被ダメージ");
+    add(/術ダメージ/, "術被ダメージ");
+    add(/元素ダメージ|元素損傷/, "元素被ダメージ");
+    add(/確定ダメージ/, "確定被ダメージ");
+    add(/被ダメージ|受けるダメージ/, "被ダメージ");
+  } else {
+    add(/物理ダメージ|術ダメージ|元素ダメージ|確定ダメージ|与ダメージ/, "与ダメージ");
+    add(/被ダメージ|受ける.*ダメージ/, "被ダメージ");
+    add(/元素損傷/, "元素損傷軽減");
+  }
+  return stats;
+}
+
+function addTextMetrics(text, operatorMetrics, enemyMetrics) {
+  const valuePattern = /([+-]\d+(?:\.\d+)?)(%|sp\/s)?/g;
+  let lastValueEnd = 0;
+  for (const match of text.matchAll(valuePattern)) {
+    const value = Number(match[1]);
+    const unit = match[2] || "";
+    const before = text.slice(0, match.index);
+    const sentenceStart = Math.max(before.lastIndexOf("。") + 1, before.lastIndexOf("；") + 1, 0);
+    const phraseStart = Math.max(sentenceStart, lastValueEnd);
+    const context = text.slice(sentenceStart, match.index);
+    const phrase = text.slice(phraseStart, match.index);
+    const operatorTarget = detectOperatorTarget(context);
+    const enemyTarget = detectEnemyTarget(context);
+    const operatorStats = operatorTarget ? metricStatsFromPhrase(phrase, "operator") : [];
+    const enemyStats = enemyTarget ? metricStatsFromPhrase(phrase, "enemy") : [];
+    for (const stat of operatorStats) addMetric(operatorMetrics, operatorTarget, stat, value, unit);
+    for (const stat of enemyStats) addMetric(enemyMetrics, enemyTarget, stat, value, unit);
+    lastValueEnd = match.index + match[0].length;
+  }
+
+  for (const match of text.matchAll(/HP(?:が|を)?(?:1秒(?:ごと|につき)|毎秒)(?:最大HPの)?(\d+(?:\.\d+)?)(%)?の?HP?を?回復/g)) {
+    const context = text.slice(Math.max(0, match.index - 40), match.index + match[0].length);
+    const target = detectOperatorTarget(context) || "全員";
+    addMetric(operatorMetrics, target, "HP回復", Number(match[1]), match[2] ? "%/秒" : "/秒");
+  }
+}
+
+function addRecruitmentHope(recruitmentValues, text) {
+  const allRarities = [1, 2, 3, 4, 5, 6];
+  const addToRarities = (value, rarities) => {
+    for (const rarity of rarities) recruitmentValues[rarity] += value;
+  };
+  const pattern = /((?:★([1-6])(?:以上)?(?:の)?)|(?:全ての|全|次回)?)(?:オペレーター)(?:を)?[招召]集(?:もしくは昇進させる際に消費する希望|する際に消費する希望|時の希望消費)([+-]\d+)/g;
+  for (const match of text.matchAll(pattern)) {
+    const prefix = match[1] || "";
+    const rarity = Number(match[2]);
+    const value = Number(match[3]);
+    const rarities = rarity
+      ? (prefix.includes("以上") ? allRarities.filter((item) => item >= rarity) : [rarity])
+      : allRarities;
+    addToRarities(value, rarities);
+  }
+}
+
+function formatRecruitmentHope(recruitmentValues) {
+  const parts = [];
+  for (let rarity = 1; rarity <= 6; rarity++) {
+    const value = recruitmentValues[rarity];
+    if (!value) continue;
+    let end = rarity;
+    while (end + 1 <= 6 && recruitmentValues[end + 1] === value) end++;
+    const label = rarity === end ? `★${rarity}` : `★${rarity}-${end}`;
+    parts.push(`${label} ${signedValue(value)}`);
+    rarity = end;
+  }
+  return parts.join(" / ");
+}
+
+function formatMetricSummary(metrics) {
+  const grouped = new Map();
+  for (const metric of metrics.values()) {
+    if (!metric.value) continue;
+    if (!grouped.has(metric.target)) grouped.set(metric.target, []);
+    grouped.get(metric.target).push(metric);
+  }
+  return [...grouped.entries()].map(([target, items]) => `${target} ${items.map(formatMetricValue).join(" / ")}`).join(" / ");
+}
+
+function summarizeRelicEffects() {
+  const runMetrics = new Map();
+  const operatorMetrics = new Map();
+  const enemyMetrics = new Map();
+  const recruitmentValues = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0 };
+
   for (const relic of getOwnedRelics()) {
     const effect = relicEffectForDisplay(relic);
-    const affectsOperator = isOperatorCombatRelicEffect(effect);
-    const affectsEnemy = isEnemyCombatRelicEffect(effect);
-    if (!affectsOperator && !affectsEnemy) continue;
-    const entry = { name: relic.name, effect };
-    if (affectsOperator && affectsEnemy) buckets.both.push(entry);
-    else if (affectsOperator) buckets.operator.push(entry);
-    else buckets.enemy.push(entry);
+    for (const match of effect.matchAll(/編成上限\s*([+-]\d+)/g)) addMetric(runMetrics, "ラン", "編成上限", Number(match[1]));
+    for (const match of effect.matchAll(/(?:同時)?配置可能人数\s*([+-]\d+)/g)) addMetric(runMetrics, "ラン", "配置数", Number(match[1]));
+    addRecruitmentHope(recruitmentValues, effect);
+    addTextMetrics(effect, operatorMetrics, enemyMetrics);
   }
 
   const summaries = [];
-  const pushBucket = (title, items) => {
-    if (!items.length) return;
-    summaries.push({
-      type: "秘宝",
-      title: `${title} ${items.length}件`,
-      effect: items.map((item) => `${item.name}: ${item.effect}`).join(" / "),
-      items,
-    });
-  };
-  pushBucket("オペレーター/敵作用", buckets.both);
-  pushBucket("オペレーター作用", buckets.operator);
-  pushBucket("敵作用", buckets.enemy);
+  const runSummary = formatMetricSummary(runMetrics).replace(/^ラン\s*/, "");
+  const recruitmentSummary = formatRecruitmentHope(recruitmentValues);
+  const operatorSummary = formatMetricSummary(operatorMetrics);
+  const enemySummary = formatMetricSummary(enemyMetrics);
+  if (runSummary) summaries.push({ type: "秘宝", title: "編成/配置", effect: runSummary });
+  if (recruitmentSummary) summaries.push({ type: "秘宝", title: "招集希望", effect: recruitmentSummary });
+  if (operatorSummary) summaries.push({ type: "秘宝", title: "オペレーター効果", effect: operatorSummary });
+  if (enemySummary) summaries.push({ type: "秘宝", title: "敵効果", effect: enemySummary });
   return summaries;
 }
 
@@ -355,14 +479,11 @@ function getActiveEffects({ includeRelics = true } = {}) {
   pushEffect("分隊", squad?.name, squad?.effect);
   pushEffect("分隊追加", option?.label || "ランダム効果", option?.effect);
   pushEffect("演目", performance?.name || performance?.title, performance?.effect);
-  if (includeRelics) effects.push(...summarizeRelicCombatEffects());
+  if (includeRelics) effects.push(...summarizeRelicEffects());
   return effects;
 }
 
 function renderEffectText(item) {
-  if (Array.isArray(item.items) && item.items.length) {
-    return `<span class="effect-text effect-text-list">${item.items.map((source) => `<span class="effect-source"><span class="effect-source-name">${html(source.name)}</span>: ${html(source.effect)}</span>`).join("")}</span>`;
-  }
   return `<span class="effect-text">${html(item.effect)}</span>`;
 }
 
