@@ -1,0 +1,306 @@
+{
+    "version":  1,
+    "operatorClasses":  [
+                            {
+                                "id":  "vanguard",
+                                "label":  "先鋒",
+                                "token":  "【先鋒】",
+                                "defaultPosition":  "melee"
+                            },
+                            {
+                                "id":  "guard",
+                                "label":  "前衛",
+                                "token":  "【前衛】",
+                                "defaultPosition":  "melee"
+                            },
+                            {
+                                "id":  "defender",
+                                "label":  "重装",
+                                "token":  "【重装】",
+                                "defaultPosition":  "melee"
+                            },
+                            {
+                                "id":  "sniper",
+                                "label":  "狙撃",
+                                "token":  "【狙撃】",
+                                "defaultPosition":  "ranged"
+                            },
+                            {
+                                "id":  "caster",
+                                "label":  "術師",
+                                "token":  "【術師】",
+                                "defaultPosition":  "ranged"
+                            },
+                            {
+                                "id":  "medic",
+                                "label":  "医療",
+                                "token":  "【医療】",
+                                "defaultPosition":  "ranged"
+                            },
+                            {
+                                "id":  "supporter",
+                                "label":  "補助",
+                                "token":  "【補助】",
+                                "defaultPosition":  "ranged"
+                            },
+                            {
+                                "id":  "specialist",
+                                "label":  "特殊",
+                                "token":  "【特殊】",
+                                "defaultPosition":  "melee"
+                            }
+                        ],
+    "operatorTargetGroups":  [
+                                 {
+                                     "id":  "all_operators",
+                                     "label":  "全オペレーター",
+                                     "selector":  {
+                                                      "kind":  "operator",
+                                                      "classes":  [
+                                                                      "*"
+                                                                  ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "melee_operators",
+                                     "label":  "近距離オペレーター",
+                                     "selector":  {
+                                                      "kind":  "operator",
+                                                      "positions":  [
+                                                                        "melee"
+                                                                    ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "ranged_operators",
+                                     "label":  "遠距離オペレーター",
+                                     "selector":  {
+                                                      "kind":  "operator",
+                                                      "positions":  [
+                                                                        "ranged"
+                                                                    ]
+                                                  }
+                                 },
+                                 {
+                                     "id":  "summons",
+                                     "label":  "召喚物/召喚ユニット",
+                                     "selector":  {
+                                                      "kind":  "operatorTag",
+                                                      "tags":  [
+                                                                   "summon"
+                                                               ]
+                                                  }
+                                 }
+                             ],
+    "effectDomains":  [
+                          {
+                              "id":  "operator_stat",
+                              "label":  "オペレーター能力"
+                          },
+                          {
+                              "id":  "recruitment",
+                              "label":  "招集/昇進"
+                          },
+                          {
+                              "id":  "run_resource",
+                              "label":  "探索リソース"
+                          },
+                          {
+                              "id":  "squad_capacity",
+                              "label":  "編成/配置"
+                          },
+                          {
+                              "id":  "battle_trigger",
+                              "label":  "戦闘中トリガー"
+                          },
+                          {
+                              "id":  "map_trigger",
+                              "label":  "マップ/エリア移動トリガー"
+                          }
+                      ],
+    "operatorStats":  [
+                          {
+                              "id":  "atk",
+                              "label":  "攻撃力",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "def",
+                              "label":  "防御力",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "maxHp",
+                              "label":  "最大HP",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "res",
+                              "label":  "術耐性",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "aspd",
+                              "label":  "攻撃速度",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "block",
+                              "label":  "ブロック数",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "redeployTime",
+                              "label":  "再配置時間",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "dpCost",
+                              "label":  "配置コスト",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "spRecovery",
+                              "label":  "SP回復",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "hpRegenPerSecond",
+                              "label":  "毎秒HP回復",
+                              "defaultStack":  "add_flat"
+                          },
+                          {
+                              "id":  "physicalDodge",
+                              "label":  "物理回避",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "artsDodge",
+                              "label":  "術回避",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "damageDealt",
+                              "label":  "与ダメージ",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "damageTaken",
+                              "label":  "被ダメージ",
+                              "defaultStack":  "add_percent"
+                          },
+                          {
+                              "id":  "healingDealt",
+                              "label":  "治療効果",
+                              "defaultStack":  "add_percent"
+                          }
+                      ],
+    "runResources":  [
+                         {
+                             "id":  "life",
+                             "label":  "耐久値"
+                         },
+                         {
+                             "id":  "maxLife",
+                             "label":  "最大耐久値"
+                         },
+                         {
+                             "id":  "shield",
+                             "label":  "シールド"
+                         },
+                         {
+                             "id":  "hope",
+                             "label":  "希望"
+                         },
+                         {
+                             "id":  "maxHope",
+                             "label":  "最大希望"
+                         },
+                         {
+                             "id":  "ingot",
+                             "label":  "源石錐"
+                         },
+                         {
+                             "id":  "key",
+                             "label":  "鍵"
+                         },
+                         {
+                             "id":  "dice",
+                             "label":  "ダイス"
+                         },
+                         {
+                             "id":  "squadSize",
+                             "label":  "編成上限"
+                         },
+                         {
+                             "id":  "deploymentLimit",
+                             "label":  "同時配置可能人数"
+                         },
+                         {
+                             "id":  "collapseValue",
+                             "label":  "崩壊値"
+                         },
+                         {
+                             "id":  "thought",
+                             "label":  "思案"
+                         },
+                         {
+                             "id":  "age",
+                             "label":  "時代"
+                         },
+                         {
+                             "id":  "coins",
+                             "label":  "銭"
+                         }
+                     ],
+    "operations":  [
+                       {
+                           "id":  "add",
+                           "label":  "固定値加算"
+                       },
+                       {
+                           "id":  "add_percent",
+                           "label":  "割合加算"
+                       },
+                       {
+                           "id":  "multiply",
+                           "label":  "乗算"
+                       },
+                       {
+                           "id":  "set",
+                           "label":  "固定値設定"
+                       },
+                       {
+                           "id":  "grant",
+                           "label":  "獲得"
+                       },
+                       {
+                           "id":  "reduce_cost",
+                           "label":  "消費軽減"
+                       },
+                       {
+                           "id":  "free_promote",
+                           "label":  "希望消費なし昇進"
+                       },
+                       {
+                           "id":  "chance",
+                           "label":  "確率効果"
+                       },
+                       {
+                           "id":  "add_percent_per_deployed_unit",
+                           "label":  "配置中ユニット数に応じた割合加算"
+                       }
+                   ],
+    "phases":  [
+                   "always",
+                   "run_start",
+                   "battle_start",
+                   "during_battle",
+                   "after_battle",
+                   "enter_area",
+                   "recruit",
+                   "promote",
+                   "shop",
+                   "event"
+               ]
+}

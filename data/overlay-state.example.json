@@ -1,0 +1,81 @@
+{
+    "version":  1,
+    "theme":  "minimal",
+    "mode":  "manual",
+    "run":  {
+                "campaignId":  "is4_sami",
+                "squad":  null,
+                "difficulty":  null,
+                "special":  {
+                                "is2_phantom":  {
+
+                                                },
+                                "is3_mizuki":  {
+                                                   "rejectionReaction":  null
+                                               },
+                                "is4_sami":  {
+                                                 "paradox":  null,
+                                                 "revelation":  null,
+                                                 "collapseValue":  null
+                                             },
+                                "is5_sarkaz":  {
+                                                   "thought":  null,
+                                                   "age":  null
+                                               },
+                                "is6_sui":  {
+                                                "coins":  null
+                                            }
+                            },
+                "squadRandomEffectOptionId":  null,
+                "difficultyTierId":  null
+            },
+    "relics":  [
+
+               ],
+    "operators":  [
+
+                  ],
+    "bossFlags":  [
+
+                  ],
+    "pendingSuggestions":  [
+
+                           ],
+    "effectCalculation":  {
+                              "enabled":  true,
+                              "ruleSet":  "manual-normalized",
+                              "lastCalculatedAt":  null,
+                              "summary":  {
+                                              "runResources":  [
+
+                                                               ],
+                                              "operatorGroups":  [
+
+                                                                 ],
+                                              "recruitment":  [
+
+                                                              ],
+                                              "battleTriggers":  [
+
+                                                                 ],
+                                              "mapTriggers":  [
+
+                                                              ],
+                                              "unparsedSourceIds":  [
+
+                                                                    ],
+                                              "warnings":  [
+
+                                                           ]
+                                          },
+                              "variantResolution":  {
+                                                        "difficultyTierId":  null,
+                                                        "activeVariantRelicIds":  [
+
+                                                                                  ],
+                                                        "unresolvedVariantRelicIds":  [
+
+                                                                                      ]
+                                                    }
+                          }
+}

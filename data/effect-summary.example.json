@@ -1,0 +1,130 @@
+{
+    "version":  1,
+    "input":  {
+                  "campaignId":  "is5_sarkaz",
+                  "ownedRelicIds":  [
+                                        "is2_phantom_relic_001",
+                                        "is3_mizuki_relic_001",
+                                        "is2_phantom_relic_018"
+                                    ],
+                  "selectedSquadId":  "is5_sarkaz_squad_16",
+                  "squadRandomEffectOptionId":  "is5_sarkaz_mimic_01",
+                  "operatorRoster":  [
+                                         {
+                                             "id":  "op_thorns",
+                                             "name":  "ソーンズ",
+                                             "class":  "guard",
+                                             "rarity":  6,
+                                             "elite":  2
+                                         },
+                                         {
+                                             "id":  "op_kroos",
+                                             "name":  "クルース",
+                                             "class":  "sniper",
+                                             "rarity":  3,
+                                             "elite":  1
+                                         }
+                                     ],
+                  "difficulty":  9,
+                  "difficultyTierId":  "polar"
+              },
+    "output":  {
+                   "runResources":  [
+                                        {
+                                            "stat":  "life",
+                                            "label":  "耐久値",
+                                            "value":  2,
+                                            "sources":  [
+                                                            "is2_phantom_relic_001"
+                                                        ]
+                                        },
+                                        {
+                                            "stat":  "hope",
+                                            "label":  "希望",
+                                            "value":  1,
+                                            "sources":  [
+                                                            "is2_phantom_relic_001"
+                                                        ]
+                                        },
+                                        {
+                                            "stat":  "squadSize",
+                                            "label":  "編成上限",
+                                            "value":  1,
+                                            "sources":  [
+                                                            "is3_mizuki_relic_001"
+                                                        ]
+                                        }
+                                    ],
+                   "operatorGroups":  [
+                                          {
+                                              "targetGroup":  "all_operators",
+                                              "label":  "全オペレーター",
+                                              "modifiers":  [
+                                                                {
+                                                                    "stat":  "hpRegenPerSecond",
+                                                                    "label":  "毎秒HP回復",
+                                                                    "operation":  "add",
+                                                                    "value":  3,
+                                                                    "sources":  [
+                                                                                    "is3_mizuki_relic_001"
+                                                                                ]
+                                                                }
+                                                            ]
+                                          },
+                                          {
+                                              "targetGroup":  "guard",
+                                              "label":  "前衛",
+                                              "modifiers":  [
+                                                                {
+                                                                    "stat":  "promotionCost",
+                                                                    "label":  "昇進希望",
+                                                                    "operation":  "free_promote",
+                                                                    "value":  1,
+                                                                    "sources":  [
+                                                                                    "is2_phantom_relic_018"
+                                                                                ]
+                                                                }
+                                                            ]
+                                          }
+                                      ],
+                   "recruitment":  [
+                                       {
+                                           "targetGroup":  "guard",
+                                           "label":  "前衛",
+                                           "modifiers":  [
+                                                             {
+                                                                 "stat":  "recruitHopeCost",
+                                                                 "operation":  "add",
+                                                                 "value":  -2
+                                                             },
+                                                             {
+                                                                 "stat":  "promotionCost",
+                                                                 "operation":  "add",
+                                                                 "value":  -1
+                                                             }
+                                                         ],
+                                           "sources":  [
+                                                           "is5_sarkaz_mimic_01"
+                                                       ]
+                                       }
+                                   ],
+                   "unparsedSourceIds":  [
+
+                                         ],
+                   "warnings":  [
+
+                                ],
+                   "variantResolution":  {
+                                             "campaignId":  "is4_sami",
+                                             "difficulty":  9,
+                                             "difficultyTierId":  "polar",
+                                             "difficultyTierLabel":  "極地化",
+                                             "activeVariantRelicIds":  [
+                                                                           "is4_sami_relic_001"
+                                                                       ],
+                                             "unresolvedVariantRelicIds":  [
+
+                                                                           ]
+                                         }
+               }
+}

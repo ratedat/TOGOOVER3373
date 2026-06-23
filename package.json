@@ -1,0 +1,10 @@
+{
+  "name": "arknights-rogue-obs-tool",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node app/server.mjs",
+    "dev:5174": "node app/server.mjs --port 5174"
+  }
+}

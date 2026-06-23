@@ -1,0 +1,2343 @@
+{
+    "version":  1,
+    "meta":  {
+                 "generatedAt":  "2026-06-22",
+                 "sourceConfig":  "data/difficulty-variant-sources.json",
+                 "source":  "arknights.wikiru.jp configured relic tables",
+                 "purpose":  "Difficulty-dependent relic effect variants layered over data/relics.json."
+             },
+    "variantGroups":  [
+                          {
+                              "relicId":  "is4_sami_relic_001",
+                              "campaignId":  "is4_sami",
+                              "number":  1,
+                              "name":  "地形図",
+                              "sourceAnchor":  "No1",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+4%"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+6%、 配置中の味方ユニット1名につき追加で防御力+0.5%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_002",
+                              "campaignId":  "is4_sami",
+                              "number":  2,
+                              "name":  "不思議なほら貝",
+                              "sourceAnchor":  "No2",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+4%"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+5%"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+6%、 配置中の味方ユニット1名につき追加で最大HP+0.5%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_003",
+                              "campaignId":  "is4_sami",
+                              "number":  3,
+                              "name":  "森の夜談",
+                              "sourceAnchor":  "No3",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+7%"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+8%、 配置中の味方ユニット1名につき追加で防御力+0.5%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_004",
+                              "campaignId":  "is4_sami",
+                              "number":  4,
+                              "name":  "教会の無償食事券",
+                              "sourceAnchor":  "No4",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+7%"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+8%"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+8%、 配置中の味方ユニット1名につき追加で最大HP+0.5%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_005",
+                              "campaignId":  "is4_sami",
+                              "number":  5,
+                              "name":  "赤い蝶リボン",
+                              "sourceAnchor":  "No5",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+2、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+3、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、同時配置可能人数+1、 非戦闘スポットでの作戦時は追加で同時配置可能人数+2"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_006",
+                              "campaignId":  "is4_sami",
+                              "number":  6,
+                              "name":  "独奏のオルゴール",
+                              "sourceAnchor":  "No6",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+5、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+6、同時配置可能人数+1"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+6、同時配置可能人数+1、 「悪路凶敵」での戦闘時は追加で同時配置可能人数+1"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_007",
+                              "campaignId":  "is4_sami",
+                              "number":  7,
+                              "name":  "こじ開けられた道具箱",
+                              "sourceAnchor":  "No7",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、源石錐+3"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、源石錐+4"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、源石錐+5"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_008",
+                              "campaignId":  "is4_sami",
+                              "number":  8,
+                              "name":  "古い楽譜の残片",
+                              "sourceAnchor":  "No8",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+4"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+5"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+6"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_009",
+                              "campaignId":  "is4_sami",
+                              "number":  9,
+                              "name":  "解約合意書",
+                              "sourceAnchor":  "No9",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、耐久値を1回復する"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、耐久値を2回復する"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、耐久値を3回復する"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_010",
+                              "campaignId":  "is4_sami",
+                              "number":  10,
+                              "name":  "マスターキー",
+                              "sourceAnchor":  "No10",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+6"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+6、崩壊値-1"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+7、崩壊値-1"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+7、崩壊値-2"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_011",
+                              "campaignId":  "is4_sami",
+                              "number":  11,
+                              "name":  "古びたコイン",
+                              "sourceAnchor":  "No11",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "源石錐+10"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+10、希望+1"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+11、希望+1"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+12、希望+1"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_012",
+                              "campaignId":  "is4_sami",
+                              "number":  12,
+                              "name":  "劇団員の小物入れ",
+                              "sourceAnchor":  "No12",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "源石錐+18"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+18、秘宝所持中に崩壊値が増加するたびに源石錐+1"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+19、秘宝所持中に崩壊値が増加するたびに源石錐+1"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+20、秘宝所持中に崩壊値が増加するたびに源石錐+1"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_013",
+                              "campaignId":  "is4_sami",
+                              "number":  13,
+                              "name":  "ゲームルームの管理員カード",
+                              "sourceAnchor":  "No13",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+2、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+2、希望+1、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+4、希望+1、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_014",
+                              "campaignId":  "is4_sami",
+                              "number":  14,
+                              "name":  "レディーのなでなで券",
+                              "sourceAnchor":  "No14",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "シールド値+1、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "シールド値+1、希望+1、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "シールド値+2、希望+1、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_015",
+                              "campaignId":  "is4_sami",
+                              "number":  15,
+                              "name":  "地方行動方案",
+                              "sourceAnchor":  "No15",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "★4オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+1、★4オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+1、★4オペレーター招集時の希望消費-2、 招集時に一定確率で★4昇進招集発生"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+2、★4オペレーター招集時の希望消費-2、 招集時に一定確率で★4昇進招集発生"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_016",
+                              "campaignId":  "is4_sami",
+                              "number":  16,
+                              "name":  "全域作戦文書",
+                              "sourceAnchor":  "No16",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "★5オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+1、★5オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+1、★5オペレーター招集時の希望消費-2、 招集時に一定確率で★5昇進招集発生"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+2、★5オペレーター招集時の希望消費-2、 招集時に一定確率で★5昇進招集発生"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_017",
+                              "campaignId":  "is4_sami",
+                              "number":  17,
+                              "name":  "人事部の機密文書",
+                              "sourceAnchor":  "No17",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "★6オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+1、★6オペレーター招集時の希望消費-2"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+1、★6オペレーター招集時の希望消費-2、 招集時に一定確率で★6昇進招集発生"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+2、★6オペレーター招集時の希望消費-2、 招集時に一定確率で★6昇進招集発生"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is4_sami_relic_018",
+                              "campaignId":  "is4_sami",
+                              "number":  18,
+                              "name":  "ロドスの戦術無線",
+                              "sourceAnchor":  "No18",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is4_sami",
+                              "fallbackTierId":  "normal",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "normal",
+                                                   "label":  "通常化",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "戦闘勝利後に獲得できる招集券の選択肢が一つ増える"
+                                               },
+                                               {
+                                                   "tierId":  "cold",
+                                                   "label":  "寒冷化",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+1 戦闘勝利後に獲得できる招集券の選択肢が一つ増える"
+                                               },
+                                               {
+                                                   "tierId":  "frozen",
+                                                   "label":  "凍土化",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+1 戦闘勝利後に獲得できる招集券の選択肢が二つ増える"
+                                               },
+                                               {
+                                                   "tierId":  "polar",
+                                                   "label":  "極地化",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+2 戦闘勝利後に獲得できる招集券の選択肢が二つ増える"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_001",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  1,
+                              "name":  "特選獣肉缶詰",
+                              "sourceAnchor":  "No1",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに3回復"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに5回復"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに8回復"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに10回復"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_002",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  2,
+                              "name":  "海藻の和え物",
+                              "sourceAnchor":  "No2",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方全員の攻撃速度+1"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方全員の攻撃速度+3"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方全員の攻撃速度+5"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方全員の攻撃速度+7"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_003",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  3,
+                              "name":  "オレンジストーム",
+                              "sourceAnchor":  "No3",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方全員の攻撃力+1%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方全員の攻撃力+3%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方全員の攻撃力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方全員の攻撃力+7%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_004",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  4,
+                              "name":  "プレインコーヒーキャンディー",
+                              "sourceAnchor":  "No4",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+2、味方全員の攻撃速度+2"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+2、味方全員の攻撃速度+4"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+2、味方全員の攻撃速度+6"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+2、味方全員の攻撃速度+8"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_005",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  5,
+                              "name":  "スクリームチェリー",
+                              "sourceAnchor":  "No5",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+2、味方全員の攻撃力+2%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+2、味方全員の攻撃力+4%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+2、味方全員の攻撃力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+2、味方全員の攻撃力+8%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_006",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  6,
+                              "name":  "ピョートルフルーツキャンディー",
+                              "sourceAnchor":  "No6",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+3、味方全員の攻撃力、防御力、最大HP+3%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力、防御力、最大HP+4%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力、防御力、最大HP+5%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力、防御力、最大HP+7%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_007",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  7,
+                              "name":  "地形図",
+                              "sourceAnchor":  "No7",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+4%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+8%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_008",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  8,
+                              "name":  "不思議なほら貝",
+                              "sourceAnchor":  "No8",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+4%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+5%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+8%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_009",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  9,
+                              "name":  "森の夜談",
+                              "sourceAnchor":  "No9",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+7%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+10%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_010",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  10,
+                              "name":  "教会の無償食事券",
+                              "sourceAnchor":  "No10",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+7%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+8%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+10%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_011",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  11,
+                              "name":  "こじ開けられた道具箱",
+                              "sourceAnchor":  "No11",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、源石錐+3"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、源石錐+4"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、源石錐+5"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_012",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  12,
+                              "name":  "古い楽譜の残片",
+                              "sourceAnchor":  "No12",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+4"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+5"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、味方全員の攻撃速度+6"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_013",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  13,
+                              "name":  "解約合意書",
+                              "sourceAnchor":  "No13",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、味方全員の攻撃力+3%"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、味方全員の攻撃力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、味方全員の攻撃力+7%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_014",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  14,
+                              "name":  "マスターキー",
+                              "sourceAnchor":  "No14",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+6"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+6、負荷臨界点+1"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+7、負荷臨界点+1"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+7、負荷臨界点+2"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_015",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  15,
+                              "name":  "バンシーの口づけ",
+                              "sourceAnchor":  "No15",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+8"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+9"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+10"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+12"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_016",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  16,
+                              "name":  "古びたコイン",
+                              "sourceAnchor":  "No16",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "源石錐+10"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+10、希望+1"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+11、希望+1"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+12、希望+1"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_017",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  17,
+                              "name":  "劇団員の小物入れ",
+                              "sourceAnchor":  "No17",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "源石錐+18"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+18、負荷臨界点+1"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+19、負荷臨界点+1"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+20、負荷臨界点+1"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_018",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  18,
+                              "name":  "無瑕の宝玉",
+                              "sourceAnchor":  "No18",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "源石錐+25"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+26"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+28"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+30"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_019",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  19,
+                              "name":  "ゲームルームの管理員カード",
+                              "sourceAnchor":  "No19",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "源石錐+1、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "源石錐+2、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "源石錐+3、 オペレーター1名を昇進させる（希望を消費しない）"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is5_sarkaz_relic_020",
+                              "campaignId":  "is5_sarkaz",
+                              "number":  20,
+                              "name":  "レディーのなでなで券",
+                              "sourceAnchor":  "No20",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is5_sarkaz",
+                              "fallbackTierId":  "realistic",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "realistic",
+                                                   "label":  "現実的",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "original",
+                                                   "label":  "独創的",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "シールド値+1、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "fantastical",
+                                                   "label":  "幻想的",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "シールド値+2、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               },
+                                               {
+                                                   "tierId":  "imaginary",
+                                                   "label":  "空想的",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "シールド値+3、 オペレーター2名を昇進させる（希望を消費しない）"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_001",
+                              "campaignId":  "is6_sui",
+                              "number":  1,
+                              "name":  "ピョートルフルーツキャンディー",
+                              "sourceAnchor":  "No1",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+3、味方全員の攻撃力・防御力・最大HP+3%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力・防御力・最大HP+4%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力・防御力・最大HP+5%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+3、味方全員の攻撃力・防御力・最大HP+7%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_002",
+                              "campaignId":  "is6_sui",
+                              "number":  2,
+                              "name":  "特選獣肉缶詰",
+                              "sourceAnchor":  "No2",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに3回復"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに5回復"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに8回復"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方全員のHPが1秒ごとに10回復"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_003",
+                              "campaignId":  "is6_sui",
+                              "number":  3,
+                              "name":  "地形図",
+                              "sourceAnchor":  "No3",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+4%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の防御力+8%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_004",
+                              "campaignId":  "is6_sui",
+                              "number":  4,
+                              "name":  "不思議なほら貝",
+                              "sourceAnchor":  "No4",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+4%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+5%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+1、味方全員の最大HP+8%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_005",
+                              "campaignId":  "is6_sui",
+                              "number":  5,
+                              "name":  "森の夜談",
+                              "sourceAnchor":  "No5",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+7%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の防御力+10%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_006",
+                              "campaignId":  "is6_sui",
+                              "number":  6,
+                              "name":  "教会の無償食事券",
+                              "sourceAnchor":  "No6",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+6%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+7%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+8%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "同時配置可能人数+2、味方全員の最大HP+10%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_007",
+                              "campaignId":  "is6_sui",
+                              "number":  7,
+                              "name":  "こじ開けられた道具箱",
+                              "sourceAnchor":  "No7",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、源石錐+3"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、源石錐+4"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、源石錐+5"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_008",
+                              "campaignId":  "is6_sui",
+                              "number":  8,
+                              "name":  "バンシーの口づけ",
+                              "sourceAnchor":  "No8",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+6、源石錐+6"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+7、源石錐+8"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+8、源石錐+8"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+10、源石錐+8"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_009",
+                              "campaignId":  "is6_sui",
+                              "number":  9,
+                              "name":  "マスターキー",
+                              "sourceAnchor":  "No9",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+6"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+6、シールド値+1"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+7、シールド値+2"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+7、シールド値+3"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_010",
+                              "campaignId":  "is6_sui",
+                              "number":  10,
+                              "name":  "海藻の和え物",
+                              "sourceAnchor":  "No10",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方遠距離ユニット全員の攻撃力+2%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方遠距離ユニット全員の攻撃力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方遠距離ユニット全員の攻撃力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方遠距離ユニット全員の攻撃力+11%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_011",
+                              "campaignId":  "is6_sui",
+                              "number":  11,
+                              "name":  "オレンジストーム",
+                              "sourceAnchor":  "No11",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+1、味方近距離ユニット全員の攻撃力+2%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+1、味方近距離ユニット全員の攻撃力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+1、味方近距離ユニット全員の攻撃力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+1、味方近距離ユニット全員の攻撃力+11%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_012",
+                              "campaignId":  "is6_sui",
+                              "number":  12,
+                              "name":  "プレインコーヒーキャンディー",
+                              "sourceAnchor":  "No12",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+2、味方遠距離ユニット全員の攻撃力+3%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+2、味方遠距離ユニット全員の攻撃力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+2、味方遠距離ユニット全員の攻撃力+9%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+2、味方遠距離ユニット全員の攻撃力+12%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_013",
+                              "campaignId":  "is6_sui",
+                              "number":  13,
+                              "name":  "スクリームチェリー",
+                              "sourceAnchor":  "No13",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "編成上限+2、味方近距離ユニット全員の攻撃力+3%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "編成上限+2、味方近距離ユニット全員の攻撃力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "編成上限+2、味方近距離ユニット全員の攻撃力+9%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "編成上限+2、味方近距離ユニット全員の攻撃力+12%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_014",
+                              "campaignId":  "is6_sui",
+                              "number":  14,
+                              "name":  "古い楽譜の残片",
+                              "sourceAnchor":  "No14",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+3、味方遠距離ユニットの攻撃力+4%"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+3、味方遠距離ユニットの攻撃力+6%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+3、味方遠距離ユニットの攻撃力+8%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+3、味方遠距離ユニットの攻撃力+10%"
+                                               }
+                                           ]
+                          },
+                          {
+                              "relicId":  "is6_sui_relic_015",
+                              "campaignId":  "is6_sui",
+                              "number":  15,
+                              "name":  "解約合意書",
+                              "sourceAnchor":  "No15",
+                              "variantKey":  "difficultyTierId",
+                              "tierSource":  "data/difficulty-tiers.json#campaignDifficultyTiers.is6_sui",
+                              "fallbackTierId":  "modern",
+                              "variants":  [
+                                               {
+                                                   "tierId":  "modern",
+                                                   "label":  "現代",
+                                                   "minDifficulty":  0,
+                                                   "maxDifficulty":  2,
+                                                   "nameSuffix":  null,
+                                                   "effect":  "希望+4"
+                                               },
+                                               {
+                                                   "tierId":  "recent",
+                                                   "label":  "近代",
+                                                   "minDifficulty":  3,
+                                                   "maxDifficulty":  5,
+                                                   "nameSuffix":  "α",
+                                                   "effect":  "希望+4、味方近距離ユニットの攻撃力+3%"
+                                               },
+                                               {
+                                                   "tierId":  "ancient",
+                                                   "label":  "古代",
+                                                   "minDifficulty":  6,
+                                                   "maxDifficulty":  8,
+                                                   "nameSuffix":  "β",
+                                                   "effect":  "希望+4、味方近距離ユニットの攻撃力+5%"
+                                               },
+                                               {
+                                                   "tierId":  "prehistoric",
+                                                   "label":  "先史",
+                                                   "minDifficulty":  9,
+                                                   "maxDifficulty":  null,
+                                                   "nameSuffix":  "γ",
+                                                   "effect":  "希望+4、味方近距離ユニットの攻撃力+7%"
+                                               }
+                                           ]
+                          }
+                      ]
+}

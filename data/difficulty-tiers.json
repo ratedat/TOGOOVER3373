@@ -1,0 +1,127 @@
+{
+    "version":  1,
+    "meta":  {
+                 "generatedAt":  "2026-06-22",
+                 "sourceConfig":  "data/difficulty-variant-sources.json",
+                 "purpose":  "Campaign-specific mapping from numeric run difficulty to difficulty variant tier ID."
+             },
+    "campaignDifficultyTiers":  {
+                                    "is4_sami":  {
+                                                     "campaignId":  "is4_sami",
+                                                     "inputField":  "run.difficulty",
+                                                     "derivedField":  "run.difficultyTierId",
+                                                     "defaultTierId":  "normal",
+                                                     "appliesTo":  "is4_sami_relic_001..is4_sami_relic_018",
+                                                     "sourceCategory":  "No.001〜018 多元化珍品",
+                                                     "resolution":  "Use the first tier where minDifficulty \u003c= run.difficulty and maxDifficulty is null or run.difficulty \u003c= maxDifficulty.",
+                                                     "tiers":  [
+                                                                   {
+                                                                       "id":  "normal",
+                                                                       "label":  "通常化",
+                                                                       "minDifficulty":  0,
+                                                                       "maxDifficulty":  2,
+                                                                       "nameSuffix":  null
+                                                                   },
+                                                                   {
+                                                                       "id":  "cold",
+                                                                       "label":  "寒冷化",
+                                                                       "minDifficulty":  3,
+                                                                       "maxDifficulty":  5,
+                                                                       "nameSuffix":  "α"
+                                                                   },
+                                                                   {
+                                                                       "id":  "frozen",
+                                                                       "label":  "凍土化",
+                                                                       "minDifficulty":  6,
+                                                                       "maxDifficulty":  8,
+                                                                       "nameSuffix":  "β"
+                                                                   },
+                                                                   {
+                                                                       "id":  "polar",
+                                                                       "label":  "極地化",
+                                                                       "minDifficulty":  9,
+                                                                       "maxDifficulty":  null,
+                                                                       "nameSuffix":  "γ"
+                                                                   }
+                                                               ]
+                                                 },
+                                    "is5_sarkaz":  {
+                                                       "campaignId":  "is5_sarkaz",
+                                                       "inputField":  "run.difficulty",
+                                                       "derivedField":  "run.difficultyTierId",
+                                                       "defaultTierId":  "realistic",
+                                                       "appliesTo":  "is5_sarkaz_relic_001..is5_sarkaz_relic_020",
+                                                       "sourceCategory":  "No.001〜020 多元化珍品",
+                                                       "resolution":  "Use the first tier where minDifficulty \u003c= run.difficulty and maxDifficulty is null or run.difficulty \u003c= maxDifficulty.",
+                                                       "tiers":  [
+                                                                     {
+                                                                         "id":  "realistic",
+                                                                         "label":  "現実的",
+                                                                         "minDifficulty":  0,
+                                                                         "maxDifficulty":  2,
+                                                                         "nameSuffix":  null
+                                                                     },
+                                                                     {
+                                                                         "id":  "original",
+                                                                         "label":  "独創的",
+                                                                         "minDifficulty":  3,
+                                                                         "maxDifficulty":  5,
+                                                                         "nameSuffix":  "α"
+                                                                     },
+                                                                     {
+                                                                         "id":  "fantastical",
+                                                                         "label":  "幻想的",
+                                                                         "minDifficulty":  6,
+                                                                         "maxDifficulty":  8,
+                                                                         "nameSuffix":  "β"
+                                                                     },
+                                                                     {
+                                                                         "id":  "imaginary",
+                                                                         "label":  "空想的",
+                                                                         "minDifficulty":  9,
+                                                                         "maxDifficulty":  null,
+                                                                         "nameSuffix":  "γ"
+                                                                     }
+                                                                 ]
+                                                   },
+                                    "is6_sui":  {
+                                                    "campaignId":  "is6_sui",
+                                                    "inputField":  "run.difficulty",
+                                                    "derivedField":  "run.difficultyTierId",
+                                                    "defaultTierId":  "modern",
+                                                    "appliesTo":  "is6_sui_relic_001..is6_sui_relic_015",
+                                                    "sourceCategory":  "No.001〜015 多元化珍品",
+                                                    "resolution":  "Use the first tier where minDifficulty \u003c= run.difficulty and maxDifficulty is null or run.difficulty \u003c= maxDifficulty.",
+                                                    "tiers":  [
+                                                                  {
+                                                                      "id":  "modern",
+                                                                      "label":  "現代",
+                                                                      "minDifficulty":  0,
+                                                                      "maxDifficulty":  2,
+                                                                      "nameSuffix":  null
+                                                                  },
+                                                                  {
+                                                                      "id":  "recent",
+                                                                      "label":  "近代",
+                                                                      "minDifficulty":  3,
+                                                                      "maxDifficulty":  5,
+                                                                      "nameSuffix":  "α"
+                                                                  },
+                                                                  {
+                                                                      "id":  "ancient",
+                                                                      "label":  "古代",
+                                                                      "minDifficulty":  6,
+                                                                      "maxDifficulty":  8,
+                                                                      "nameSuffix":  "β"
+                                                                  },
+                                                                  {
+                                                                      "id":  "prehistoric",
+                                                                      "label":  "先史",
+                                                                      "minDifficulty":  9,
+                                                                      "maxDifficulty":  null,
+                                                                      "nameSuffix":  "γ"
+                                                                  }
+                                                              ]
+                                                }
+                                }
+}

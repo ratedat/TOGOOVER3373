@@ -1,0 +1,25 @@
+{
+    "fileStorageListing":  [
+                               "total 20",
+                               "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-09-04 16:30 .",
+                               "drwxrws--- 12 u0_a38 ext_data_rw 4096 2026-06-22 11:34 ..",
+                               "-rw-rw----  1 u0_a38 ext_data_rw    0 2025-09-04 16:30 BattleLogNeedToUpload.json"
+                           ],
+    "orderListing":  [
+                         "total 140",
+                         "drwxrws---  2 u0_a38 ext_data_rw  4096 2025-05-02 13:52 .",
+                         "drwxrws--- 12 u0_a38 ext_data_rw  4096 2026-06-22 11:34 ..",
+                         "-rw-rw----  1 u0_a38 ext_data_rw 53248 2026-06-22 15:02 order.db",
+                         "-rw-rw----  1 u0_a38 ext_data_rw     0 2026-06-22 15:02 order.db-journal",
+                         "-rw-rw----  1 u0_a38 ext_data_rw 20480 2026-06-22 15:02 purchase.db",
+                         "-rw-rw----  1 u0_a38 ext_data_rw     0 2026-06-22 15:02 purchase.db-journal",
+                         "-rw-rw----  1 u0_a38 ext_data_rw 24576 2026-06-22 15:02 purchase_event.db",
+                         "-rw-rw----  1 u0_a38 ext_data_rw     0 2026-06-22 15:02 purchase_event.db-journal"
+                     ],
+    "hypergryphListing":  [
+                              "total 24",
+                              "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-04-08 17:41 .",
+                              "drwxrws--- 12 u0_a38 ext_data_rw 4096 2026-06-22 11:34 ..",
+                              "-rw-rw----  1 u0_a38 ext_data_rw   36 2026-06-22 21:23 guid"
+                          ]
+}

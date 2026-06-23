@@ -1,0 +1,675 @@
+{
+    "image":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-top-20260622-222718\\screenshot_latest.png",
+    "language":  "ja",
+    "text":  "炉 辺 畚 談 。 、 、 104 仮 説 集 HYPOTHESESCOMPUTON LV ・ 魂 の 交 流 守 則 CGO! 儀 式 保 存 館 NEW ー WITCHCRAFTARCHIVES 歴 史 再 編 59 投 資 シ ス テ ム 628 18 ー 魂 に 直 面 ト 探 検 開 始 ィ IN STORYWE GO 0 印 象 再 構 築 く X 〉 通 常 探 索 五 ロ 多 面 探 索 勲 章 シ リ ー ズ",
+    "lineCount":  20,
+    "lines":  [
+                  {
+                      "text":  "炉 辺 畚 談 。",
+                      "words":  [
+                                    {
+                                        "text":  "炉",
+                                        "x":  1003,
+                                        "y":  950,
+                                        "width":  136,
+                                        "height":  136
+                                    },
+                                    {
+                                        "text":  "辺",
+                                        "x":  1143,
+                                        "y":  955,
+                                        "width":  139,
+                                        "height":  130
+                                    },
+                                    {
+                                        "text":  "畚",
+                                        "x":  1283,
+                                        "y":  904,
+                                        "width":  138,
+                                        "height":  182
+                                    },
+                                    {
+                                        "text":  "談",
+                                        "x":  1426,
+                                        "y":  952,
+                                        "width":  133,
+                                        "height":  133
+                                    },
+                                    {
+                                        "text":  "。",
+                                        "x":  1619,
+                                        "y":  924,
+                                        "width":  3,
+                                        "height":  55
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "、 、 104 仮 説 集",
+                      "words":  [
+                                    {
+                                        "text":  "、",
+                                        "x":  2049,
+                                        "y":  104,
+                                        "width":  25,
+                                        "height":  16
+                                    },
+                                    {
+                                        "text":  "、",
+                                        "x":  2075,
+                                        "y":  116,
+                                        "width":  8,
+                                        "height":  7
+                                    },
+                                    {
+                                        "text":  "104",
+                                        "x":  2104,
+                                        "y":  88,
+                                        "width":  116,
+                                        "height":  50
+                                    },
+                                    {
+                                        "text":  "仮",
+                                        "x":  2245,
+                                        "y":  82,
+                                        "width":  45,
+                                        "height":  44
+                                    },
+                                    {
+                                        "text":  "説",
+                                        "x":  2294,
+                                        "y":  81,
+                                        "width":  44,
+                                        "height":  45
+                                    },
+                                    {
+                                        "text":  "集",
+                                        "x":  2341,
+                                        "y":  81,
+                                        "width":  46,
+                                        "height":  45
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "HYPOTHESESCOMPUTON",
+                      "words":  [
+                                    {
+                                        "text":  "HYPOTHESESCOMPUTON",
+                                        "x":  2221,
+                                        "y":  130,
+                                        "width":  246,
+                                        "height":  14
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "LV",
+                      "words":  [
+                                    {
+                                        "text":  "LV",
+                                        "x":  2150,
+                                        "y":  64,
+                                        "width":  29,
+                                        "height":  18
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "・ 魂 の 交 流 守 則",
+                      "words":  [
+                                    {
+                                        "text":  "・",
+                                        "x":  890,
+                                        "y":  72,
+                                        "width":  14,
+                                        "height":  14
+                                    },
+                                    {
+                                        "text":  "魂",
+                                        "x":  916,
+                                        "y":  64,
+                                        "width":  35,
+                                        "height":  34
+                                    },
+                                    {
+                                        "text":  "の",
+                                        "x":  955,
+                                        "y":  66,
+                                        "width":  33,
+                                        "height":  31
+                                    },
+                                    {
+                                        "text":  "交",
+                                        "x":  993,
+                                        "y":  64,
+                                        "width":  34,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "流",
+                                        "x":  1030,
+                                        "y":  64,
+                                        "width":  35,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "守",
+                                        "x":  1066,
+                                        "y":  64,
+                                        "width":  36,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "則",
+                                        "x":  1107,
+                                        "y":  64,
+                                        "width":  32,
+                                        "height":  35
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "CGO!",
+                      "words":  [
+                                    {
+                                        "text":  "CGO!",
+                                        "x":  62,
+                                        "y":  403,
+                                        "width":  142,
+                                        "height":  68
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "儀 式 保 存 館 NEW",
+                      "words":  [
+                                    {
+                                        "text":  "儀",
+                                        "x":  217,
+                                        "y":  440,
+                                        "width":  47,
+                                        "height":  46
+                                    },
+                                    {
+                                        "text":  "式",
+                                        "x":  267,
+                                        "y":  441,
+                                        "width":  45,
+                                        "height":  44
+                                    },
+                                    {
+                                        "text":  "保",
+                                        "x":  314,
+                                        "y":  439,
+                                        "width":  46,
+                                        "height":  46
+                                    },
+                                    {
+                                        "text":  "存",
+                                        "x":  362,
+                                        "y":  440,
+                                        "width":  46,
+                                        "height":  46
+                                    },
+                                    {
+                                        "text":  "館",
+                                        "x":  409,
+                                        "y":  441,
+                                        "width":  46,
+                                        "height":  44
+                                    },
+                                    {
+                                        "text":  "NEW",
+                                        "x":  457,
+                                        "y":  450,
+                                        "width":  87,
+                                        "height":  27
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "ー WITCHCRAFTARCHIVES",
+                      "words":  [
+                                    {
+                                        "text":  "ー",
+                                        "x":  195,
+                                        "y":  495,
+                                        "width":  2,
+                                        "height":  9
+                                    },
+                                    {
+                                        "text":  "WITCHCRAFTARCHIVES",
+                                        "x":  236,
+                                        "y":  489,
+                                        "width":  236,
+                                        "height":  14
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "歴 史 再 編",
+                      "words":  [
+                                    {
+                                        "text":  "歴",
+                                        "x":  219,
+                                        "y":  695,
+                                        "width":  40,
+                                        "height":  38
+                                    },
+                                    {
+                                        "text":  "史",
+                                        "x":  260,
+                                        "y":  694,
+                                        "width":  38,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "再",
+                                        "x":  300,
+                                        "y":  696,
+                                        "width":  38,
+                                        "height":  41
+                                    },
+                                    {
+                                        "text":  "編",
+                                        "x":  339,
+                                        "y":  694,
+                                        "width":  39,
+                                        "height":  42
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "59",
+                      "words":  [
+                                    {
+                                        "text":  "59",
+                                        "x":  251,
+                                        "y":  745,
+                                        "width":  49,
+                                        "height":  33
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "投 資 シ ス テ ム",
+                      "words":  [
+                                    {
+                                        "text":  "投",
+                                        "x":  139,
+                                        "y":  891,
+                                        "width":  41,
+                                        "height":  42
+                                    },
+                                    {
+                                        "text":  "資",
+                                        "x":  183,
+                                        "y":  892,
+                                        "width":  38,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "シ",
+                                        "x":  227,
+                                        "y":  897,
+                                        "width":  33,
+                                        "height":  32
+                                    },
+                                    {
+                                        "text":  "ス",
+                                        "x":  261,
+                                        "y":  897,
+                                        "width":  35,
+                                        "height":  31
+                                    },
+                                    {
+                                        "text":  "テ",
+                                        "x":  299,
+                                        "y":  896,
+                                        "width":  35,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "ム",
+                                        "x":  333,
+                                        "y":  897,
+                                        "width":  33,
+                                        "height":  31
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "628",
+                      "words":  [
+                                    {
+                                        "text":  "628",
+                                        "x":  183,
+                                        "y":  953,
+                                        "width":  75,
+                                        "height":  32
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "18 ー 魂 に 直 面",
+                      "words":  [
+                                    {
+                                        "text":  "18",
+                                        "x":  2154,
+                                        "y":  965,
+                                        "width":  43,
+                                        "height":  32
+                                    },
+                                    {
+                                        "text":  "ー",
+                                        "x":  2209,
+                                        "y":  980,
+                                        "width":  41,
+                                        "height":  5
+                                    },
+                                    {
+                                        "text":  "魂",
+                                        "x":  2266,
+                                        "y":  964,
+                                        "width":  32,
+                                        "height":  33
+                                    },
+                                    {
+                                        "text":  "に",
+                                        "x":  2304,
+                                        "y":  966,
+                                        "width":  28,
+                                        "height":  30
+                                    },
+                                    {
+                                        "text":  "直",
+                                        "x":  2338,
+                                        "y":  964,
+                                        "width":  32,
+                                        "height":  33
+                                    },
+                                    {
+                                        "text":  "面",
+                                        "x":  2374,
+                                        "y":  965,
+                                        "width":  32,
+                                        "height":  32
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "ト 探 検 開 始 ィ",
+                      "words":  [
+                                    {
+                                        "text":  "ト",
+                                        "x":  2127,
+                                        "y":  1189,
+                                        "width":  40,
+                                        "height":  39
+                                    },
+                                    {
+                                        "text":  "探",
+                                        "x":  2170,
+                                        "y":  1154,
+                                        "width":  71,
+                                        "height":  70
+                                    },
+                                    {
+                                        "text":  "検",
+                                        "x":  2242,
+                                        "y":  1154,
+                                        "width":  71,
+                                        "height":  70
+                                    },
+                                    {
+                                        "text":  "開",
+                                        "x":  2318,
+                                        "y":  1156,
+                                        "width":  65,
+                                        "height":  68
+                                    },
+                                    {
+                                        "text":  "始",
+                                        "x":  2388,
+                                        "y":  1155,
+                                        "width":  69,
+                                        "height":  69
+                                    },
+                                    {
+                                        "text":  "ィ",
+                                        "x":  2458,
+                                        "y":  1189,
+                                        "width":  40,
+                                        "height":  38
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "IN STORYWE GO 0",
+                      "words":  [
+                                    {
+                                        "text":  "IN",
+                                        "x":  2144,
+                                        "y":  1230,
+                                        "width":  45,
+                                        "height":  31
+                                    },
+                                    {
+                                        "text":  "STORYWE",
+                                        "x":  2203,
+                                        "y":  1230,
+                                        "width":  198,
+                                        "height":  31
+                                    },
+                                    {
+                                        "text":  "GO",
+                                        "x":  2413,
+                                        "y":  1230,
+                                        "width":  66,
+                                        "height":  37
+                                    },
+                                    {
+                                        "text":  "0",
+                                        "x":  2521,
+                                        "y":  1228,
+                                        "width":  20,
+                                        "height":  21
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "印 象 再 構 築",
+                      "words":  [
+                                    {
+                                        "text":  "印",
+                                        "x":  426,
+                                        "y":  1108,
+                                        "width":  39,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "象",
+                                        "x":  468,
+                                        "y":  1106,
+                                        "width":  41,
+                                        "height":  42
+                                    },
+                                    {
+                                        "text":  "再",
+                                        "x":  511,
+                                        "y":  1108,
+                                        "width":  42,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "構",
+                                        "x":  555,
+                                        "y":  1107,
+                                        "width":  41,
+                                        "height":  41
+                                    },
+                                    {
+                                        "text":  "築",
+                                        "x":  600,
+                                        "y":  1107,
+                                        "width":  41,
+                                        "height":  40
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "く X 〉 通 常 探 索",
+                      "words":  [
+                                    {
+                                        "text":  "く",
+                                        "x":  1576,
+                                        "y":  1297,
+                                        "width":  25,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "X",
+                                        "x":  1597,
+                                        "y":  1290,
+                                        "width":  54,
+                                        "height":  53
+                                    },
+                                    {
+                                        "text":  "〉",
+                                        "x":  1647,
+                                        "y":  1297,
+                                        "width":  25,
+                                        "height":  39
+                                    },
+                                    {
+                                        "text":  "通",
+                                        "x":  1686,
+                                        "y":  1298,
+                                        "width":  40,
+                                        "height":  39
+                                    },
+                                    {
+                                        "text":  "常",
+                                        "x":  1731,
+                                        "y":  1297,
+                                        "width":  38,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "探",
+                                        "x":  1774,
+                                        "y":  1297,
+                                        "width":  40,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "索",
+                                        "x":  1818,
+                                        "y":  1297,
+                                        "width":  40,
+                                        "height":  40
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "五 ロ",
+                      "words":  [
+                                    {
+                                        "text":  "五",
+                                        "x":  1234,
+                                        "y":  1302,
+                                        "width":  19,
+                                        "height":  17
+                                    },
+                                    {
+                                        "text":  "ロ",
+                                        "x":  1235,
+                                        "y":  1322,
+                                        "width":  17,
+                                        "height":  13
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "多 面 探 索",
+                      "words":  [
+                                    {
+                                        "text":  "多",
+                                        "x":  783,
+                                        "y":  1297,
+                                        "width":  38,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "面",
+                                        "x":  826,
+                                        "y":  1299,
+                                        "width":  39,
+                                        "height":  38
+                                    },
+                                    {
+                                        "text":  "探",
+                                        "x":  870,
+                                        "y":  1297,
+                                        "width":  40,
+                                        "height":  40
+                                    },
+                                    {
+                                        "text":  "索",
+                                        "x":  914,
+                                        "y":  1297,
+                                        "width":  40,
+                                        "height":  40
+                                    }
+                                ]
+                  },
+                  {
+                      "text":  "勲 章 シ リ ー ズ",
+                      "words":  [
+                                    {
+                                        "text":  "勲",
+                                        "x":  234,
+                                        "y":  1291,
+                                        "width":  33,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "章",
+                                        "x":  271,
+                                        "y":  1291,
+                                        "width":  33,
+                                        "height":  35
+                                    },
+                                    {
+                                        "text":  "シ",
+                                        "x":  309,
+                                        "y":  1293,
+                                        "width":  30,
+                                        "height":  32
+                                    },
+                                    {
+                                        "text":  "リ",
+                                        "x":  344,
+                                        "y":  1293,
+                                        "width":  22,
+                                        "height":  32
+                                    },
+                                    {
+                                        "text":  "ー",
+                                        "x":  372,
+                                        "y":  1305,
+                                        "width":  31,
+                                        "height":  6
+                                    },
+                                    {
+                                        "text":  "ズ",
+                                        "x":  405,
+                                        "y":  1290,
+                                        "width":  34,
+                                        "height":  35
+                                    }
+                                ]
+                  }
+              ]
+}

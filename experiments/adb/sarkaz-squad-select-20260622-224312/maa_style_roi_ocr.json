@@ -1,0 +1,90 @@
+{
+    "createdAt":  "2026-06-22T22:53:15",
+    "items":  [
+                  {
+                      "name":  "maa_hijack_squad_scaled",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\maa_hijack_squad_scaled.png",
+                                  "text":  "霊 魂 護 送 分 隊 新 エ リ ア に 入 る た び 、 妙 博 学 多 識 分 隊 初 期 負 荷 臨 界 点 + 10 、 位 置 測 定 分 隊 ス ポ ッ ト 更 新 回 数 + 1 、 初 期 指 揮 分 隊 最 大 耐 久 値 + 5 、 戦 闘 終 編 成 上 限 +.",
+                                  "lines":  [
+                                                "霊 魂 護 送 分 隊",
+                                                "新 エ リ ア に 入 る た び 、 妙",
+                                                "博 学 多 識 分 隊",
+                                                "初 期 負 荷 臨 界 点 + 10 、",
+                                                "位 置 測 定 分 隊",
+                                                "ス ポ ッ ト 更 新 回 数 + 1 、 初 期",
+                                                "指 揮 分 隊",
+                                                "最 大 耐 久 値 + 5 、 戦 闘 終",
+                                                "編 成 上 限 +."
+                                            ]
+                              }
+                  },
+                  {
+                      "name":  "squad_card_1",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\squad_card_1.png",
+                                  "text":  "霊 魂 護 送 分 隊 新 エ リ ア に 入 る た び 、 妙 想 + 2 、 負 荷 臨 界 点 + 1",
+                                  "lines":  [
+                                                "霊 魂 護 送 分 隊",
+                                                "新 エ リ ア に 入 る た び 、 妙",
+                                                "想 + 2 、 負 荷 臨 界 点 + 1"
+                                            ]
+                              }
+                  },
+                  {
+                      "name":  "squad_card_2",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\squad_card_2.png",
+                                  "text":  "博 学 多 識 分 隊 初 期 負 荷 臨 界 点 + IO 、 初 期 希 望 + 2",
+                                  "lines":  [
+                                                "博 学 多 識 分 隊",
+                                                "初 期 負 荷 臨 界 点 + IO 、",
+                                                "初 期 希 望 + 2"
+                                            ]
+                              }
+                  },
+                  {
+                      "name":  "squad_card_3",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\squad_card_3.png",
+                                  "text":  "位 置 測 定 分 隊 ス ポ ッ ト 更 新 回 数 + 1 、 初 期 構 想 + 1 。 各 ス ポ ッ ト の 初 回 更 新 時 に 構 想 を 消 費 し な い",
+                                  "lines":  [
+                                                "位 置 測 定 分 隊",
+                                                "ス ポ ッ ト 更 新 回 数 + 1 、 初 期",
+                                                "構 想 + 1 。 各 ス ポ ッ ト の 初 回",
+                                                "更 新 時 に 構 想 を 消 費 し な い"
+                                            ]
+                              }
+                  },
+                  {
+                      "name":  "squad_card_4",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\squad_card_4.png",
+                                  "text":  "指 揮 分 隊 最 大 耐 久 値 + 5 、 戦 闘 終 了 時 に 追 加 で 耐 久 値 を 1 回 復 す る 編 成 上 限 + 人 数 + 2 。 ス 予 備 隊 フ",
+                                  "lines":  [
+                                                "指 揮 分 隊",
+                                                "最 大 耐 久 値 + 5 、 戦 闘 終",
+                                                "了 時 に 追 加 で 耐 久 値 を 1",
+                                                "回 復 す る",
+                                                "編 成 上 限 +",
+                                                "人 数 + 2 。",
+                                                "ス 予 備 隊 フ"
+                                            ]
+                              }
+                  },
+                  {
+                      "name":  "squad_title_and_status",
+                      "ocr":  {
+                                  "path":  "O:\\Arknights_Rogue_OBSTool\\experiments\\adb\\sarkaz-squad-select-20260622-224312\\maa_style_roi_crops\\squad_title_and_status.png",
+                                  "text":  "指 揮 Lv 当 ー 分 隊 選 択 4 / 4 0 / 10",
+                                  "lines":  [
+                                                "指 揮 Lv",
+                                                "当 ー",
+                                                "分 隊 選 択",
+                                                "4 / 4",
+                                                "0 / 10"
+                                            ]
+                              }
+                  }
+              ]
+}

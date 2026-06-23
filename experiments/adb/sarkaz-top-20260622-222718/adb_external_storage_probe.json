@@ -1,0 +1,72 @@
+{
+    "base":  "/sdcard/Android/data/com.YoStarJP.Arknights/files",
+    "topLevelListing":  [
+                            "total 104",
+                            "drwxrws--- 12 u0_a38 ext_data_rw 4096 2026-06-22 11:34 .",
+                            "drwxrws---  3 u0_a38 ext_data_rw 4096 2026-06-22 21:23 ..",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-06-05 15:07 .preset_thumbnail",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2026-04-02 16:08 BattleLog",
+                            "drwxrws--- 27 u0_a38 ext_data_rw 4096 2026-06-22 11:35 Bundles",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-04-08 17:41 Cookies",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-09-04 16:30 FileStorage",
+                            "drwxrws---  4 u0_a38 ext_data_rw 4096 2025-04-08 17:41 HGGameUpdate",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-04-08 17:41 HTTPCache",
+                            "-rw-rw----  1 u0_a38 ext_data_rw   16 2026-06-22 11:35 Library",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-04-08 17:41 hypergryph",
+                            "drwxr-s---  4 u0_a38 ext_data_rw 4096 2026-06-22 11:34 il2cpp",
+                            "drwxrws---  2 u0_a38 ext_data_rw 4096 2025-05-02 13:52 order"
+                        ],
+    "diskUsageDepth2":  [
+                            "132K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/order",
+                            "352K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/il2cpp/Resources",
+                            "36M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/il2cpp/Metadata",
+                            "37M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/il2cpp",
+                            "12K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/FileStorage",
+                            "8.0K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/HTTPCache",
+                            "12K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/.preset_thumbnail",
+                            "16K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/hypergryph",
+                            "8.0K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/BattleLog",
+                            "16K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Cookies",
+                            "16K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/cutin",
+                            "15M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/shaders",
+                            "51M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/retro",
+                            "4.4G\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/audio",
+                            "7.1M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/prefabs",
+                            "249M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/spritepack",
+                            "1.0G\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/skinpack",
+                            "120K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/graphics",
+                            "10M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/battle",
+                            "252M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/ui",
+                            "3.3M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/pkgrps",
+                            "944K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/[[jp]]",
+                            "8.0K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/crisisv2seasons",
+                            "257M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/raw",
+                            "1.5G\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/avg",
+                            "8.0K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/charpack",
+                            "73M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/refs",
+                            "967M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/chararts",
+                            "536K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/crisisv2longterm",
+                            "45M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/anon",
+                            "52K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/config",
+                            "193M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/building",
+                            "4.4G\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/scenes",
+                            "65M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/activity",
+                            "904M\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles/arts",
+                            "14G\t/sdcard/Android/data/com.YoStarJP.Arknights/files/Bundles",
+                            "16K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/HGGameUpdate/HGDownload",
+                            "8.0K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/HGGameUpdate/gameupdate",
+                            "32K\t/sdcard/Android/data/com.YoStarJP.Arknights/files/HGGameUpdate",
+                            "15G\t/sdcard/Android/data/com.YoStarJP.Arknights/files"
+                        ],
+    "battleLogListing":  [
+                             "total 16",
+                             "drwxrws---  2 u0_a38 ext_data_rw 4096 2026-04-02 16:08 .",
+                             "drwxrws--- 12 u0_a38 ext_data_rw 4096 2026-06-22 11:34 .."
+                         ],
+    "fileStorageFiles":  [
+                             "find: bad arg \u0027-ls\u0027"
+                         ],
+    "orderFiles":  [
+                       "find: bad arg \u0027-ls\u0027"
+                   ]
+}

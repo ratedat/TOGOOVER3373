@@ -1,0 +1,101 @@
+[
+  {
+    "id": "is2_phantom",
+    "number": 2,
+    "title": "ファントムと緋き貴石",
+    "fullTitle": "統合戦略#2「ファントムと緋き貴石」",
+    "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%83%95%E3%82%A1%E3%83%B3%E3%83%88%E3%83%A0%E3%81%A8%E7%B7%8B%E3%81%8D%E8%B2%B4%E7%9F%B3%E3%80%8D",
+    "specialFields": [],
+    "bossFlags": {
+      "derivedFromRelics": true,
+      "manualOverride": true
+    }
+  },
+  {
+    "id": "is3_mizuki",
+    "number": 3,
+    "title": "ミヅキと紺碧の樹",
+    "fullTitle": "統合戦略#3「ミヅキと紺碧の樹」",
+    "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%83%9F%E3%83%85%E3%82%AD%E3%81%A8%E7%B4%BA%E7%A2%A7%E3%81%AE%E6%A8%B9%E3%80%8D",
+    "specialFields": [
+      {
+        "id": "rejectionReaction",
+        "label": "拒絶反応",
+        "type": "text"
+      }
+    ],
+    "bossFlags": {
+      "derivedFromRelics": true,
+      "manualOverride": true
+    }
+  },
+  {
+    "id": "is4_sami",
+    "number": 4,
+    "title": "探索者と銀氷の果て",
+    "fullTitle": "統合戦略#4「探索者と銀氷の果て」",
+    "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%8E%A2%E7%B4%A2%E8%80%85%E3%81%A8%E9%8A%80%E6%B0%B7%E3%81%AE%E6%9E%9C%E3%81%A6%E3%80%8D",
+    "specialFields": [
+      {
+        "id": "paradox",
+        "label": "パラドックス",
+        "type": "number"
+      },
+      {
+        "id": "revelation",
+        "label": "啓示",
+        "type": "text"
+      },
+      {
+        "id": "collapseValue",
+        "label": "崩壊値",
+        "type": "number"
+      }
+    ],
+    "bossFlags": {
+      "derivedFromRelics": true,
+      "manualOverride": true
+    }
+  },
+  {
+    "id": "is5_sarkaz",
+    "number": 5,
+    "title": "サルカズの炉辺奇談",
+    "fullTitle": "統合戦略#5「サルカズの炉辺奇談」",
+    "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D",
+    "specialFields": [
+      {
+        "id": "thought",
+        "label": "思案",
+        "type": "number"
+      },
+      {
+        "id": "age",
+        "label": "時代",
+        "type": "text"
+      }
+    ],
+    "bossFlags": {
+      "derivedFromRelics": true,
+      "manualOverride": true
+    }
+  },
+  {
+    "id": "is6_sui",
+    "number": 6,
+    "title": "歳の界園志異",
+    "fullTitle": "統合戦略#6「歳の界園志異」",
+    "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D",
+    "specialFields": [
+      {
+        "id": "coins",
+        "label": "銭",
+        "type": "number"
+      }
+    ],
+    "bossFlags": {
+      "derivedFromRelics": true,
+      "manualOverride": true
+    }
+  }
+]

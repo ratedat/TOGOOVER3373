@@ -1,0 +1,73 @@
+{
+  "version": 1,
+  "meta": {
+    "purpose": "Campaign difficulty grade extraction config. Add or update campaigns here, then run tools/extract-difficulty-grades.ps1.",
+    "sourceConfig": "data/wikiru-campaign-sources.json"
+  },
+  "campaigns": [
+    {
+      "id": "is2_phantom",
+      "difficultyName": "正式調査",
+      "minSelectableGrade": 1,
+      "maxSelectableGrade": 15,
+      "tableStyle": "mode-grade",
+      "fields": [
+        { "key": "condition", "label": "追加条件", "index": 2 },
+        { "key": "scoreMultiplier", "label": "スコア倍率", "index": 3 }
+      ]
+    },
+    {
+      "id": "is3_mizuki",
+      "difficultyName": "波瀾万丈",
+      "minSelectableGrade": 1,
+      "maxSelectableGrade": 18,
+      "tableStyle": "mode-grade",
+      "fields": [
+        { "key": "condition", "label": "追加条件", "index": 2 },
+        { "key": "enemyStrength", "label": "敵の強さ", "index": 3 },
+        { "key": "scoreMultiplier", "label": "スコア倍率", "index": 4 }
+      ]
+    },
+    {
+      "id": "is4_sami",
+      "difficultyName": "自然の猛威",
+      "minSelectableGrade": 1,
+      "maxSelectableGrade": 15,
+      "tableStyle": "grade-only",
+      "fields": [
+        { "key": "condition", "label": "追加条件", "index": 1 },
+        { "key": "enemyStrength", "label": "敵の強さ", "index": 2 },
+        { "key": "scoreMultiplier", "label": "スコア倍率", "index": 3 },
+        { "key": "rhetoricRate", "label": "修辞付与確率", "index": 4 }
+      ]
+    },
+    {
+      "id": "is5_sarkaz",
+      "difficultyName": "魂に直面",
+      "minSelectableGrade": 1,
+      "maxSelectableGrade": 18,
+      "tableStyle": "grade-only",
+      "fields": [
+        { "key": "condition", "label": "追加条件", "index": 1 },
+        { "key": "scoreMultiplier", "label": "スコア倍率", "index": 2 },
+        { "key": "enemyStrength", "label": "敵の強さ", "index": 3 },
+        { "key": "ageProgress", "label": "時代進度", "index": 4 },
+        { "key": "thoughtLoad", "label": "思考負荷", "index": 5 }
+      ]
+    },
+    {
+      "id": "is6_sui",
+      "difficultyName": "迎客入園",
+      "minSelectableGrade": 1,
+      "maxSelectableGrade": 15,
+      "tableStyle": "grade-only",
+      "fields": [
+        { "key": "condition", "label": "追加条件", "index": 1 },
+        { "key": "scoreMultiplier", "label": "スコア倍率", "index": 2 },
+        { "key": "enemyStrength", "label": "敵の強さ", "index": 3 },
+        { "key": "suiTime", "label": "歳時", "index": 4 },
+        { "key": "stateChangeRate", "label": "状態変化率", "index": 5 }
+      ]
+    }
+  ]
+}

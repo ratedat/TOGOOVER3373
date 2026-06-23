@@ -1,0 +1,231 @@
+{
+    "version":  1,
+    "meta":  {
+                 "purpose":  "Example normalized rules layered over data/relics.json. Full normalization can be manual, semi-automatic, or generated later.",
+                 "sourceData":  "data/relics.json"
+             },
+    "ruleShape":  {
+                      "source":  "kind + relicId or squadOptionId + sourceText",
+                      "status":  "verified | draft | generated | unparsed | ignored",
+                      "effects":  "one source text may produce multiple calculation effects"
+                  },
+    "rules":  [
+                  {
+                      "id":  "example_is2_phantom_relic_001",
+                      "source":  {
+                                     "kind":  "relic",
+                                     "relicId":  "is2_phantom_relic_001",
+                                     "sourceText":  "耐久値+2、希望+1"
+                                 },
+                      "status":  "verified_example",
+                      "effects":  [
+                                      {
+                                          "domain":  "run_resource",
+                                          "target":  {
+                                                         "kind":  "run"
+                                                     },
+                                          "stat":  "life",
+                                          "operation":  "add",
+                                          "value":  2,
+                                          "phase":  "run_start"
+                                      },
+                                      {
+                                          "domain":  "run_resource",
+                                          "target":  {
+                                                         "kind":  "run"
+                                                     },
+                                          "stat":  "hope",
+                                          "operation":  "add",
+                                          "value":  1,
+                                          "phase":  "run_start"
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "example_is3_mizuki_relic_001",
+                      "source":  {
+                                     "kind":  "relic",
+                                     "relicId":  "is3_mizuki_relic_001",
+                                     "sourceText":  "編成上限+1、味方全員が1秒につきHPを3回復"
+                                 },
+                      "status":  "verified_example",
+                      "effects":  [
+                                      {
+                                          "domain":  "squad_capacity",
+                                          "target":  {
+                                                         "kind":  "run"
+                                                     },
+                                          "stat":  "squadSize",
+                                          "operation":  "add",
+                                          "value":  1,
+                                          "phase":  "always"
+                                      },
+                                      {
+                                          "domain":  "operator_stat",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "*"
+                                                                     ]
+                                                     },
+                                          "stat":  "hpRegenPerSecond",
+                                          "operation":  "add",
+                                          "value":  3,
+                                          "unit":  "hp_per_second",
+                                          "phase":  "during_battle"
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "example_is2_phantom_relic_018",
+                      "source":  {
+                                     "kind":  "relic",
+                                     "relicId":  "is2_phantom_relic_018",
+                                     "sourceText":  "【前衛】1名を昇進させる（希望を消費しない）"
+                                 },
+                      "status":  "verified_example",
+                      "effects":  [
+                                      {
+                                          "domain":  "recruitment",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "guard"
+                                                                     ]
+                                                     },
+                                          "stat":  "promotionCost",
+                                          "operation":  "free_promote",
+                                          "value":  1,
+                                          "limit":  {
+                                                        "count":  1
+                                                    },
+                                          "phase":  "promote"
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "example_is5_sarkaz_mimic_01",
+                      "source":  {
+                                     "kind":  "squad_random_option",
+                                     "squadOptionId":  "is5_sarkaz_mimic_01"
+                                 },
+                      "status":  "verified_example",
+                      "effects":  [
+                                      {
+                                          "domain":  "recruitment",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "guard"
+                                                                     ],
+                                                         "rarity":  {
+                                                                        "min":  4
+                                                                    }
+                                                     },
+                                          "stat":  "recruitHopeCost",
+                                          "operation":  "add",
+                                          "value":  -2,
+                                          "phase":  "recruit"
+                                      },
+                                      {
+                                          "domain":  "recruitment",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "guard"
+                                                                     ],
+                                                         "rarity":  {
+                                                                        "min":  4
+                                                                    }
+                                                     },
+                                          "stat":  "promotionCost",
+                                          "operation":  "add",
+                                          "value":  -1,
+                                          "phase":  "promote"
+                                      },
+                                      {
+                                          "domain":  "recruitment",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "guard"
+                                                                     ]
+                                                     },
+                                          "stat":  "firstRecruitPromoted",
+                                          "operation":  "set",
+                                          "value":  true,
+                                          "phase":  "recruit"
+                                      },
+                                      {
+                                          "domain":  "run_resource",
+                                          "target":  {
+                                                         "kind":  "run"
+                                                     },
+                                          "stat":  "startingRelic",
+                                          "operation":  "grant",
+                                          "value":  "生還者の契約",
+                                          "phase":  "run_start"
+                                      }
+                                  ]
+                  },
+                  {
+                      "id":  "example_is4_sami_relic_001_polar",
+                      "source":  {
+                                     "kind":  "relic",
+                                     "relicId":  "is4_sami_relic_001",
+                                     "variantTierId":  "polar",
+                                     "sourceText":  "同時配置可能人数+1、味方全員の防御力+6%、配置中の味方ユニット1名につき追加で防御力+0.5%"
+                                 },
+                      "status":  "verified_example",
+                      "conditions":  {
+                                         "campaignId":  "is4_sami",
+                                         "difficultyTierId":  "polar",
+                                         "difficulty":  {
+                                                            "min":  9,
+                                                            "max":  null
+                                                        }
+                                     },
+                      "effects":  [
+                                      {
+                                          "domain":  "run_resource",
+                                          "target":  {
+                                                         "kind":  "run"
+                                                     },
+                                          "stat":  "deploymentLimit",
+                                          "operation":  "add",
+                                          "value":  1,
+                                          "phase":  "always"
+                                      },
+                                      {
+                                          "domain":  "operator_stat",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "*"
+                                                                     ]
+                                                     },
+                                          "stat":  "def",
+                                          "operation":  "add_percent",
+                                          "value":  6,
+                                          "unit":  "percent",
+                                          "phase":  "during_battle"
+                                      },
+                                      {
+                                          "domain":  "operator_stat",
+                                          "target":  {
+                                                         "kind":  "operator",
+                                                         "classes":  [
+                                                                         "*"
+                                                                     ]
+                                                     },
+                                          "stat":  "def",
+                                          "operation":  "add_percent_per_deployed_unit",
+                                          "value":  0.5,
+                                          "unit":  "percent",
+                                          "phase":  "during_battle",
+                                          "dynamicContext":  "deployedAlliedUnitCount"
+                                      }
+                                  ]
+                  }
+              ]
+}

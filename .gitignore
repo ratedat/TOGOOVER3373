@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.venv/
+venv/
+
+# Build outputs
+dist/
+build/
+out/
+coverage/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Local environment
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local captures and generated screenshots
+captures/
+screenshots/
+tmp/
+temp/
+
+# Runtime local state
+data/current-state.json
+# Local ADB/OCR experiments
+experiments/adb/**/screenshot*.png
+experiments/adb/**/bench_*.png
+# Local agent/project planning files
+AGENTS.md
+CLAUDE.md
+PLANS.md

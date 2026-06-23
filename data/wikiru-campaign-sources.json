@@ -1,0 +1,38 @@
+{
+    "version":  1,
+    "meta":  {
+                 "purpose":  "Campaign wiki source list for data extraction. Add future IS campaigns here before running tools/extract-wikiru-data.ps1."
+             },
+    "campaigns":  [
+                      {
+                          "id":  "is2_phantom",
+                          "number":  2,
+                          "title":  "ファントムと緋き貴石",
+                          "page":  "統合戦略「ファントムと緋き貴石」"
+                      },
+                      {
+                          "id":  "is3_mizuki",
+                          "number":  3,
+                          "title":  "ミヅキと紺碧の樹",
+                          "page":  "統合戦略「ミヅキと紺碧の樹」"
+                      },
+                      {
+                          "id":  "is4_sami",
+                          "number":  4,
+                          "title":  "探索者と銀氷の果て",
+                          "page":  "統合戦略「探索者と銀氷の果て」"
+                      },
+                      {
+                          "id":  "is5_sarkaz",
+                          "number":  5,
+                          "title":  "サルカズの炉辺奇談",
+                          "page":  "統合戦略「サルカズの炉辺奇談」"
+                      },
+                      {
+                          "id":  "is6_sui",
+                          "number":  6,
+                          "title":  "歳の界園志異",
+                          "page":  "統合戦略「歳の界園志異」"
+                      }
+                  ]
+}
