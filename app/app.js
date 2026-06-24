@@ -1,4 +1,5 @@
 import { bossDisplaySubline, bossDisplayTitle, renderBossCard, renderBossChip } from "./components/boss.js";
+import { renderEffectList } from "./components/effects.js";
 import { bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
@@ -845,16 +846,6 @@ function getActiveEffects({ includeRelics = true, includeDifficulty = true, over
   return effects;
 }
 
-function renderEffectText(item) {
-  return `<span class="effect-text">${html(item.effect)}</span>`;
-}
-
-function renderEffectList(effects, className = "", emptyText = "発動効果はありません。") {
-  if (!effects.length) return `<div class="empty-state effect-empty">${html(emptyText)}</div>`;
-  return `<div class="effect-list ${className}">
-    ${effects.map((item) => `<div class="effect-row"><span class="effect-type">${html(item.type)}</span><strong class="effect-title">${html(item.title)}</strong>${renderEffectText(item)}</div>`).join("")}
-  </div>`;
-}
 
 function ensureStateShape() {
   state.run ||= {};
