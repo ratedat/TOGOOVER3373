@@ -7,9 +7,23 @@ $root = Split-Path -Parent (Split-Path -Parent (Split-Path -Parent $PSCommandPat
 $shell = New-Object -ComObject WScript.Shell
 Set-Location $root
 
+function Stop-StaleLocalServers {
+  $servers = Get-CimInstance Win32_Process -Filter "name = 'node.exe'" |
+    Where-Object { $_.CommandLine -match 'app[\\/]server\.mjs --port (5173|5174|5200)' }
+
+  foreach ($server in $servers) {
+    try {
+      Stop-Process -Id $server.ProcessId -Force -ErrorAction Stop
+    } catch {
+      # Best effort only. A stale process should not block the normal launcher path.
+    }
+  }
+}
 function Show-Message($message, $title = "Arknights Rogue OBS Tool", $icon = 64) {
   $shell.Popup($message, 0, $title, $icon) | Out-Null
 }
+
+Stop-StaleLocalServers
 
 if (-not (Get-Command npm.cmd -ErrorAction SilentlyContinue)) {
   Show-Message "Node.js / npm が見つかりません。配布版の exe を使うか、開発用に Node.js をインストールしてください。" "起動できません" 16

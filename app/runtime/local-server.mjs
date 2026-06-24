@@ -52,7 +52,7 @@ export function waitForReady(url, attempts = 60) {
     const probe = () => {
       const req = http.get(url, (res) => {
         res.resume();
-        if (res.statusCode && res.statusCode < 500) return resolve();
+        if (res.statusCode && res.statusCode >= 200 && res.statusCode < 400) return resolve();
         retry();
       });
       req.setTimeout(500, () => {
