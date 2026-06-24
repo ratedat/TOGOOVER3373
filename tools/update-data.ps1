@@ -1,4 +1,4 @@
-﻿param(
+param(
   [string]$ProjectRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path,
   [ValidateSet('All', 'Campaigns', 'Performances', 'SelectableEffects', 'DifficultyVariants', 'DifficultyGrades', 'RelicImages', 'Operators', 'ReviewPages')]
   [string[]]$Scope = @('All'),
@@ -29,6 +29,7 @@ $DataFiles = @(
   'wikiru-operator-sources.json',
   'performance-sources.json',
   'selectable-effect-sources.json',
+  'special-item-sources.json',
   'selectable-effects.json',
   'difficulty-variant-sources.json',
   'difficulty-grade-sources.json',
@@ -112,6 +113,7 @@ foreach ($step in $steps) {
     }
     'SelectableEffects' {
       Invoke-ToolStep 'Selectable special effect extraction' 'extract-selectable-effects.ps1'
+      Invoke-ToolStep 'Special item extraction' 'extract-special-items.ps1'
       break
     }
     'DifficultyVariants' {

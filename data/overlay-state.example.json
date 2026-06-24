@@ -15,16 +15,19 @@
       },
       "is4_sami": {
         "paradox": null,
-        "revelation": null,
+        "revelation": [],
         "collapseValue": null,
-        "paradigmLost": {}
+        "paradigmLost": {},
+        "revelationOverlayVisible": false
       },
       "is5_sarkaz": {
-        "thought": null,
-        "age": null
+        "thought": [],
+        "age": null,
+        "thoughtOverlayVisible": false,
+        "idea": 0
       },
       "is6_sui": {
-        "coins": null,
+        "coins": [],
         "seasonalHours": {}
       }
     },

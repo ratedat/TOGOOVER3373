@@ -485,7 +485,20 @@
       {
         "id": "revelation",
         "label": "啓示板",
-        "type": "text"
+        "type": "effectStackLoadout",
+        "effectSlot": "revelationBoard",
+        "optionGroupLabels": [
+          "構成",
+          "本因"
+        ],
+        "unitLabel": "枚",
+        "stateLabel": "修辞",
+        "stateGroupLabels": [
+          "修辞"
+        ],
+        "emptyStateLabel": "修辞なし",
+        "overlayToggle": true,
+        "overlayToggleLabel": "OBS表示"
       }
     ],
     "bossFlags": {
@@ -756,7 +769,17 @@
       {
         "id": "thought",
         "label": "思案",
-        "type": "number"
+        "type": "effectMultiSelect",
+        "effectSlot": "thought",
+        "overlayToggle": true,
+        "overlayToggleLabel": "OBS表示",
+        "compact": true
+      },
+      {
+        "id": "idea",
+        "label": "構想",
+        "type": "number",
+        "min": 0
       },
       {
         "id": "age",
@@ -1193,8 +1216,10 @@
     "specialFields": [
       {
         "id": "coins",
-        "label": "銭",
-        "type": "number"
+        "label": "通宝",
+        "type": "coinLoadout",
+        "effectSlot": "coin",
+        "statusSlot": "coinStatus"
       },
       {
         "id": "seasonalHours",

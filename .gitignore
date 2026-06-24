@@ -46,3 +46,4 @@ PLANS.md
 review/update-runs/
 outputs/
 *.inspect.ndjson
+review/*.png

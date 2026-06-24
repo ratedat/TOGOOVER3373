@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "campaignId": "is4_sami",
+      "page": "統合戦略「探索者と銀氷の果て」",
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%8E%A2%E7%B4%A2%E8%80%85%E3%81%A8%E9%8A%80%E6%B0%B7%E3%81%AE%E6%9E%9C%E3%81%A6%E3%80%8D#foldartals",
+      "parser": "foldartal"
+    },
+    {
+      "campaignId": "is5_sarkaz",
+      "page": "統合戦略「サルカズの炉辺奇談」",
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E3%82%B5%E3%83%AB%E3%82%AB%E3%82%BA%E3%81%AE%E7%82%89%E8%BE%BA%E5%A5%87%E8%AB%87%E3%80%8D#mental_toil_list",
+      "parser": "sarkazThought"
+    },
+    {
+      "campaignId": "is6_sui",
+      "page": "統合戦略「歳の界園志異」",
+      "sourceUrl": "https://arknights.wikiru.jp/?%E7%B5%B1%E5%90%88%E6%88%A6%E7%95%A5%E3%80%8C%E6%AD%B3%E3%81%AE%E7%95%8C%E5%9C%92%E5%BF%97%E7%95%B0%E3%80%8D#copper",
+      "parser": "suiCoin"
+    }
+  ]
+}

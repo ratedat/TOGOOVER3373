@@ -126,6 +126,158 @@ function asSpecialObject(value) {
   return {};
 }
 
+function clampSpecialNumber(value, min = null, max = null) {
+  if (value === null || value === undefined || value === "") return null;
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return null;
+  const hasMin = min !== null && min !== undefined && min !== "";
+  const hasMax = max !== null && max !== undefined && max !== "";
+  const lower = hasMin && Number.isFinite(Number(min)) ? Number(min) : -Infinity;
+  const upper = hasMax && Number.isFinite(Number(max)) ? Number(max) : Infinity;
+  return Math.round(Math.max(lower, Math.min(upper, numeric)));
+}
+
+function clampCoinCount(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return 1;
+  return Math.max(1, Math.min(99, Math.round(numeric)));
+}
+
+const coinFaceLabels = {
+  front: "表",
+  back: "裏",
+};
+
+function normalizeCoinFace(value) {
+  return value === "back" ? "back" : "front";
+}
+
+function asCoinEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => {
+    if (typeof entry === "string") return { coinId: entry, count: 1, statusId: null, face: "front" };
+    if (!entry || typeof entry !== "object") return null;
+    return {
+      coinId: entry.coinId || entry.id || null,
+      count: clampCoinCount(entry.count),
+      statusId: entry.statusId || entry.status || null,
+      face: normalizeCoinFace(entry.face),
+    };
+  }).filter((entry) => entry?.coinId);
+}
+
+function coinEntryKey(entry) {
+  return `${entry.coinId}\u001f${entry.statusId || ""}\u001f${entry.face}`;
+}
+
+function mergeCoinEntries(entries) {
+  const merged = new Map();
+  for (const entry of asCoinEntries(entries)) {
+    const key = coinEntryKey(entry);
+    if (merged.has(key)) {
+      const current = merged.get(key);
+      current.count = clampCoinCount(current.count + entry.count);
+    } else {
+      merged.set(key, { ...entry, count: clampCoinCount(entry.count) });
+    }
+  }
+  return [...merged.values()];
+}
+
+function matchesGroupLabels(item, groupLabels) {
+  return !Array.isArray(groupLabels) || !groupLabels.length || groupLabels.includes(item.groupLabel || item.slotLabel || "");
+}
+
+function getConfiguredStackOptions(rawOptions) {
+  return (Array.isArray(rawOptions) ? rawOptions : []).map((option) => {
+    if (typeof option === "string") return { id: option, label: option, effect: "" };
+    const id = option?.id || option?.value || option?.label || option?.name;
+    if (!id) return null;
+    return { id: String(id), label: option.label || option.name || String(id), effect: option.effect || option.description || "" };
+  }).filter(Boolean);
+}
+
+function getStackEmptyStateId(field) {
+  return field.emptyStateId || "none";
+}
+
+function getStackStateOptions(field, campaignId = getCampaign()?.id) {
+  const configured = getConfiguredStackOptions(field?.stateOptions);
+  const stateSlot = field?.stateEffectSlot || field?.effectSlot || field?.id;
+  const dynamic = stateSlot && Array.isArray(field?.stateGroupLabels)
+    ? getCampaignSelectableEffects(campaignId, stateSlot)
+      .filter((item) => matchesGroupLabels(item, field.stateGroupLabels))
+      .map((item) => ({ id: item.id, label: item.name, effect: item.effect || "" }))
+    : [];
+  const options = [...configured, ...dynamic];
+  const unique = [...new Map(options.map((option) => [option.id, option])).values()];
+  const allowEmpty = field?.allowEmptyState !== false;
+  const empty = { id: getStackEmptyStateId(field), label: field?.emptyStateLabel || "なし", effect: "", empty: true };
+  if (!unique.length) return allowEmpty ? [empty] : [{ id: "normal", label: "通常", effect: "" }];
+  return allowEmpty ? [empty, ...unique.filter((option) => option.id !== empty.id)] : unique;
+}
+
+function normalizeStackState(field, value, campaignId = getCampaign()?.id) {
+  const options = getStackStateOptions(field, campaignId);
+  const raw = value === null || value === undefined || value === "" ? "" : String(value);
+  return options.some((option) => option.id === raw) ? raw : options[0].id;
+}
+
+function isEmptyStackState(field, value, campaignId = getCampaign()?.id) {
+  return normalizeStackState(field, value, campaignId) === getStackEmptyStateId(field);
+}
+
+function getStackStateLabel(field, value, campaignId = getCampaign()?.id) {
+  const stateId = normalizeStackState(field, value, campaignId);
+  return getStackStateOptions(field, campaignId).find((option) => option.id === stateId)?.label || stateId;
+}
+
+function getStackStateEffect(field, value, campaignId = getCampaign()?.id) {
+  const stateId = normalizeStackState(field, value, campaignId);
+  const fromOption = getStackStateOptions(field, campaignId).find((option) => option.id === stateId)?.effect;
+  return fromOption || field?.stateEffects?.[stateId] || "";
+}
+
+function asEffectStackEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => {
+    if (typeof entry === "string") return { effectId: entry, count: 1, stateId: null };
+    if (!entry || typeof entry !== "object") return null;
+    return {
+      effectId: entry.effectId || entry.id || null,
+      count: clampCoinCount(entry.count),
+      stateId: entry.stateId || entry.state || entry.statusId || null,
+    };
+  }).filter((entry) => entry?.effectId);
+}
+
+function normalizeEffectStackEntry(field, entry, campaignId = getCampaign()?.id) {
+  return {
+    ...entry,
+    count: clampCoinCount(entry.count),
+    stateId: normalizeStackState(field, entry.stateId, campaignId),
+  };
+}
+
+function effectStackEntryKey(entry) {
+  return `${entry.effectId}\u001f${entry.stateId || ""}`;
+}
+
+function mergeEffectStackEntries(field, entries, campaignId = getCampaign()?.id) {
+  const merged = new Map();
+  for (const rawEntry of asEffectStackEntries(entries)) {
+    const entry = normalizeEffectStackEntry(field, rawEntry, campaignId);
+    const key = effectStackEntryKey(entry);
+    if (merged.has(key)) {
+      const current = merged.get(key);
+      current.count = clampCoinCount(current.count + entry.count);
+    } else {
+      merged.set(key, entry);
+    }
+  }
+  return [...merged.values()];
+}
+
 function getCampaignSelectableEffects(campaignId = getCampaign()?.id, slot = null) {
   return (master.selectableEffects || [])
     .filter((item) => item.campaignId === campaignId && (!slot || item.slot === slot))
@@ -134,6 +286,47 @@ function getCampaignSelectableEffects(campaignId = getCampaign()?.id, slot = nul
 
 function getSelectableEffectsForField(field, campaignId = getCampaign()?.id) {
   return getCampaignSelectableEffects(campaignId, field.effectSlot || field.id);
+}
+
+function getSpecialFieldConfig(campaignId, fieldId) {
+  const campaign = maps.campaign.get(campaignId);
+  return (campaign?.specialFields || []).find((field) => field.id === fieldId) || null;
+}
+
+function getCoinOptions(field, campaignId = getCampaign()?.id) {
+  return getCampaignSelectableEffects(campaignId, field.effectSlot || field.id || "coin");
+}
+
+function getCoinStatusOptions(field, campaignId = getCampaign()?.id) {
+  return getCampaignSelectableEffects(campaignId, field.statusSlot || "coinStatus");
+}
+
+function getEffectStackOptions(field, campaignId = getCampaign()?.id) {
+  return getSelectableEffectsForField(field, campaignId)
+    .filter((item) => matchesGroupLabels(item, field.optionGroupLabels))
+    .filter((item) => !Array.isArray(field.excludeOptionGroupLabels) || !field.excludeOptionGroupLabels.includes(item.groupLabel || item.slotLabel || ""));
+}
+
+function normalizeEffectStackEntries(field, campaignId, value) {
+  const validEffects = new Set(getEffectStackOptions(field, campaignId).map((item) => item.id));
+  const normalized = asEffectStackEntries(value)
+    .filter((entry) => validEffects.has(entry.effectId))
+    .map((entry) => normalizeEffectStackEntry(field, entry, campaignId));
+  return mergeEffectStackEntries(field, normalized, campaignId);
+}
+
+function normalizeCoinLoadoutEntries(field, campaignId, value) {
+  const validCoins = new Set(getCoinOptions(field, campaignId).map((item) => item.id));
+  const validStatuses = new Set(getCoinStatusOptions(field, campaignId).map((item) => item.id));
+  const normalized = asCoinEntries(value)
+    .filter((entry) => validCoins.has(entry.coinId))
+    .map((entry) => ({
+      ...entry,
+      count: clampCoinCount(entry.count),
+      statusId: validStatuses.has(entry.statusId) ? entry.statusId : null,
+      face: normalizeCoinFace(entry.face),
+    }));
+  return mergeCoinEntries(normalized);
 }
 
 function getRankedEffectGroups(field, campaignId = getCampaign()?.id) {
@@ -155,6 +348,35 @@ function getSpecialEffectName(id) {
   return item?.name || item?.title || id;
 }
 
+function formatCoinLoadoutValue(field, value) {
+  const entries = asCoinEntries(value).filter((entry) => maps.selectableEffect.has(entry.coinId));
+  if (!entries.length) return "";
+  const total = entries.reduce((sum, entry) => sum + clampCoinCount(entry.count), 0);
+  if (entries.length === 1) {
+    const entry = entries[0];
+    const coin = maps.selectableEffect.get(entry.coinId);
+    const status = entry.statusId ? maps.selectableEffect.get(entry.statusId) : null;
+    return [coin?.name, `x${entry.count}`, status?.name, coinFaceLabels[entry.face]].filter(Boolean).join(" / ");
+  }
+  return `${total}枚 / ${entries.length}枠`;
+}
+
+function formatEffectStackValue(field, value) {
+  const entries = asEffectStackEntries(value)
+    .map((entry) => normalizeEffectStackEntry(field, entry))
+    .filter((entry) => maps.selectableEffect.has(entry.effectId));
+  if (!entries.length) return "";
+  const total = entries.reduce((sum, entry) => sum + clampCoinCount(entry.count), 0);
+  const unit = field.unitLabel || "件";
+  if (entries.length === 1) {
+    const entry = entries[0];
+    const item = maps.selectableEffect.get(entry.effectId);
+    const stateLabel = isEmptyStackState(field, entry.stateId) ? "" : getStackStateLabel(field, entry.stateId);
+    return [item?.name, `x${entry.count}`, stateLabel].filter(Boolean).join(" / ");
+  }
+  return `${total}${unit} / ${entries.length}枠`;
+}
+
 function formatSpecialValue(field, value) {
   if (field.type === "effectSelect") return value ? getSpecialEffectName(value) : "";
   if (field.type === "effectMultiSelect") {
@@ -167,42 +389,142 @@ function formatSpecialValue(field, value) {
     if (names.length <= 1) return names[0] || "";
     return `${names.length}件`;
   }
+  if (field.type === "effectStackLoadout") return formatEffectStackValue(field, value);
+  if (field.type === "coinLoadout") return formatCoinLoadoutValue(field, value);
+  if (field.type === "number") return value === null || value === undefined || value === "" ? "" : String(value);
   return value ?? "";
 }
 
-function getSpecialTags(specialFields, special) {
+function getSpecialOverlayToggleKey(field) {
+  return field.overlayToggleKey || `${field.id}OverlayVisible`;
+}
+
+function isSpecialFieldVisibleOnOverlay(field, special) {
+  if (!field.overlayToggle) return true;
+  return Boolean(special[getSpecialOverlayToggleKey(field)]);
+}
+
+function getSpecialTags(specialFields, special, options = {}) {
   return specialFields
+    .filter((field) => !options.overlay || isSpecialFieldVisibleOnOverlay(field, special))
     .map((field) => ({ label: field.label, value: formatSpecialValue(field, special[field.id]) }))
     .filter((item) => item.value !== null && item.value !== undefined && item.value !== "");
 }
 
-function getSelectedSpecialEffects(campaignId = getCampaign()?.id) {
-  const campaign = maps.campaign.get(campaignId);
-  const special = state.run.special?.[campaignId] || {};
+function getSelectedSpecialEffectsForField(field, special) {
   const effects = [];
-  for (const field of campaign?.specialFields || []) {
-    if (field.type === "effectSelect") {
-      const item = maps.selectableEffect.get(special[field.id]);
+  if (field.type === "effectSelect") {
+    const item = maps.selectableEffect.get(special[field.id]);
+    if (item) effects.push(item);
+  } else if (field.type === "effectMultiSelect") {
+    for (const id of asSpecialArray(special[field.id])) {
+      const item = maps.selectableEffect.get(id);
       if (item) effects.push(item);
-    } else if (field.type === "effectMultiSelect") {
-      for (const id of asSpecialArray(special[field.id])) {
-        const item = maps.selectableEffect.get(id);
-        if (item) effects.push(item);
-      }
-    } else if (field.type === "effectRankedMultiSelect") {
-      for (const id of Object.values(asSpecialObject(special[field.id]))) {
-        const item = maps.selectableEffect.get(id);
-        if (item) effects.push(item);
-      }
+    }
+  } else if (field.type === "effectRankedMultiSelect") {
+    for (const id of Object.values(asSpecialObject(special[field.id]))) {
+      const item = maps.selectableEffect.get(id);
+      if (item) effects.push(item);
+    }
+  } else if (field.type === "effectStackLoadout") {
+    for (const rawEntry of asEffectStackEntries(special[field.id])) {
+      const entry = normalizeEffectStackEntry(field, rawEntry);
+      const item = maps.selectableEffect.get(entry.effectId);
+      if (!item) continue;
+      const hasState = !isEmptyStackState(field, entry.stateId);
+      const stateLabel = hasState ? getStackStateLabel(field, entry.stateId) : "";
+      const stateEffect = hasState ? getStackStateEffect(field, entry.stateId) : "";
+      const titleParts = [`x${entry.count}`, stateLabel].filter(Boolean);
+      const effectParts = [item.effect, stateEffect ? `${field.stateLabel || "状態"} ${stateLabel}: ${stateEffect}` : ""].filter(Boolean);
+      effects.push({
+        ...item,
+        slotLabel: field.label || item.slotLabel,
+        name: `${item.name} ${titleParts.join(" / ")}`,
+        effect: effectParts.join(" / "),
+      });
+    }
+  } else if (field.type === "coinLoadout") {
+    for (const entry of asCoinEntries(special[field.id])) {
+      const coin = maps.selectableEffect.get(entry.coinId);
+      if (!coin) continue;
+      const status = entry.statusId ? maps.selectableEffect.get(entry.statusId) : null;
+      const titleParts = [`x${entry.count}`, coinFaceLabels[entry.face], status?.name].filter(Boolean);
+      const effectParts = [coin.effect, status?.effect ? `${status.name}: ${status.effect}` : ""].filter(Boolean);
+      effects.push({
+        ...coin,
+        slotLabel: field.label || coin.slotLabel,
+        name: `${coin.name} ${titleParts.join(" / ")}`,
+        effect: effectParts.join(" / "),
+      });
     }
   }
   return effects;
 }
 
+function getSelectedSpecialEffects(campaignId = getCampaign()?.id, options = {}) {
+  const campaign = maps.campaign.get(campaignId);
+  const special = state.run.special?.[campaignId] || {};
+  const effects = [];
+  for (const field of campaign?.specialFields || []) {
+    if (options.overlay && !isSpecialFieldVisibleOnOverlay(field, special)) continue;
+    effects.push(...getSelectedSpecialEffectsForField(field, special));
+  }
+  return effects;
+}
+
+function getOverlaySpecialEffects(campaignId, specialFields, special) {
+  const effects = [];
+  for (const field of specialFields || []) {
+    if (!field.overlayToggle || !isSpecialFieldVisibleOnOverlay(field, special)) continue;
+    effects.push(...getSelectedSpecialEffectsForField(field, special));
+  }
+  return effects;
+}
+
+function specialEffectImageSrc(item) {
+  return item.image?.localPath ? assetUrl(item.image.localPath) : (item.image?.sourceUrl || "");
+}
+
+function renderSpecialOverlayItems(items) {
+  return `<div class="special-overlay-grid">
+    ${items.map((item) => {
+      const imageSrc = specialEffectImageSrc(item);
+      const label = item.groupLabel && item.groupLabel !== item.slotLabel ? `${item.slotLabel} / ${item.groupLabel}` : item.slotLabel;
+      return `<div class="special-overlay-chip" title="${html(item.effect)}">
+        ${imageSrc ? `<img src="${html(imageSrc)}" alt="" />` : `<span class="special-overlay-fallback">${html((item.name || "?").slice(0, 1))}</span>`}
+        <div><span>${html(label || "特殊")}</span><strong>${html(item.name)}</strong></div>
+      </div>`;
+    }).join("")}
+  </div>`;
+}
+
+function renderSpecialOverlayBlock(items, mode, speedKey) {
+  if (!items.length) return "";
+  const isCompact = mode === "compact";
+  return `<section class="${isCompact ? "compact-section compact-special-section" : "stream-special-section"}">
+    <div class="${isCompact ? "compact-section-head" : "stream-section-head"}"><span>Special</span><span>${items.length}</span></div>
+    <div class="stream-scroll ${isCompact ? "compact-special-scroll" : "stream-special-scroll"}" data-autoscroll data-scroll-speed="${getOverlayScrollSpeed(speedKey)}">
+      ${renderSpecialOverlayItems(items)}
+    </div>
+  </section>`;
+}
+
+function renderSpecialOverlayToggle(field, special) {
+  if (!field.overlayToggle) return "";
+  const key = getSpecialOverlayToggleKey(field);
+  return `<label class="special-overlay-toggle"><input type="checkbox" data-special-visibility="${html(field.id)}" ${special[key] ? "checked" : ""} />${html(field.overlayToggleLabel || "OBS表示")}</label>`;
+}
+
+function renderSpecialEffectGroupHeader(field, special) {
+  return `<div class="special-effect-group-head"><div class="special-effect-group-title">${html(field.label)}</div>${renderSpecialOverlayToggle(field, special)}</div>`;
+}
+
 function renderSpecialEffectOption(field, item, selected) {
   const groupPrefix = item.groupLabel && item.groupLabel !== item.slotLabel ? `${item.groupLabel} / ` : "";
+  const imageSrc = specialEffectImageSrc(item);
   return `<label class="special-effect-option" title="${html(item.effect)}">
     <input type="checkbox" value="${html(item.id)}" data-special-effect-toggle="${html(field.id)}" ${selected.has(item.id) ? "checked" : ""} />
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : ""}
     <span>${html(groupPrefix + item.name)}</span>
   </label>`;
 }
@@ -221,28 +543,144 @@ function renderRankedSpecialEffectRow(field, group, selectedId) {
   </div>`;
 }
 
+function renderSpecialEffectSelectOptions(options, current = "", placeholder = "未選択", excludedIds = new Set()) {
+  const grouped = new Map();
+  for (const item of options) {
+    if (excludedIds.has(item.id) && item.id !== current) continue;
+    const key = item.groupLabel || item.slotLabel || "その他";
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(item);
+  }
+  return `<option value="">${html(placeholder)}</option>${[...grouped.entries()].map(([group, items]) => `<optgroup label="${html(group)}">${items.map((item) => `<option value="${html(item.id)}" ${item.id === current ? "selected" : ""}>${html(item.name)}</option>`).join("")}</optgroup>`).join("")}`;
+}
+
+function renderSpecialSelectedChip(field, item) {
+  const imageSrc = specialEffectImageSrc(item);
+  const groupPrefix = item.groupLabel && item.groupLabel !== item.slotLabel ? `${item.groupLabel} / ` : "";
+  return `<button type="button" class="special-selected-chip" data-action="remove-special-effect" data-special-picker-field="${html(field.id)}" data-id="${html(item.id)}" title="${html(item.effect)}">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : ""}
+    <span>${html(groupPrefix + item.name)}</span>
+    <b>×</b>
+  </button>`;
+}
+
+function renderCompactSpecialPicker(field, campaignId, special) {
+  const options = getSelectableEffectsForField(field, campaignId);
+  const selectedIds = asSpecialArray(special[field.id]);
+  const selected = new Set(selectedIds);
+  const selectedItems = selectedIds.map((id) => maps.selectableEffect.get(id)).filter(Boolean);
+  return `<div class="field-wide special-effect-group compact-special-picker" data-special-picker="${html(field.id)}">
+    ${renderSpecialEffectGroupHeader(field, special)}
+    <div class="special-picker-row">
+      <select data-special-picker-select="${html(field.id)}">
+        ${renderSpecialEffectSelectOptions(options, "", `${field.label}を追加`, selected)}
+      </select>
+      <button type="button" data-action="add-special-effect" data-special-picker-field="${html(field.id)}">追加</button>
+    </div>
+    <div class="special-selected-list">
+      ${selectedItems.length ? selectedItems.map((item) => renderSpecialSelectedChip(field, item)).join("") : `<div class="empty-state">未選択</div>`}
+    </div>
+  </div>`;
+}
+
+function renderCoinFaceOptions(current) {
+  return Object.entries(coinFaceLabels).map(([value, label]) => `<option value="${html(value)}" ${value === current ? "selected" : ""}>${html(label)}</option>`).join("");
+}
+
+function renderCoinEntryRow(field, entry, index, statusOptions) {
+  const coin = maps.selectableEffect.get(entry.coinId);
+  if (!coin) return "";
+  const imageSrc = specialEffectImageSrc(coin);
+  return `<div class="coin-entry-row">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(coin.name.slice(0, 1))}</span>`}
+    <div class="coin-entry-title"><strong>${html(coin.name)}</strong><span>${html(coin.groupLabel || coin.slotLabel || "通宝")}</span></div>
+    <input type="number" min="1" max="99" value="${html(entry.count)}" data-coin-entry-count="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}の個数" />
+    <select data-coin-entry-status="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}の状態">
+      ${renderSpecialEffectSelectOptions(statusOptions, entry.statusId || "", "状態なし")}
+    </select>
+    <select data-coin-entry-face="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}の表裏">
+      ${renderCoinFaceOptions(entry.face)}
+    </select>
+    <button type="button" data-action="remove-coin-entry" data-coin-field="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}を削除">×</button>
+  </div>`;
+}
+
+function renderCoinLoadoutField(field, campaignId, special) {
+  const coinOptions = getCoinOptions(field, campaignId);
+  const statusOptions = getCoinStatusOptions(field, campaignId);
+  const entries = asCoinEntries(special[field.id]).filter((entry) => maps.selectableEffect.has(entry.coinId));
+  return `<div class="field-wide special-effect-group coin-loadout-field">
+    ${renderSpecialEffectGroupHeader(field, special)}
+    <div class="coin-loadout-builder" data-coin-builder="${html(field.id)}">
+      <select data-coin-input="coin">${renderSpecialEffectSelectOptions(coinOptions, "", "通宝を追加")}</select>
+      <input type="number" min="1" max="99" value="1" data-coin-input="count" aria-label="追加する通宝の個数" />
+      <select data-coin-input="status">${renderSpecialEffectSelectOptions(statusOptions, "", "状態なし")}</select>
+      <select data-coin-input="face" aria-label="追加する通宝の表裏">${renderCoinFaceOptions("front")}</select>
+      <button type="button" data-action="add-coin-entry" data-coin-field="${html(field.id)}">追加</button>
+    </div>
+    <div class="coin-entry-summary">${html(formatCoinLoadoutValue(field, entries) || "未選択")}</div>
+    <div class="coin-entry-list">
+      ${entries.length ? entries.map((entry, index) => renderCoinEntryRow(field, entry, index, statusOptions)).join("") : `<div class="empty-state">通宝なし</div>`}
+    </div>
+  </div>`;
+}
+
+function renderEffectStackStateOptions(field, current, campaignId = getCampaign()?.id) {
+  const selected = normalizeStackState(field, current, campaignId);
+  return getStackStateOptions(field, campaignId).map((option) => `<option value="${html(option.id)}" ${option.id === selected ? "selected" : ""}>${html(option.label)}</option>`).join("");
+}
+
+function renderEffectStackEntryRow(field, entry, index, campaignId = getCampaign()?.id) {
+  const normalized = normalizeEffectStackEntry(field, entry, campaignId);
+  const item = maps.selectableEffect.get(normalized.effectId);
+  if (!item) return "";
+  const imageSrc = specialEffectImageSrc(item);
+  return `<div class="coin-entry-row effect-stack-entry-row">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(item.name.slice(0, 1))}</span>`}
+    <div class="coin-entry-title"><strong>${html(item.name)}</strong><span>${html(item.groupLabel || item.slotLabel || field.label)}</span></div>
+    <input type="number" min="1" max="99" value="${html(normalized.count)}" data-effect-stack-entry-count="${html(field.id)}" data-index="${html(index)}" aria-label="${html(item.name)}の個数" />
+    <select data-effect-stack-entry-state="${html(field.id)}" data-index="${html(index)}" aria-label="${html(item.name)}の${html(field.stateLabel || "状態")}">
+      ${renderEffectStackStateOptions(field, normalized.stateId, campaignId)}
+    </select>
+    <button type="button" data-action="remove-effect-stack-entry" data-effect-stack-field="${html(field.id)}" data-index="${html(index)}" aria-label="${html(item.name)}を削除">×</button>
+  </div>`;
+}
+
+function renderEffectStackLoadoutField(field, campaignId, special) {
+  const options = getEffectStackOptions(field, campaignId);
+  const defaultState = getStackStateOptions(field, campaignId)[0]?.id || getStackEmptyStateId(field);
+  const entries = normalizeEffectStackEntries(field, campaignId, special[field.id]);
+  return `<div class="field-wide special-effect-group effect-stack-loadout-field">
+    ${renderSpecialEffectGroupHeader(field, special)}
+    <div class="effect-stack-loadout-builder" data-effect-stack-builder="${html(field.id)}">
+      <select data-effect-stack-input="effect">${renderSpecialEffectSelectOptions(options, "", `${field.label}を追加`)}</select>
+      <input type="number" min="1" max="99" value="1" data-effect-stack-input="count" aria-label="追加する${html(field.label)}の個数" />
+      <select data-effect-stack-input="state" aria-label="追加する${html(field.label)}の${html(field.stateLabel || "状態")}">${renderEffectStackStateOptions(field, defaultState, campaignId)}</select>
+      <button type="button" data-action="add-effect-stack-entry" data-effect-stack-field="${html(field.id)}">追加</button>
+    </div>
+    <div class="effect-stack-entry-summary">${html(formatEffectStackValue(field, entries) || "未選択")}</div>
+    <div class="effect-stack-entry-list">
+      ${entries.length ? entries.map((entry, index) => renderEffectStackEntryRow(field, entry, index, campaignId)).join("") : `<div class="empty-state">${html(field.label)}なし</div>`}
+    </div>
+  </div>`;
+}
+
 function renderSpecialField(field, campaignId, special) {
   if (field.type === "effectSelect") {
     const options = getSelectableEffectsForField(field, campaignId);
     const current = special[field.id] || "";
-    const grouped = new Map();
-    for (const item of options) {
-      const key = item.groupLabel || item.slotLabel || "その他";
-      if (!grouped.has(key)) grouped.set(key, []);
-      grouped.get(key).push(item);
-    }
     return `<label>${html(field.label)}
       <select data-special-field="${html(field.id)}">
-        <option value="">未選択</option>
-        ${[...grouped.entries()].map(([group, items]) => `<optgroup label="${html(group)}">${items.map((item) => `<option value="${html(item.id)}" ${item.id === current ? "selected" : ""}>${html(item.name)}</option>`).join("")}</optgroup>`).join("")}
+        ${renderSpecialEffectSelectOptions(options, current, "未選択")}
       </select>
     </label>`;
   }
   if (field.type === "effectMultiSelect") {
+    if (field.compact) return renderCompactSpecialPicker(field, campaignId, special);
     const options = getSelectableEffectsForField(field, campaignId);
     const selected = new Set(asSpecialArray(special[field.id]));
     return `<div class="field-wide special-effect-group">
-      <div class="special-effect-group-title">${html(field.label)}</div>
+      ${renderSpecialEffectGroupHeader(field, special)}
       <div class="special-effect-options">
         ${options.length ? options.map((item) => renderSpecialEffectOption(field, item, selected)).join("") : `<div class="empty-state">選択肢がありません。</div>`}
       </div>
@@ -252,14 +690,18 @@ function renderSpecialField(field, campaignId, special) {
     const groups = getRankedEffectGroups(field, campaignId);
     const selected = asSpecialObject(special[field.id]);
     return `<div class="field-wide special-effect-group">
-      <div class="special-effect-group-title">${html(field.label)}</div>
+      ${renderSpecialEffectGroupHeader(field, special)}
       <div class="special-effect-ranked-list">
         ${groups.length ? groups.map((group) => renderRankedSpecialEffectRow(field, group, selected[group.key])).join("") : `<div class="empty-state">選択肢がありません。</div>`}
       </div>
     </div>`;
   }
+  if (field.type === "effectStackLoadout") return renderEffectStackLoadoutField(field, campaignId, special);
+  if (field.type === "coinLoadout") return renderCoinLoadoutField(field, campaignId, special);
+  const minAttr = field.min !== undefined ? ` min="${html(field.min)}"` : "";
+  const maxAttr = field.max !== undefined ? ` max="${html(field.max)}"` : "";
   return `<label>${html(field.label)}
-    <input type="${field.type === "number" ? "number" : "text"}" value="${html(special[field.id] ?? "")}" data-special-field="${html(field.id)}" />
+    <input type="${field.type === "number" ? "number" : "text"}"${minAttr}${maxAttr} value="${html(special[field.id] ?? "")}" data-special-field="${html(field.id)}" />
   </label>`;
 }
 
@@ -278,8 +720,18 @@ function normalizeSpecialFieldSelections() {
         const next = {};
         for (const [parentKey, id] of Object.entries(asSpecialObject(special[field.id]))) if (validIds.has(id)) next[parentKey] = id;
         special[field.id] = next;
+      } else if (field.type === "effectStackLoadout") {
+        special[field.id] = normalizeEffectStackEntries(field, campaign.id, special[field.id]);
+      } else if (field.type === "coinLoadout") {
+        special[field.id] = normalizeCoinLoadoutEntries(field, campaign.id, special[field.id]);
+      } else if (field.type === "number") {
+        special[field.id] = clampSpecialNumber(special[field.id], field.min, field.max);
       } else if (!(field.id in special)) {
         special[field.id] = null;
+      }
+      if (field.overlayToggle) {
+        const key = getSpecialOverlayToggleKey(field);
+        special[key] = Boolean(special[key]);
       }
     }
   }
@@ -1124,7 +1576,7 @@ function summarizeDifficultyEffects(grade = getSelectedDifficultyGrade()) {
   return summarizeEffectMetrics("等級", metrics);
 }
 
-function getActiveEffects({ includeRelics = true, includeDifficulty = true } = {}) {
+function getActiveEffects({ includeRelics = true, includeDifficulty = true, overlay = false } = {}) {
   const effects = [];
   const pushEffect = (type, title, effect) => {
     if (!effect) return;
@@ -1136,7 +1588,7 @@ function getActiveEffects({ includeRelics = true, includeDifficulty = true } = {
   pushEffect("分隊", squad?.name, squad?.effect);
   pushEffect("分隊追加", option?.label || "ランダム効果", option?.effect);
   pushEffect("演目", performance?.name || performance?.title, performance?.effect);
-  for (const effect of getSelectedSpecialEffects()) pushEffect(effect.slotLabel || "特殊", effect.name || effect.title, effect.effect);
+  for (const effect of getSelectedSpecialEffects(getCampaign()?.id, { overlay })) pushEffect(effect.slotLabel || "特殊", effect.name || effect.title, effect.effect);
   if (includeDifficulty) effects.push(...summarizeDifficultyEffects());
   if (includeRelics) effects.push(...summarizeRelicEffects());
   return effects;
@@ -1628,7 +2080,8 @@ function renderJsonTab() {
 }
 
 function renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade }) {
-  const specialTags = getSpecialTags(specialFields, special);
+  const specialTags = getSpecialTags(specialFields, special, { overlay: true });
+  const specialItems = getOverlaySpecialEffects(campaign.id, specialFields, special);
   const flags = getBossFlagEntries(campaign.id);
   return `
     <section class="compact-overlay-shell">
@@ -1649,6 +2102,7 @@ function renderOverlayCompact({ campaign, squad, option, performance, activeEffe
         <span class="tag">Tier ${html(getDifficultyTierLabel())}</span>
         ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
       </div>
+      ${renderSpecialOverlayBlock(specialItems, "compact", "compactRelicScrollSpeed")}
       ${activeEffects.length ? `<section class="compact-section compact-effects-section">
         <div class="compact-section-head"><span>Effects</span><span>${activeEffects.length}</span></div>
         <div class="stream-scroll compact-effect-scroll" data-autoscroll data-scroll-speed="${getOverlayScrollSpeed("compactRelicScrollSpeed")}">
@@ -1676,7 +2130,8 @@ function renderOverlayCompact({ campaign, squad, option, performance, activeEffe
 }
 
 function renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, orientation }) {
-  const specialTags = getSpecialTags(specialFields, special);
+  const specialTags = getSpecialTags(specialFields, special, { overlay: true });
+  const specialItems = getOverlaySpecialEffects(campaign.id, specialFields, special);
   const flags = getBossFlagEntries(campaign.id);
   return `
     <section class="stream-overlay-shell stream-${orientation}">
@@ -1699,6 +2154,7 @@ function renderOverlayDense({ campaign, squad, option, performance, activeEffect
           ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
           ${flags.map((flag) => renderBossChip(flag)).join("")}
         </div>
+        ${renderSpecialOverlayBlock(specialItems, "stream", orientation + "RelicScrollSpeed")}
         ${activeEffects.length ? `<div class="stream-scroll stream-effect-scroll" data-autoscroll data-scroll-speed="${getOverlayScrollSpeed(`${orientation}RelicScrollSpeed`)}">
           ${renderEffectList(activeEffects, "stream-effect-list", "発動効果なし")}
         </div>` : ""}
@@ -1788,7 +2244,7 @@ function renderOverlay() {
   const special = state.run.special?.[campaign.id] || {};
   const difficultyGrade = getSelectedDifficultyGrade();
   const performance = getSelectedPerformance();
-  const activeEffects = getActiveEffects();
+  const activeEffects = getActiveEffects({ overlay: true });
   if (overlayLayout === "compact") {
     app.innerHTML = renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade });
     setupOverlayAutoScroll();
@@ -1813,7 +2269,7 @@ function renderOverlay() {
         <div class="overlay-card-body overlay-kpis">
           <div class="kpi"><div class="kpi-label">等級</div><div class="kpi-value">${html(difficultyGrade?.label || (state.run.difficulty ?? "-"))}</div></div>
           <div class="kpi"><div class="kpi-label">Tier</div><div class="kpi-value">${html(getDifficultyTierLabel())}</div></div>
-          ${getSpecialTags(specialFields, special).map((item) => `<div class="kpi"><div class="kpi-label">${html(item.label)}</div><div class="kpi-value">${html(item.value || "-")}</div></div>`).join("")}
+          ${getSpecialTags(specialFields, special, { overlay: true }).map((item) => `<div class="kpi"><div class="kpi-label">${html(item.label)}</div><div class="kpi-value">${html(item.value || "-")}</div></div>`).join("")}
           ${difficultyGrade ? renderDifficultyFields(difficultyGrade, "overlay") : ""}
         </div>
       </section>
@@ -1888,6 +2344,97 @@ app.addEventListener("click", async (event) => {
   if (!button || view !== "control") return;
   const action = button.dataset.action;
   const id = button.dataset.id;
+
+  if (action === "add-special-effect") {
+    const fieldId = button.dataset.specialPickerField;
+    const container = button.closest("[data-special-picker]");
+    const value = container?.querySelector("[data-special-picker-select]")?.value;
+    if (fieldId && value) {
+      mutate((s) => {
+        const campaignId = getCampaign().id;
+        s.run.special[campaignId] ||= {};
+        const selected = new Set(asSpecialArray(s.run.special[campaignId][fieldId]));
+        selected.add(value);
+        s.run.special[campaignId][fieldId] = [...selected];
+      });
+    }
+    return;
+  }
+  if (action === "remove-special-effect") {
+    const fieldId = button.dataset.specialPickerField;
+    if (fieldId && id) {
+      mutate((s) => {
+        const campaignId = getCampaign().id;
+        s.run.special[campaignId] ||= {};
+        s.run.special[campaignId][fieldId] = asSpecialArray(s.run.special[campaignId][fieldId]).filter((itemId) => itemId !== id);
+      });
+    }
+    return;
+  }
+  if (action === "add-effect-stack-entry") {
+    const fieldId = button.dataset.effectStackField;
+    const container = button.closest("[data-effect-stack-builder]");
+    const effectId = container?.querySelector('[data-effect-stack-input="effect"]')?.value;
+    if (fieldId && effectId) {
+      const campaignId = getCampaign().id;
+      const fieldConfig = getSpecialFieldConfig(campaignId, fieldId) || { id: fieldId };
+      const count = clampCoinCount(container?.querySelector('[data-effect-stack-input="count"]')?.value);
+      const stateId = normalizeStackState(fieldConfig, container?.querySelector('[data-effect-stack-input="state"]')?.value, campaignId);
+      mutate((s) => {
+        s.run.special[campaignId] ||= {};
+        const entries = asEffectStackEntries(s.run.special[campaignId][fieldId]);
+        entries.push({ effectId, count, stateId });
+        s.run.special[campaignId][fieldId] = mergeEffectStackEntries(fieldConfig, entries, campaignId);
+      });
+    }
+    return;
+  }
+  if (action === "remove-effect-stack-entry") {
+    const fieldId = button.dataset.effectStackField;
+    const index = Number(button.dataset.index);
+    if (fieldId && Number.isInteger(index)) {
+      mutate((s) => {
+        const campaignId = getCampaign().id;
+        s.run.special[campaignId] ||= {};
+        const entries = asEffectStackEntries(s.run.special[campaignId][fieldId]);
+        entries.splice(index, 1);
+        s.run.special[campaignId][fieldId] = entries;
+      });
+    }
+    return;
+  }
+  if (action === "add-coin-entry") {
+    const fieldId = button.dataset.coinField;
+    const container = button.closest("[data-coin-builder]");
+    const coinId = container?.querySelector('[data-coin-input="coin"]')?.value;
+    if (fieldId && coinId) {
+      const count = clampCoinCount(container?.querySelector('[data-coin-input="count"]')?.value);
+      const statusId = container?.querySelector('[data-coin-input="status"]')?.value || null;
+      const face = normalizeCoinFace(container?.querySelector('[data-coin-input="face"]')?.value);
+      mutate((s) => {
+        const campaignId = getCampaign().id;
+        s.run.special[campaignId] ||= {};
+        const entries = asCoinEntries(s.run.special[campaignId][fieldId]);
+        entries.push({ coinId, count, statusId, face });
+        s.run.special[campaignId][fieldId] = mergeCoinEntries(entries);
+      });
+    }
+    return;
+  }
+  if (action === "remove-coin-entry") {
+    const fieldId = button.dataset.coinField;
+    const index = Number(button.dataset.index);
+    if (fieldId && Number.isInteger(index)) {
+      mutate((s) => {
+        const campaignId = getCampaign().id;
+        s.run.special[campaignId] ||= {};
+        const entries = asCoinEntries(s.run.special[campaignId][fieldId]);
+        entries.splice(index, 1);
+        s.run.special[campaignId][fieldId] = entries;
+      });
+    }
+    return;
+  }
   if (action === "tab") { ui.tab = button.dataset.tab; renderControl(); return; }
   if (action === "toggle-relic") { toggleChoiceElement(button, "relic", id); return; }
   if (action === "toggle-operator") { toggleChoiceElement(button, "operator", id); return; }
@@ -2040,12 +2587,26 @@ app.addEventListener("change", (event) => {
       s.bossSelections[campaignId][bossToggle] = [...next];
     });
   }
+  const specialVisibility = target.dataset.specialVisibility;
+  if (specialVisibility) {
+    mutate((s) => {
+      const campaign = getCampaign();
+      const campaignId = campaign.id;
+      const fieldConfig = (campaign.specialFields || []).find((field) => field.id === specialVisibility) || { id: specialVisibility };
+      const key = getSpecialOverlayToggleKey(fieldConfig);
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][key] = target.checked;
+    });
+  }
   const specialField = target.dataset.specialField;
   if (specialField) {
     mutate((s) => {
       const campaignId = getCampaign().id;
+      const fieldConfig = getSpecialFieldConfig(campaignId, specialField);
       s.run.special[campaignId] ||= {};
-      s.run.special[campaignId][specialField] = target.value === "" ? null : target.value;
+      s.run.special[campaignId][specialField] = fieldConfig?.type === "number"
+        ? clampSpecialNumber(target.value, fieldConfig.min, fieldConfig.max)
+        : (target.value === "" ? null : target.value);
     });
   }
   const specialEffectToggle = target.dataset.specialEffectToggle;
@@ -2067,6 +2628,64 @@ app.addEventListener("change", (event) => {
       const selected = { ...asSpecialObject(s.run.special[campaignId][specialRankedField]) };
       if (target.value) selected[parentKey] = target.value; else delete selected[parentKey];
       s.run.special[campaignId][specialRankedField] = selected;
+    });
+  }
+
+  const effectStackEntryCount = target.dataset.effectStackEntryCount;
+  if (effectStackEntryCount) {
+    mutate((s) => {
+      const campaignId = getCampaign().id;
+      const fieldConfig = getSpecialFieldConfig(campaignId, effectStackEntryCount) || { id: effectStackEntryCount };
+      const entries = asEffectStackEntries(s.run.special[campaignId]?.[effectStackEntryCount]);
+      const entry = entries[Number(target.dataset.index)];
+      if (entry) entry.count = clampCoinCount(target.value);
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][effectStackEntryCount] = mergeEffectStackEntries(fieldConfig, entries, campaignId);
+    });
+  }
+  const effectStackEntryState = target.dataset.effectStackEntryState;
+  if (effectStackEntryState) {
+    mutate((s) => {
+      const campaignId = getCampaign().id;
+      const fieldConfig = getSpecialFieldConfig(campaignId, effectStackEntryState) || { id: effectStackEntryState };
+      const entries = asEffectStackEntries(s.run.special[campaignId]?.[effectStackEntryState]);
+      const entry = entries[Number(target.dataset.index)];
+      if (entry) entry.stateId = normalizeStackState(fieldConfig, target.value, campaignId);
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][effectStackEntryState] = mergeEffectStackEntries(fieldConfig, entries, campaignId);
+    });
+  }
+  const coinEntryCount = target.dataset.coinEntryCount;
+  if (coinEntryCount) {
+    mutate((s) => {
+      const campaignId = getCampaign().id;
+      const entries = asCoinEntries(s.run.special[campaignId]?.[coinEntryCount]);
+      const entry = entries[Number(target.dataset.index)];
+      if (entry) entry.count = clampCoinCount(target.value);
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][coinEntryCount] = mergeCoinEntries(entries);
+    });
+  }
+  const coinEntryStatus = target.dataset.coinEntryStatus;
+  if (coinEntryStatus) {
+    mutate((s) => {
+      const campaignId = getCampaign().id;
+      const entries = asCoinEntries(s.run.special[campaignId]?.[coinEntryStatus]);
+      const entry = entries[Number(target.dataset.index)];
+      if (entry) entry.statusId = target.value || null;
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][coinEntryStatus] = mergeCoinEntries(entries);
+    });
+  }
+  const coinEntryFace = target.dataset.coinEntryFace;
+  if (coinEntryFace) {
+    mutate((s) => {
+      const campaignId = getCampaign().id;
+      const entries = asCoinEntries(s.run.special[campaignId]?.[coinEntryFace]);
+      const entry = entries[Number(target.dataset.index)];
+      if (entry) entry.face = normalizeCoinFace(target.value);
+      s.run.special[campaignId] ||= {};
+      s.run.special[campaignId][coinEntryFace] = mergeCoinEntries(entries);
     });
   }
 });

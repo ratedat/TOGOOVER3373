@@ -264,6 +264,16 @@ const datasets = [
     summary: simpleSummary(["campaignId", "slot", "slotLabel", "selectionMode", "rowMode", "sectionAnchor"]),
   },
   {
+    name: "specialItemSources",
+    file: "special-item-sources.json",
+    listPath: "sources",
+    key: (item) => `${item.campaignId}|${item.parser}`,
+    label: (item) => item.parser || item.page,
+    campaignId: (item) => item.campaignId,
+    fields: ["page", "sourceUrl", "parser"],
+    summary: simpleSummary(["campaignId", "page", "parser"]),
+  },
+  {
     name: "difficultyVariantSources",
     file: "difficulty-variant-sources.json",
     listPath: "sources",
@@ -282,7 +292,8 @@ const datasets = [
     campaignId: (item) => item.id,
     fields: ["difficultyName", "minSelectableGrade", "maxSelectableGrade", "tableStyle", "fields"],
     summary: simpleSummary(["id", "difficultyName", "minSelectableGrade", "maxSelectableGrade", "tableStyle"]),
-  },  {
+  },
+  {
     name: "relics",
     file: "relics.json",
     listPath: "relics",
@@ -309,7 +320,7 @@ const datasets = [
     key: (item) => item.id,
     label: (item) => item.name || item.title,
     campaignId: (item) => item.campaignId,
-    fields: ["campaignId", "order", "group", "title", "subtitle", "name", "effect", "flavorText", "sourcePage", "sourceAnchor", "image.sourcePath", "image.sourceUrl"],
+    fields: ["campaignId", "order", "group", "title", "subtitle", "name", "effect", "flavorText", "sourcePage", "sourceAnchor", "image.sourcePath", "image.sourceUrl", "image.localPath"],
     summary: simpleSummary(["campaignId", "order", "group", "name", "effect"]),
   },
   {
@@ -319,7 +330,7 @@ const datasets = [
     key: (item) => item.id,
     label: (item) => item.name,
     campaignId: (item) => item.campaignId,
-    fields: ["campaignId", "order", "slot", "slotLabel", "selectionMode", "group", "groupLabel", "parentKey", "parentName", "variantRank", "variantLabel", "name", "effect", "flavorText", "sourcePage", "sourceAnchor", "image.sourcePath", "image.sourceUrl"],
+    fields: ["campaignId", "order", "slot", "slotLabel", "selectionMode", "group", "groupLabel", "parentKey", "parentName", "variantRank", "variantLabel", "name", "effect", "flavorText", "sourcePage", "sourceAnchor", "image.sourcePath", "image.sourceUrl", "image.localPath"],
     summary: simpleSummary(["campaignId", "slot", "parentName", "variantLabel", "name", "effect"]),
   },
   {
