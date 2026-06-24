@@ -1,7 +1,7 @@
 import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
 import { mediaUrl, specialEffectImageSrc } from "./lib/media.js";
-import { clampGridColumns, gridColumnOptions } from "./lib/preferences.js";
+import { clampGridColumns, gridColumnOptions, normalizePreferences } from "./lib/preferences.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
@@ -1563,14 +1563,7 @@ function ensureStateShape() {
   state.bossFlags = Array.isArray(state.bossFlags) ? state.bossFlags : [];
   normalizeBossSelections();
   state.pendingSuggestions = Array.isArray(state.pendingSuggestions) ? state.pendingSuggestions : [];
-  state.preferences ||= {};
-  state.preferences.showUnreleasedOperators ??= false;
-  state.preferences.operatorSort ||= "rarity_desc";
-  state.preferences.operatorGridColumns = clampGridColumns(state.preferences.operatorGridColumns ?? 2);
-  state.preferences.relicGridColumns = clampGridColumns(state.preferences.relicGridColumns ?? 2);
-  for (const [key, fallback] of Object.entries(overlayScrollSpeedDefaults)) {
-    state.preferences[key] = clampOverlayScrollSpeed(state.preferences[key], fallback);
-  }
+  state.preferences = normalizePreferences(state.preferences);
   state.tournament ||= { pendingState: null, lastSubmissionAt: null, submittedBy: null };
   deriveDifficultyTier();
 }
