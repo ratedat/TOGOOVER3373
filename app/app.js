@@ -3,6 +3,7 @@ import { renderEffectList } from "./components/effects.js";
 import { bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
+import { operatorReleaseMatches as operatorMatchesRelease, sortOperators as sortOperatorsByPreference, uniqueValues } from "./domain/operators.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asEffectStackEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, coinFaceLabels, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
 import * as selectableEffects from "./domain/selectable-effects.js";
@@ -681,12 +682,7 @@ function getRecruitedOperators() {
 }
 
 function sortOperators(operators) {
-  const mode = state.preferences?.operatorSort || "rarity_desc";
-  return [...operators].sort((a, b) => {
-    if (mode === "rarity_asc") return (a.rarity - b.rarity) || (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name, "ja");
-    if (mode === "name") return a.name.localeCompare(b.name, "ja");
-    return (b.rarity - a.rarity) || (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name, "ja");
-  });
+  return sortOperatorsByPreference(operators, state.preferences?.operatorSort || "rarity_desc");
 }
 
 function getDifficultyGradeConfig(campaignId = state?.run?.campaignId) {
@@ -732,16 +728,8 @@ function renderDifficultyFields(grade, mode = "control") {
 }
 
 function operatorReleaseMatches(item) {
-  if (ui.operatorRelease === "all") return true;
-  if (ui.operatorRelease === "unreleased") return Boolean(item.hiddenByDefault);
-  return !item.hiddenByDefault;
+  return operatorMatchesRelease(item, ui.operatorRelease);
 }
-
-function uniqueValues(items, key) {
-  return [...new Set(items.map((item) => item[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ja"));
-}
-
-
 
 function getOverlayScrollSpeed(key) {
   return clampOverlayScrollSpeed(state?.preferences?.[key], overlayScrollSpeedDefaults[key] ?? 12);
