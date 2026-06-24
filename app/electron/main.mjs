@@ -19,6 +19,7 @@ import {
   serializeDesktopSettings,
   shouldPromptForPort,
 } from "../runtime/port-config.mjs";
+import { launchRequestData, resolveSecondInstanceView } from "../runtime/launch-guard.mjs";
 
 let port = resolveStartupPort({ args: process.argv, env: process.env });
 const initialView = normalizeView(readArg(process.argv, "--view", "control"));
@@ -35,6 +36,27 @@ function currentPort() {
 function loadView(view) {
   if (!mainWindow) return;
   mainWindow.loadURL(appUrl(currentPort(), view));
+}
+
+function focusWindow(window) {
+  if (!window || window.isDestroyed()) return false;
+  if (window.isMinimized()) window.restore();
+  window.show();
+  window.focus();
+  return true;
+}
+
+function focusAnyWindow() {
+  return focusWindow(mainWindow) || focusWindow(BrowserWindow.getAllWindows().find((window) => !window.isDestroyed()));
+}
+
+function handleSecondInstance(_event, commandLine, _workingDirectory, additionalData) {
+  const requestedView = resolveSecondInstanceView(commandLine, additionalData, initialView);
+  if (serverController) {
+    if (mainWindow) loadView(requestedView);
+    else if (app.isReady()) createWindow(appUrl(currentPort(), requestedView));
+  }
+  focusAnyWindow();
 }
 
 function buildMenu() {
@@ -295,20 +317,26 @@ async function startDesktopApp() {
   createWindow(targetUrl);
 }
 
-app.whenReady().then(startDesktopApp).catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
+if (!app.requestSingleInstanceLock(launchRequestData({ port, view: initialView }))) {
   app.quit();
-});
+} else {
+  app.on("second-instance", handleSecondInstance);
 
-app.on("activate", () => {
-  if (BrowserWindow.getAllWindows().length === 0 && serverController) createWindow(appUrl(currentPort(), initialView));
-});
+  app.whenReady().then(startDesktopApp).catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    app.quit();
+  });
 
-app.on("before-quit", () => {
-  isQuitting = true;
-  serverController?.server?.close();
-});
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0 && serverController) createWindow(appUrl(currentPort(), initialView));
+  });
 
-app.on("window-all-closed", () => {
-  if (process.platform !== "darwin") app.quit();
-});
+  app.on("before-quit", () => {
+    isQuitting = true;
+    serverController?.server?.close();
+  });
+
+  app.on("window-all-closed", () => {
+    if (process.platform !== "darwin") app.quit();
+  });
+}

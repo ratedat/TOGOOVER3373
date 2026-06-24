@@ -66,6 +66,15 @@ export function waitForReady(url, attempts = 60) {
   });
 }
 
+export async function isLocalServerReady(url, attempts = 2) {
+  try {
+    await waitForReady(url, attempts);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function startLocalServer({ port = DEFAULT_PORT, stdio = ["ignore", "pipe", "pipe"] } = {}) {
   return spawn(process.execPath, [path.join(APP_DIR, "server.mjs"), "--port", String(port)], {
     cwd: ROOT,

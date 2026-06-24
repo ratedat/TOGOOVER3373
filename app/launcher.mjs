@@ -2,6 +2,7 @@ import {
   appUrl,
   DEFAULT_PORT,
   hasFlag,
+  isLocalServerReady,
   normalizePort,
   normalizeView,
   openExternalUrl,
@@ -16,10 +17,8 @@ const view = normalizeView(readArg(process.argv, "--view", "control"));
 const noOpen = hasFlag(process.argv, "--no-open") || process.env.ARKNIGHTS_APP_NO_OPEN === "1";
 const exitAfterReady = hasFlag(process.argv, "--exit-after-ready");
 const targetUrl = appUrl(port, view);
-const server = startLocalServer({ port });
 
-server.stdout.on("data", (chunk) => process.stdout.write(chunk));
-server.stderr.on("data", (chunk) => process.stderr.write(chunk));
+let server = null;
 
 let shuttingDown = false;
 function shutdown(code = 0) {
@@ -31,11 +30,21 @@ function shutdown(code = 0) {
 
 process.on("SIGINT", () => shutdown(0));
 process.on("SIGTERM", () => shutdown(0));
-server.on("exit", (code) => {
-  if (!shuttingDown) process.exit(code ?? 1);
-});
 
 try {
+  if (await isLocalServerReady(targetUrl, 2)) {
+    console.log(`App already running: ${targetUrl}`);
+    if (!noOpen) openExternalUrl(targetUrl);
+    process.exit(0);
+  }
+
+  server = startLocalServer({ port });
+  server.stdout.on("data", (chunk) => process.stdout.write(chunk));
+  server.stderr.on("data", (chunk) => process.stderr.write(chunk));
+  server.on("exit", (code) => {
+    if (!shuttingDown) process.exit(code ?? 1);
+  });
+
   await waitForReady(targetUrl);
   console.log(`App: ${targetUrl}`);
   if (!noOpen) openExternalUrl(targetUrl);

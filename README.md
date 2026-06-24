@@ -46,6 +46,8 @@ When running from the source folder on Windows, double-click this file instead o
 
 The first launch may run a one-time setup if dependencies are missing. After that, the desktop app asks which local server port to use before starting. The default is `5173`, and the last selected port is reused on the next launch. The top menu can switch between Control and Overlay Preview, and can open common OBS overlay URLs in the system browser.
 
+The desktop app uses a single-instance guard. Launching it again brings the existing window to the front instead of starting another local server. The web launcher also reuses an already-running server on the selected port and exits after opening the existing URL.
+
 Developer fallback commands:
 
 ```powershell
