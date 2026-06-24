@@ -10,7 +10,7 @@ import { renderSpecialOverlayBlock as renderSpecialOverlayBlockComponent } from 
 import { registerControlEvents } from "./control-events.js";
 import { bossSectionAllowsMultiple, bossSelectionValues as readBossSelectionValues, buildBossFlagEntries, getBossManualSections as readBossManualSections, getSelectedFloor3Boss as readSelectedFloor3Boss, getSelectedManualBosses as readSelectedManualBosses, normalizeBossSelections as normalizeBossSelectionsState } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
-import { difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
+import { applyDifficultyTier, difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getDifficultyTierLabel as readDifficultyTierLabel, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
 import { operatorReleaseMatches as operatorMatchesRelease, sortOperators as sortOperatorsByPreference, uniqueValues } from "./domain/operators.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
@@ -493,30 +493,11 @@ function normalizeOperatorFilters() {
   if (ui.operatorBranch !== "all" && !branchValues.has(ui.operatorBranch)) ui.operatorBranch = "all";
 }
 function deriveDifficultyTier() {
-  const campaignId = state?.run?.campaignId;
-  const cfg = master?.difficultyTiers?.[campaignId];
-  if (!cfg) {
-    state.run.difficultyTierId = null;
-    return null;
-  }
-  const raw = state.run.difficulty;
-  const value = raw === null || raw === undefined || raw === "" ? null : Number(raw);
-  if (!Number.isFinite(value)) {
-    state.run.difficultyTierId = null;
-    return null;
-  }
-  const tier = cfg.tiers.find((item) => value >= item.minDifficulty && (item.maxDifficulty === null || value <= item.maxDifficulty));
-  state.run.difficultyTierId = tier?.id || cfg.defaultTierId || null;
-  return tier || null;
+  return applyDifficultyTier(master, state?.run);
 }
 
 function getDifficultyTierLabel() {
-  const campaignId = state?.run?.campaignId;
-  const tierId = state?.run?.difficultyTierId;
-  const cfg = master?.difficultyTiers?.[campaignId];
-  if (!cfg || !tierId) return "未解決";
-  const tier = cfg.tiers.find((item) => item.id === tierId);
-  return tier ? tier.label : tierId;
+  return readDifficultyTierLabel(master, state?.run);
 }
 
 function relicEffectForDisplay(relic) {
