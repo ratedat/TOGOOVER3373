@@ -812,10 +812,7 @@ function refreshChoiceCountLabels() {
 }
 
 function toggleChoiceElement(element, type, id) {
-  mutate((s) => {
-    if (type === "relic") s.relics = toggleId(s.relics, id);
-    else s.operators = toggleId(s.operators, id);
-  }, { render: false });
+  mutate((s) => controlActions.toggleChoice(s, type, id), { render: false });
   const active = type === "relic" ? state.relics.includes(id) : state.operators.includes(id);
   setChoicePressed(element, active);
   refreshChoiceCountLabels();
@@ -1219,11 +1216,6 @@ function renderOverlay() {
   setupOverlayAutoScroll(app);
 }
 
-function toggleId(list, id) {
-  const set = new Set(list || []);
-  if (set.has(id)) set.delete(id); else set.add(id);
-  return [...set];
-}
 
 function parseImportDraft() {
   if (!ui.importDraft.trim()) throw new Error("JSONが空です");

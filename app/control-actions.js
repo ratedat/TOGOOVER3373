@@ -197,3 +197,11 @@ export function updateCoinEntryFace(state, campaignId, fieldId, index, value) {
   const special = ensureCampaignSpecial(state, campaignId);
   special[fieldId] = mergeCoinEntries(entries);
 }
+
+export function toggleChoice(state, type, id) {
+  const key = type === "relic" ? "relics" : "operators";
+  const set = new Set(state[key] || []);
+  if (set.has(id)) set.delete(id);
+  else set.add(id);
+  state[key] = [...set];
+}
