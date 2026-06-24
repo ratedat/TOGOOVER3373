@@ -7,6 +7,7 @@ import * as specialControls from "./components/special-controls.js";
 import { renderCompactSpecialPicker as renderCompactSpecialPickerComponent, renderSpecialField as renderSpecialFieldComponent } from "./components/special-fields.js";
 import { renderCoinEntryRow as renderCoinEntryRowComponent, renderCoinLoadoutField as renderCoinLoadoutFieldComponent, renderEffectStackEntryRow as renderEffectStackEntryRowComponent, renderEffectStackLoadoutField as renderEffectStackLoadoutFieldComponent, renderEffectStackStateOptions as renderEffectStackStateOptionsComponent } from "./components/special-loadouts.js";
 import { renderSpecialOverlayBlock as renderSpecialOverlayBlockComponent } from "./components/special-overlay.js";
+import * as controlActions from "./control-actions.js";
 import { bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
 import { difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
@@ -1242,24 +1243,14 @@ app.addEventListener("click", async (event) => {
     const container = button.closest("[data-special-picker]");
     const value = container?.querySelector("[data-special-picker-select]")?.value;
     if (fieldId && value) {
-      mutate((s) => {
-        const campaignId = getCampaign().id;
-        s.run.special[campaignId] ||= {};
-        const selected = new Set(asSpecialArray(s.run.special[campaignId][fieldId]));
-        selected.add(value);
-        s.run.special[campaignId][fieldId] = [...selected];
-      });
+      mutate((s) => controlActions.addSpecialEffect(s, getCampaign().id, fieldId, value));
     }
     return;
   }
   if (action === "remove-special-effect") {
     const fieldId = button.dataset.specialPickerField;
     if (fieldId && id) {
-      mutate((s) => {
-        const campaignId = getCampaign().id;
-        s.run.special[campaignId] ||= {};
-        s.run.special[campaignId][fieldId] = asSpecialArray(s.run.special[campaignId][fieldId]).filter((itemId) => itemId !== id);
-      });
+      mutate((s) => controlActions.removeSpecialEffect(s, getCampaign().id, fieldId, id));
     }
     return;
   }
@@ -1272,12 +1263,7 @@ app.addEventListener("click", async (event) => {
       const fieldConfig = getSpecialFieldConfig(campaignId, fieldId) || { id: fieldId };
       const count = clampCoinCount(container?.querySelector('[data-effect-stack-input="count"]')?.value);
       const stateId = normalizeStackState(fieldConfig, container?.querySelector('[data-effect-stack-input="state"]')?.value, campaignId);
-      mutate((s) => {
-        s.run.special[campaignId] ||= {};
-        const entries = asEffectStackEntries(s.run.special[campaignId][fieldId]);
-        entries.push({ effectId, count, stateId });
-        s.run.special[campaignId][fieldId] = mergeEffectStackEntries(fieldConfig, entries, campaignId);
-      });
+      mutate((s) => controlActions.addEffectStackEntry(s, campaignId, fieldId, { effectId, count, stateId }, fieldConfig, mergeEffectStackEntries));
     }
     return;
   }
@@ -1285,13 +1271,7 @@ app.addEventListener("click", async (event) => {
     const fieldId = button.dataset.effectStackField;
     const index = Number(button.dataset.index);
     if (fieldId && Number.isInteger(index)) {
-      mutate((s) => {
-        const campaignId = getCampaign().id;
-        s.run.special[campaignId] ||= {};
-        const entries = asEffectStackEntries(s.run.special[campaignId][fieldId]);
-        entries.splice(index, 1);
-        s.run.special[campaignId][fieldId] = entries;
-      });
+      mutate((s) => controlActions.removeEffectStackEntry(s, getCampaign().id, fieldId, index));
     }
     return;
   }
@@ -1303,13 +1283,7 @@ app.addEventListener("click", async (event) => {
       const count = clampCoinCount(container?.querySelector('[data-coin-input="count"]')?.value);
       const statusId = container?.querySelector('[data-coin-input="status"]')?.value || null;
       const face = normalizeCoinFace(container?.querySelector('[data-coin-input="face"]')?.value);
-      mutate((s) => {
-        const campaignId = getCampaign().id;
-        s.run.special[campaignId] ||= {};
-        const entries = asCoinEntries(s.run.special[campaignId][fieldId]);
-        entries.push({ coinId, count, statusId, face });
-        s.run.special[campaignId][fieldId] = mergeCoinEntries(entries);
-      });
+      mutate((s) => controlActions.addCoinEntry(s, getCampaign().id, fieldId, { coinId, count, statusId, face }));
     }
     return;
   }
@@ -1317,13 +1291,7 @@ app.addEventListener("click", async (event) => {
     const fieldId = button.dataset.coinField;
     const index = Number(button.dataset.index);
     if (fieldId && Number.isInteger(index)) {
-      mutate((s) => {
-        const campaignId = getCampaign().id;
-        s.run.special[campaignId] ||= {};
-        const entries = asCoinEntries(s.run.special[campaignId][fieldId]);
-        entries.splice(index, 1);
-        s.run.special[campaignId][fieldId] = entries;
-      });
+      mutate((s) => controlActions.removeCoinEntry(s, getCampaign().id, fieldId, index));
     }
     return;
   }
