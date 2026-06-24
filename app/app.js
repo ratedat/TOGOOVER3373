@@ -1,7 +1,7 @@
 import { bossFloorLabel, bossImages, bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
-import { asCoinEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, coinFaceLabels, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
+import { asCoinEntries, asEffectStackEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, coinFaceLabels, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
 import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
 import { mediaUrl, specialEffectImageSrc } from "./lib/media.js";
@@ -120,18 +120,6 @@ function getStackStateEffect(field, value, campaignId = getCampaign()?.id) {
   return fromOption || field?.stateEffects?.[stateId] || "";
 }
 
-function asEffectStackEntries(value) {
-  if (!Array.isArray(value)) return [];
-  return value.map((entry) => {
-    if (typeof entry === "string") return { effectId: entry, count: 1, stateId: null };
-    if (!entry || typeof entry !== "object") return null;
-    return {
-      effectId: entry.effectId || entry.id || null,
-      count: clampCoinCount(entry.count),
-      stateId: entry.stateId || entry.state || entry.statusId || null,
-    };
-  }).filter((entry) => entry?.effectId);
-}
 
 function normalizeEffectStackEntry(field, entry, campaignId = getCampaign()?.id) {
   return {

@@ -66,3 +66,16 @@ export function mergeCoinEntries(entries) {
   }
   return [...merged.values()];
 }
+
+export function asEffectStackEntries(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((entry) => {
+    if (typeof entry === "string") return { effectId: entry, count: 1, stateId: null };
+    if (!entry || typeof entry !== "object") return null;
+    return {
+      effectId: entry.effectId || entry.id || null,
+      count: clampCoinCount(entry.count),
+      stateId: entry.stateId || entry.state || entry.statusId || null,
+    };
+  }).filter((entry) => entry?.effectId);
+}
