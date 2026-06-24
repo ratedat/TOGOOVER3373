@@ -1,6 +1,7 @@
 import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
 import { mediaUrl, specialEffectImageSrc } from "./lib/media.js";
+import { clampGridColumns, gridColumnOptions } from "./lib/preferences.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
@@ -1053,11 +1054,7 @@ function uniqueValues(items, key) {
   return [...new Set(items.map((item) => item[key]).filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b), "ja"));
 }
 
-function clampOperatorGridColumns(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 2;
-  return Math.min(6, Math.max(1, Math.trunc(numeric)));
-}
+
 
 function getOverlayScrollSpeed(key) {
   return clampOverlayScrollSpeed(state?.preferences?.[key], overlayScrollSpeedDefaults[key] ?? 12);
@@ -1071,11 +1068,11 @@ function renderScrollSpeedControl(key) {
 }
 
 function getOperatorGridColumns() {
-  return clampOperatorGridColumns(state?.preferences?.operatorGridColumns ?? 2);
+  return clampGridColumns(state?.preferences?.operatorGridColumns ?? 2);
 }
 
 function getRelicGridColumns() {
-  return clampOperatorGridColumns(state?.preferences?.relicGridColumns ?? 2);
+  return clampGridColumns(state?.preferences?.relicGridColumns ?? 2);
 }
 function normalizeOperatorFilters() {
   const releaseBase = master.operators.filter(operatorReleaseMatches);
@@ -1569,8 +1566,8 @@ function ensureStateShape() {
   state.preferences ||= {};
   state.preferences.showUnreleasedOperators ??= false;
   state.preferences.operatorSort ||= "rarity_desc";
-  state.preferences.operatorGridColumns = clampOperatorGridColumns(state.preferences.operatorGridColumns ?? 2);
-  state.preferences.relicGridColumns = clampOperatorGridColumns(state.preferences.relicGridColumns ?? 2);
+  state.preferences.operatorGridColumns = clampGridColumns(state.preferences.operatorGridColumns ?? 2);
+  state.preferences.relicGridColumns = clampGridColumns(state.preferences.relicGridColumns ?? 2);
   for (const [key, fallback] of Object.entries(overlayScrollSpeedDefaults)) {
     state.preferences[key] = clampOverlayScrollSpeed(state.preferences[key], fallback);
   }
@@ -1860,7 +1857,7 @@ function renderRelicsTab() {
           <div class="search-strip relic-filter-strip">
             <label>検索<input value="${html(ui.relicSearch)}" data-ui="relicSearch" placeholder="秘宝名、番号、効果" /></label>
             <label>カテゴリ<select data-ui="relicCategory"><option value="all">すべて</option>${categories.map((cat) => `<option value="${html(cat)}" ${cat === ui.relicCategory ? "selected" : ""}>${html(cat)}</option>`).join("")}</select></label>
-            <label>表示列<select data-field="relicGridColumns">${[1, 2, 3, 4, 5, 6].map((count) => `<option value="${count}" ${count === viewData.gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
+            <label>表示列<select data-field="relicGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === viewData.gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
             <button data-action="clear-relics">秘宝を全解除</button>
           </div>
           ${renderRelicListArea(viewData)}
@@ -1906,7 +1903,7 @@ function renderOperatorsTab() {
             <label>職業<select data-ui="operatorClass"><option value="all">すべて</option>${classOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorClass ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
             <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
             <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
-            <label>表示列<select data-field="operatorGridColumns">${[1, 2, 3, 4, 5, 6].map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
+            <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
           </div>
           <div class="list-area operator-pick-grid" style="--operator-grid-columns: ${gridColumns}">
             ${shown.map((item) => renderOperatorControlRow(item, selected.has(item.id))).join("")}
@@ -2503,9 +2500,9 @@ app.addEventListener("change", (event) => {
       } else if (field === "operatorSort") {
         s.preferences.operatorSort = target.value;
       } else if (field === "operatorGridColumns") {
-        s.preferences.operatorGridColumns = clampOperatorGridColumns(target.value);
+        s.preferences.operatorGridColumns = clampGridColumns(target.value);
       } else if (field === "relicGridColumns") {
-        s.preferences.relicGridColumns = clampOperatorGridColumns(target.value);
+        s.preferences.relicGridColumns = clampGridColumns(target.value);
       } else if (isOverlayScrollSpeedField(field)) {
         s.preferences[field] = clampOverlayScrollSpeed(target.value, overlayScrollSpeedDefaults[field]);
       } else if (field === "showUnreleasedOperators") {
