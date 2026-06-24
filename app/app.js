@@ -13,6 +13,7 @@ import { createLookupMaps } from "./domain/master-maps.js";
 import { applyDifficultyTier, difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getDifficultyTierLabel as readDifficultyTierLabel, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
 import { getOperatorFilterView, sortOperators as sortOperatorsByPreference } from "./domain/operators.js";
+import { getRelicCategories, getRelicListView as buildRelicListView } from "./domain/relics.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampSpecialNumber } from "./domain/special-values.js";
 import * as selectableEffects from "./domain/selectable-effects.js";
@@ -754,19 +755,7 @@ function renderRunTab() {
 }
 
 function getRelicListView() {
-  const relics = getCampaignRelics();
-  const q = normalizeText(ui.relicSearch);
-  const filtered = relics.filter((item) => {
-    if (ui.relicCategory !== "all" && (item.category || "未分類") !== ui.relicCategory) return false;
-    if (!q) return true;
-    return normalizeText(`${item.number} ${item.name} ${item.category} ${item.effect}`).includes(q);
-  });
-  return {
-    filtered,
-    shown: filtered.slice(0, 500),
-    owned: new Set(state.relics),
-    gridColumns: getRelicGridColumns(),
-  };
+  return buildRelicListView(getCampaignRelics(), ui, state.relics, getRelicGridColumns());
 }
 
 function renderRelicListContent(viewData) {
@@ -790,8 +779,7 @@ function refreshRelicListOnly() {
 }
 
 function renderRelicsTab() {
-  const relics = getCampaignRelics();
-  const categories = [...new Set(relics.map((item) => item.category || "未分類"))];
+  const categories = getRelicCategories(getCampaignRelics());
   const viewData = getRelicListView();
   return `
     <section class="panel-grid">
