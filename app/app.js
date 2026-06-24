@@ -1389,106 +1389,36 @@ app.addEventListener("change", (event) => {
   }
   const field = target.dataset.field;
   if (field) {
-    mutate((s) => {
-      if (field === "campaignId") {
-        s.run.campaignId = target.value;
-        s.run.squadId = null;
-        s.run.squad = null;
-        s.run.squadRandomEffectOptionId = null;
-        s.run.performanceId = null;
-        s.run.difficulty = null;
-        s.run.difficultyTierId = null;
-        s.relics = [];
-        s.bossFlags = [];
-        s.bossSelections ||= {};
-        s.bossSelections[target.value] ||= {};
-      } else if (field === "difficulty") {
-        s.run.difficulty = target.value === "" ? null : Number(target.value);
-      } else if (field === "squadId") {
-        s.run.squadId = target.value || null;
-        s.run.squad = null;
-        s.run.squadRandomEffectOptionId = null;
-      } else if (field === "squadRandomEffectOptionId") {
-        s.run.squadRandomEffectOptionId = target.value || null;
-      } else if (field === "performanceId") {
-        s.run.performanceId = target.value || null;
-      } else if (field === "operatorSort") {
-        s.preferences.operatorSort = target.value;
-      } else if (field === "operatorGridColumns") {
-        s.preferences.operatorGridColumns = clampGridColumns(target.value);
-      } else if (field === "relicGridColumns") {
-        s.preferences.relicGridColumns = clampGridColumns(target.value);
-      } else if (isOverlayScrollSpeedField(field)) {
-        s.preferences[field] = clampOverlayScrollSpeed(target.value, overlayScrollSpeedDefaults[field]);
-      } else if (field === "showUnreleasedOperators") {
-        s.preferences.showUnreleasedOperators = target.checked;
-      }
-    });
+    mutate((s) => controlActions.updateRunField(s, field, target.value, target.checked));
   }
   const bossSelect = target.dataset.bossSelect;
   if (bossSelect) {
-    mutate((s) => {
-      const campaignId = getCampaign().id;
-      s.bossSelections ||= {};
-      s.bossSelections[campaignId] ||= {};
-      s.bossSelections[campaignId][bossSelect] = target.value || null;
-    });
+    mutate((s) => controlActions.updateBossSelect(s, getCampaign().id, bossSelect, target.value));
   }
   const bossToggle = target.dataset.bossToggle;
   if (bossToggle) {
-    mutate((s) => {
-      const campaignId = getCampaign().id;
-      s.bossSelections ||= {};
-      s.bossSelections[campaignId] ||= {};
-      const current = s.bossSelections[campaignId][bossToggle];
-      const next = new Set(Array.isArray(current) ? current : (current ? [current] : []));
-      if (target.checked) next.add(target.value);
-      else next.delete(target.value);
-      s.bossSelections[campaignId][bossToggle] = [...next];
-    });
+    mutate((s) => controlActions.updateBossToggle(s, getCampaign().id, bossToggle, target.value, target.checked));
   }
   const specialVisibility = target.dataset.specialVisibility;
   if (specialVisibility) {
-    mutate((s) => {
-      const campaign = getCampaign();
-      const campaignId = campaign.id;
-      const fieldConfig = (campaign.specialFields || []).find((field) => field.id === specialVisibility) || { id: specialVisibility };
-      const key = getSpecialOverlayToggleKey(fieldConfig);
-      s.run.special[campaignId] ||= {};
-      s.run.special[campaignId][key] = target.checked;
-    });
+    const campaign = getCampaign();
+    const fieldConfig = (campaign.specialFields || []).find((field) => field.id === specialVisibility) || { id: specialVisibility };
+    const key = getSpecialOverlayToggleKey(fieldConfig);
+    mutate((s) => controlActions.updateSpecialVisibility(s, campaign.id, key, target.checked));
   }
   const specialField = target.dataset.specialField;
   if (specialField) {
-    mutate((s) => {
-      const campaignId = getCampaign().id;
-      const fieldConfig = getSpecialFieldConfig(campaignId, specialField);
-      s.run.special[campaignId] ||= {};
-      s.run.special[campaignId][specialField] = fieldConfig?.type === "number"
-        ? clampSpecialNumber(target.value, fieldConfig.min, fieldConfig.max)
-        : (target.value === "" ? null : target.value);
-    });
+    const campaignId = getCampaign().id;
+    const fieldConfig = getSpecialFieldConfig(campaignId, specialField);
+    mutate((s) => controlActions.updateSpecialField(s, campaignId, specialField, target.value, fieldConfig));
   }
   const specialEffectToggle = target.dataset.specialEffectToggle;
   if (specialEffectToggle) {
-    mutate((s) => {
-      const campaignId = getCampaign().id;
-      s.run.special[campaignId] ||= {};
-      const selected = new Set(asSpecialArray(s.run.special[campaignId][specialEffectToggle]));
-      if (target.checked) selected.add(target.value); else selected.delete(target.value);
-      s.run.special[campaignId][specialEffectToggle] = [...selected];
-    });
+    mutate((s) => controlActions.updateSpecialEffectToggle(s, getCampaign().id, specialEffectToggle, target.value, target.checked));
   }
   const specialRankedField = target.dataset.specialRankedField;
   if (specialRankedField) {
-    mutate((s) => {
-      const campaignId = getCampaign().id;
-      const parentKey = target.dataset.effectParent;
-      s.run.special[campaignId] ||= {};
-      const selected = { ...asSpecialObject(s.run.special[campaignId][specialRankedField]) };
-      if (target.value) selected[parentKey] = target.value; else delete selected[parentKey];
-      s.run.special[campaignId][specialRankedField] = selected;
-    });
+    mutate((s) => controlActions.updateSpecialRankedField(s, getCampaign().id, specialRankedField, target.dataset.effectParent, target.value));
   }
 
   const effectStackEntryCount = target.dataset.effectStackEntryCount;
