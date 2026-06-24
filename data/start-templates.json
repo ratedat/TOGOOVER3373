@@ -1,0 +1,545 @@
+{
+  "version": 1,
+  "templates": [
+    {
+      "id": "is2_phantom_difficulty_3_opening_scripts",
+      "campaignId": "is2_phantom",
+      "title": "正式調査3+ 開始秘宝候補",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 3
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "劇作家の原稿",
+          "count": 1,
+          "relicIds": [
+            "is2_phantom_relic_189",
+            "is2_phantom_relic_190",
+            "is2_phantom_relic_191",
+            "is2_phantom_relic_192"
+          ]
+        },
+        {
+          "type": "manualChoice",
+          "label": "有利効果を持つ秘宝",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is2_phantom_difficulty_4_opening_bad_relic",
+      "campaignId": "is2_phantom",
+      "title": "正式調査4+ 開始秘宝候補",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 4
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "不利効果を持つ秘宝",
+          "count": 1
+        },
+        {
+          "type": "manualChoice",
+          "label": "有利効果を持つ秘宝",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is2_phantom_difficulty_7_fallen_land_scripts",
+      "campaignId": "is2_phantom",
+      "title": "正式調査7+ 凋落の故地候補",
+      "phase": "areaEnter",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 7
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "凋落の故地突入時: 劇作家の原稿",
+          "count": 1,
+          "relicIds": [
+            "is2_phantom_relic_189",
+            "is2_phantom_relic_190",
+            "is2_phantom_relic_191",
+            "is2_phantom_relic_192"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "is2_phantom_difficulty_13_modified_bad_relic",
+      "campaignId": "is2_phantom",
+      "title": "正式調査13+ 改造秘宝候補",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 13
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "改造された不利効果を持つ秘宝",
+          "count": 1
+        },
+        {
+          "type": "manualChoice",
+          "label": "有利効果を持つ秘宝",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is2_phantom_difficulty_15_crimson_corridor",
+      "campaignId": "is2_phantom",
+      "title": "正式調査15+ 緋月の回廊候補",
+      "phase": "areaEnter",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 15
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "緋月の回廊突入時: 不利効果を持つ秘宝",
+          "count": 1
+        },
+        {
+          "type": "manualChoice",
+          "label": "緋月の回廊突入時: 特殊な有利効果を持つ秘宝",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is3_mizuki_difficulty_2_floor3_curse",
+      "campaignId": "is3_mizuki",
+      "title": "波瀾万丈2+ 第三層開始候補",
+      "phase": "floor3Start",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 2
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "第三層開始時: 呪いの秘宝",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is3_mizuki_difficulty_6_start_light",
+      "campaignId": "is3_mizuki",
+      "title": "波瀾万丈6+ 初期灯火補正",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 6
+      },
+      "operations": [
+        {
+          "type": "note",
+          "label": "初期灯火",
+          "value": "-15"
+        }
+      ]
+    },
+    {
+      "id": "is3_mizuki_difficulty_10_start_light",
+      "campaignId": "is3_mizuki",
+      "title": "波瀾万丈10+ 初期灯火補正",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 10
+      },
+      "operations": [
+        {
+          "type": "note",
+          "label": "初期灯火",
+          "value": "-15"
+        }
+      ]
+    },
+    {
+      "id": "is3_mizuki_difficulty_16_caregiver_genetic",
+      "campaignId": "is3_mizuki",
+      "title": "波瀾万丈16+ 養育者の遺伝資",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 16
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is3_mizuki_relic_262"
+        }
+      ]
+    },
+    {
+      "id": "is3_mizuki_squad_01_survivor_contract",
+      "campaignId": "is3_mizuki",
+      "title": "精神論分隊 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is3_mizuki_squad_01"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is3_mizuki_relic_261"
+        }
+      ]
+    },
+    {
+      "id": "is4_sami_squad_02_revelation_boards",
+      "campaignId": "is4_sami",
+      "title": "生活重視分隊 啓示板候補",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is4_sami_squad_02"
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "初期啓示板",
+          "count": 3
+        }
+      ]
+    },
+    {
+      "id": "is5_sarkaz_difficulty_17_floor3_cursed_item",
+      "campaignId": "is5_sarkaz",
+      "title": "魂に直面17+ 灰燼の迷城候補",
+      "phase": "floor3Start",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 17
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "第三層【灰燼の迷城】突入時: 呪われし物",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is5_sarkaz_squad_14_greedy_scale",
+      "campaignId": "is5_sarkaz",
+      "title": "破棘成金分隊 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is5_sarkaz_squad_14"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is5_sarkaz_relic_225"
+        }
+      ]
+    },
+    {
+      "id": "is5_sarkaz_squad_15_dowsing_count",
+      "campaignId": "is5_sarkaz",
+      "title": "擬態学者分隊 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is5_sarkaz_squad_15"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is5_sarkaz_relic_221"
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_difficulty_3_coin_box",
+      "campaignId": "is6_sui",
+      "title": "迎客入園3+ 初期銭匣",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 3
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_b01",
+          "count": 3
+        },
+        {
+          "type": "note",
+          "label": "銭匣容量",
+          "value": "+3"
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_difficulty_7_special_bad_coins",
+      "campaignId": "is6_sui",
+      "title": "迎客入園7+ 厲銭化",
+      "phase": "runStart",
+      "trigger": {
+        "type": "difficultyMin",
+        "value": 7
+      },
+      "operations": [
+        {
+          "type": "manualChoice",
+          "label": "初期銭匣内の大炎通宝が特殊な厲銭へ変化",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_01_time_end",
+      "campaignId": "is6_sui",
+      "title": "指揮分隊 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_01"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is6_sui_relic_228"
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_03_silk_coin",
+      "campaignId": "is6_sui",
+      "title": "支援分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_03"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_r08",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_04_north_coin",
+      "campaignId": "is6_sui",
+      "title": "突撃戦術分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_04"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_b03",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_05_west_coin",
+      "campaignId": "is6_sui",
+      "title": "要塞戦術分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_05"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_b02",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_06_south_coin",
+      "campaignId": "is6_sui",
+      "title": "援護戦術分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_06"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_b04",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_07_east_coin",
+      "campaignId": "is6_sui",
+      "title": "破壊戦術分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_07"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_b05",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_14_first_writing_coin",
+      "campaignId": "is6_sui",
+      "title": "百花繚乱分隊 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_14"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_u5",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_15_relic_and_coin",
+      "campaignId": "is6_sui",
+      "title": "起死回生分隊 開始秘宝/通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squad",
+        "squadId": "is6_sui_squad_15"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is6_sui_relic_181"
+        },
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_f23",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_16_option_01_coin_pair",
+      "campaignId": "is6_sui",
+      "title": "歳影反響分隊 効果01 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squadOption",
+        "squadId": "is6_sui_squad_16",
+        "optionId": "is6_sui_shadow_echo_01"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_r09",
+          "count": 1
+        },
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_s8",
+          "count": 1
+        },
+        {
+          "type": "note",
+          "label": "銭匣容量",
+          "value": "+2"
+        },
+        {
+          "type": "note",
+          "label": "遊覧券",
+          "value": "+3"
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_16_option_04_shuttle",
+      "campaignId": "is6_sui",
+      "title": "歳影反響分隊 効果04 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squadOption",
+        "squadId": "is6_sui_squad_16",
+        "optionId": "is6_sui_shadow_echo_04"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is6_sui_relic_241"
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_16_option_06_military_coin",
+      "campaignId": "is6_sui",
+      "title": "歳影反響分隊 効果06 開始通宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squadOption",
+        "squadId": "is6_sui_squad_16",
+        "optionId": "is6_sui_shadow_echo_06"
+      },
+      "operations": [
+        {
+          "type": "addCoin",
+          "fieldId": "coins",
+          "coinId": "is6_sui_selectable_coin_is6_copper_r04",
+          "count": 1
+        }
+      ]
+    },
+    {
+      "id": "is6_sui_squad_16_option_07_home_cooking",
+      "campaignId": "is6_sui",
+      "title": "歳影反響分隊 効果07 開始秘宝",
+      "phase": "runStart",
+      "trigger": {
+        "type": "squadOption",
+        "squadId": "is6_sui_squad_16",
+        "optionId": "is6_sui_shadow_echo_07"
+      },
+      "operations": [
+        {
+          "type": "addRelic",
+          "relicId": "is6_sui_relic_182"
+        }
+      ]
+    }
+  ]
+}

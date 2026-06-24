@@ -39,6 +39,7 @@ $DataFiles = @(
   'performances.json',
   'relic-images.json',
   'operator-images.json',
+  'operator-implementation-history.json',
   'difficulty-tiers.json',
   'difficulty-grades.json',
   'relic-effect-variants.json'
@@ -134,6 +135,7 @@ foreach ($step in $steps) {
       $args = @()
       if ($ForceDownload) { $args += '-ForceDownload' }
       Invoke-ToolStep 'Operator data and image sync' 'sync-operator-data.ps1' $args
+      Invoke-ToolStep 'Operator implementation history sync' 'sync-operator-implementation-history.ps1'
       break
     }
     'ReviewPages' {

@@ -15,6 +15,7 @@ import { applyDifficultyTier, difficultyEffectTexts, difficultySummary as summar
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
 import { getOperatorFilterView, sortOperators as sortOperatorsByPreference } from "./domain/operators.js";
 import { getRelicCategories, getRelicListView as buildRelicListView } from "./domain/relics.js";
+import { buildStartTemplateSummary, getEffectiveRelicIds, mergeEffectiveSpecial, phaseLabel } from "./domain/start-templates.js";
 import { controlModeOptions, getControlMode, getModeOrderedTabs, normalizeControlMode } from "./domain/ui-modes.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampSpecialNumber } from "./domain/special-values.js";
@@ -232,6 +233,10 @@ function getSpecialEffectName(id) {
   return specialDisplay.getSpecialEffectName(id, maps.selectableEffect);
 }
 
+function formatCoinLoadoutValue(field, value) {
+  return specialDisplay.formatCoinLoadoutValue(field, value, getSpecialDisplayContext());
+}
+
 function formatEffectStackValue(field, value) {
   return specialDisplay.formatEffectStackValue(field, value, getSpecialDisplayContext());
 }
@@ -258,7 +263,7 @@ function getSelectedSpecialEffectsForField(field, special, campaignId = getCampa
 
 function getSelectedSpecialEffects(campaignId = getCampaign()?.id, options = {}) {
   const campaign = maps.campaign.get(campaignId);
-  const special = state.run.special?.[campaignId] || {};
+  const special = options.includeStartTemplates ? getEffectiveSpecial(campaignId) : state.run.special?.[campaignId] || {};
   return specialDisplay.getSelectedSpecialEffects(campaign?.specialFields || [], special, getSpecialDisplayContext(campaignId), options);
 }
 
@@ -430,8 +435,59 @@ function getSelectedSquadOption(squad = getSelectedSquad()) {
   return options.find((item) => item.id === id) || null;
 }
 
+function getStartTemplateSummary() {
+  return buildStartTemplateSummary(master, state?.run || {});
+}
+
+function getEffectiveRelicIdList() {
+  return getEffectiveRelicIds(state.relics || [], getStartTemplateSummary());
+}
+
+function getTemplateRelicIds() {
+  return new Set(getStartTemplateSummary().relicIds || []);
+}
+
 function getOwnedRelics() {
-  return (state.relics || []).map((id) => maps.relic.get(id)).filter(Boolean);
+  return getEffectiveRelicIdList().map((id) => maps.relic.get(id)).filter(Boolean);
+}
+
+function getEffectiveSpecial(campaignId = getCampaign()?.id) {
+  const base = state.run.special?.[campaignId] || {};
+  const patch = getStartTemplateSummary().specialPatch?.[campaignId] || {};
+  return mergeEffectiveSpecial(base, patch);
+}
+
+function renderStartTemplateSummary(summary = getStartTemplateSummary()) {
+  if (!summary.templates.length) return "";
+  const autoRelics = summary.relicIds
+    .map((id) => maps.relic.get(id)?.name || id)
+    .map((name) => '<span class="tag info">自動秘宝 ' + html(name) + '</span>')
+    .join("");
+  const autoSpecials = Object.entries(summary.specialPatch || {})
+    .flatMap(([campaignId, patch]) => Object.entries(patch).flatMap(([fieldId, values]) => {
+      const field = getSpecialFieldConfig(campaignId, fieldId);
+      return values.map((value) => {
+        const itemId = value?.coinId || value?.effectId || value;
+        const item = maps.selectableEffect.get(itemId);
+        const count = value?.count ? ' x' + value.count : '';
+        return '<span class="tag info">自動' + html(field?.label || fieldId) + ' ' + html(item?.name || itemId) + html(count) + '</span>';
+      });
+    }))
+    .join("");
+  const manualChoices = summary.manualChoices
+    .map((item) => '<span class="tag">' + html(phaseLabel(item.phase)) + ' ' + html(item.label) + ' x' + html(item.count) + '</span>')
+    .join("");
+  const notes = summary.notes
+    .map((item) => '<span class="tag">' + html(item.label) + ' ' + html(item.value) + '</span>')
+    .join("");
+  const rows = summary.templates
+    .map((template) => '<div class="start-template-row"><strong>' + html(phaseLabel(template.phase)) + '</strong><span>' + html(template.title) + '</span></div>')
+    .join("");
+  return '<div class="effect-block start-template-block">'
+    + '<div class="effect-block-title">開始/進行テンプレート</div>'
+    + '<div class="tag-list">' + autoRelics + autoSpecials + manualChoices + notes + '</div>'
+    + '<div class="start-template-list">' + rows + '</div>'
+    + '</div>';
 }
 
 
@@ -471,7 +527,7 @@ function getSelectedFloor3Boss(campaignId = getCampaign()?.id) {
 function getBossFlagEntries(campaignId = getCampaign()?.id) {
   return buildBossFlagEntries({
     config: getBossConfig(campaignId),
-    relicIds: state.relics || [],
+    relicIds: getEffectiveRelicIdList(),
     manualBosses: getSelectedManualBosses(campaignId),
     manualFlags: state.bossFlags || [],
     relicMap: maps.relic,
@@ -594,7 +650,7 @@ function getActiveEffects({ includeRelics = true, includeDifficulty = true, over
   pushEffect("分隊", squad?.name, squad?.effect);
   pushEffect("分隊追加", option?.label || "ランダム効果", option?.effect);
   pushEffect("演目", performance?.name || performance?.title, performance?.effect);
-  for (const effect of getSelectedSpecialEffects(getCampaign()?.id, { overlay })) pushEffect(effect.slotLabel || "特殊", effect.name || effect.title, effect.effect);
+  for (const effect of getSelectedSpecialEffects(getCampaign()?.id, { overlay, includeStartTemplates: overlay })) pushEffect(effect.slotLabel || "特殊", effect.name || effect.title, effect.effect);
   if (includeDifficulty) effects.push(...summarizeDifficultyEffects());
   if (includeRelics) effects.push(...summarizeRelicEffects());
   return effects;
@@ -757,6 +813,8 @@ function renderRunTab() {
   const specialFields = campaign.specialFields || [];
   const special = state.run.special?.[campaign.id] || {};
   const specialTags = getSpecialTags(specialFields, special);
+  const startTemplateSummary = getStartTemplateSummary();
+  const effectiveRelicCount = getEffectiveRelicIdList().length;
   const bossEntries = getBossFlagEntries(campaign.id);
   const tierCfg = master.difficultyTiers?.[campaign.id];
   const difficultyGrade = getSelectedDifficultyGrade();
@@ -814,7 +872,7 @@ function renderRunTab() {
         <div class="panel-header"><h2 class="panel-title">現在の表示サマリー</h2><span class="panel-subtitle">保存するとOverlayへ反映</span></div>
         <div class="panel-body">
           <div class="tag-list">
-            <span class="tag accent">秘宝 ${state.relics.length}</span>
+            <span class="tag accent">秘宝 ${effectiveRelicCount}${effectiveRelicCount !== state.relics.length ? " / 手入力 " + state.relics.length : ""}</span>
             <span class="tag info">招集 ${state.operators.length}</span>
             <span class="tag">ボス ${bossEntries.length}</span>
             <span class="tag">等級 ${html(difficultyGrade?.label || "未選択")}</span>
@@ -825,6 +883,7 @@ function renderRunTab() {
           ${selectedSquad ? `<p><strong>${html(selectedSquad.name)}</strong><br><span class="panel-subtitle">${html(selectedSquad.effect)}</span></p>` : `<p class="panel-subtitle">分隊は未選択です。</p>`}
           ${selectedPerformance ? `<p><strong>${html(selectedPerformance.name)}</strong><br><span class="panel-subtitle">${html(selectedPerformance.effect)}</span></p>` : ""}
           ${difficultyGrade ? renderDifficultyFields(difficultyGrade) : `<p class="panel-subtitle">等級は未選択です。</p>`}
+          ${renderStartTemplateSummary(startTemplateSummary)}
           <div class="effect-block">
             <div class="effect-block-title">発動効果</div>
             ${renderEffectList(activeEffects, "control-effect-list", "分隊・演目・等級・秘宝の発動効果は未設定です。")}
@@ -836,7 +895,7 @@ function renderRunTab() {
 }
 
 function getRelicListView() {
-  return buildRelicListView(getCampaignRelics(), ui, state.relics, getRelicGridColumns());
+  return buildRelicListView(getCampaignRelics(), ui, getEffectiveRelicIdList(), getRelicGridColumns());
 }
 
 function renderRelicListContent(viewData) {
@@ -871,7 +930,7 @@ function renderRelicsTab() {
             <label>検索<input value="${html(ui.relicSearch)}" data-ui="relicSearch" placeholder="秘宝名、番号、効果" /></label>
             <label>カテゴリ<select data-ui="relicCategory"><option value="all">すべて</option>${categories.map((cat) => `<option value="${html(cat)}" ${cat === ui.relicCategory ? "selected" : ""}>${html(cat)}</option>`).join("")}</select></label>
             <label>表示列<select data-field="relicGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === viewData.gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
-            <button data-action="clear-relics">秘宝を全解除</button>
+            <button data-action="clear-relics">手入力秘宝を全解除</button>
           </div>
           ${renderRelicListArea(viewData)}
         </div>
@@ -881,7 +940,9 @@ function renderRelicsTab() {
 }
 
 function renderRelicControlRow(item, active) {
-  return renderRelicControlRowComponent(item, active, relicEffectForDisplay(item));
+  const manual = new Set(state.relics || []).has(item.id);
+  const template = getTemplateRelicIds().has(item.id);
+  return renderRelicControlRowComponent(item, active, relicEffectForDisplay(item), { manual, template });
 }
 
 function renderOperatorsTab() {
@@ -899,7 +960,7 @@ function renderOperatorsTab() {
             <label>レア度<select data-ui="operatorRarity"><option value="all">すべて</option>${rarityOptions.map((rarity) => `<option value="${rarity}" ${String(rarity) === ui.operatorRarity ? "selected" : ""}>★${rarity}</option>`).join("")}</select></label>
             <label>職業<select data-ui="operatorClass"><option value="all">すべて</option>${classOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorClass ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
             <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
-            <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
+            <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
             <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
           </div>
           ${renderOperatorListAreaComponent({ shown, operators, selected, gridColumns }, renderOperatorControlRow)}
@@ -1195,7 +1256,7 @@ function renderOverlay() {
   const relics = getOwnedRelics();
   const operators = getRecruitedOperators();
   const specialFields = campaign.specialFields || [];
-  const special = state.run.special?.[campaign.id] || {};
+  const special = getEffectiveSpecial(campaign.id);
   const difficultyGrade = getSelectedDifficultyGrade();
   const performance = getSelectedPerformance();
   const activeEffects = getActiveEffects({ overlay: true });
@@ -1251,6 +1312,9 @@ function getControlEventContext() {
     setNotice,
     refreshRelicListOnly,
     getCampaign,
+    getChoiceActive: (type, id) => type === "relic" ? getEffectiveRelicIdList().includes(id) : (state.operators || []).includes(id),
+    getEffectiveRelicCount: () => getEffectiveRelicIdList().length,
+    getRelicChoiceMeta: (id) => ({ manual: new Set(state.relics || []).has(id), template: getTemplateRelicIds().has(id) }),
     getSpecialFieldConfig,
     getSpecialOverlayToggleKey,
     mergeEffectStackEntries,

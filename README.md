@@ -30,6 +30,7 @@ See:
 - `assets/relics/wikiru/img` for mirrored relic image files referenced by `data/relics.json`
 - `data/wikiru-operator-sources.json` for the operator wiki extraction source
 - `data/operators.json` for operator names, rarity, class, branch, and image metadata
+- `data/operator-implementation-history.json` for Japan implementation dates/order merged into operator sorting
 - `data/operator-images.json` for the operator image sync audit
 - `assets/operators/wikiru/img` for mirrored operator image files referenced by `data/operators.json`
 
@@ -43,13 +44,19 @@ When running from the source folder on Windows, double-click this file instead o
 
 - `start-windows.vbs`
 
-The first launch may run a one-time setup if dependencies are missing. After that, the desktop window opens directly. The top menu can switch between Control and Overlay Preview, and can open common OBS overlay URLs in the system browser.
+The first launch may run a one-time setup if dependencies are missing. After that, the desktop app asks which local server port to use before starting. The default is `5173`, and the last selected port is reused on the next launch. The top menu can switch between Control and Overlay Preview, and can open common OBS overlay URLs in the system browser.
 
 Developer fallback commands:
 
 ```powershell
 cd O:\Arknights_Rogue_OBSTool
 npm.cmd run app
+```
+
+To bypass the desktop port picker during development, pass a port explicitly:
+
+```powershell
+npm.cmd run app -- --port 5174
 ```
 
 Build a portable Windows exe for distribution:
@@ -68,6 +75,8 @@ npm.cmd run dev
 Open the control panel:
 
 - http://127.0.0.1:5173/control
+
+The examples below use the default port `5173`. If you selected another port in the desktop app, replace `5173` with that port in OBS Browser Source URLs.
 
 Open the sidecar support window when you want a compact emulator-adjacent view for run state, effects, relics, operators, boss flags, and review queues:
 

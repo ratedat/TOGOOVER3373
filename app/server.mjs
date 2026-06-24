@@ -4,6 +4,7 @@ import { createReadStream } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizeControlMode } from "./domain/ui-modes.js";
+import { mergeImplementationHistory } from "./domain/operator-implementation-history.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -19,6 +20,12 @@ const argvPort = (() => {
   return null;
 })();
 const PORT = Number(process.env.PORT || argvPort || 5173);
+const NO_CACHE_HEADERS = {
+  "cache-control": "no-store, max-age=0, must-revalidate",
+  "pragma": "no-cache",
+  "expires": "0",
+};
+
 const OVERLAY_SCROLL_SPEED_DEFAULTS = {
   compactRelicScrollSpeed: 9,
   verticalRelicScrollSpeed: 11,
@@ -151,7 +158,7 @@ async function ensureState() {
 }
 
 async function masterData() {
-  const [campaigns, squadsRaw, relicsRaw, operatorsRaw, performancesRaw, selectableEffectsRaw, tiersRaw, gradesRaw, variantsRaw, effectRulesRaw] = await Promise.all([
+  const [campaigns, squadsRaw, relicsRaw, operatorsRaw, performancesRaw, selectableEffectsRaw, tiersRaw, gradesRaw, variantsRaw, effectRulesRaw, startTemplatesRaw, operatorHistoryRaw] = await Promise.all([
     readJson(path.join(DATA, "campaigns.json")),
     readJson(path.join(DATA, "squads.json")),
     readJson(path.join(DATA, "relics.json")),
@@ -162,12 +169,14 @@ async function masterData() {
     readJson(path.join(DATA, "difficulty-grades.json")).catch(() => ({ campaignDifficultyGrades: {} })),
     readJson(path.join(DATA, "relic-effect-variants.json")).catch(() => ({ variants: [] })),
     readJson(path.join(DATA, "relic-effect-rules.json")).catch(() => ({ rules: [], tagGroups: {} })),
+    readJson(path.join(DATA, "start-templates.json")).catch(() => ({ templates: [] })),
+    readJson(path.join(DATA, "operator-implementation-history.json")).catch(() => ({ history: [] })),
   ]);
   return {
     campaigns,
     squads: squadsRaw.squads || [],
     relics: relicsRaw.relics || [],
-    operators: operatorsRaw.operators || [],
+    operators: mergeImplementationHistory(operatorsRaw.operators || [], operatorHistoryRaw.history || []).operators,
     performances: performancesRaw.performances || [],
     selectableEffects: selectableEffectsRaw.selectableEffects || [],
     difficultyTiers: tiersRaw.campaignDifficultyTiers || {},
@@ -178,6 +187,7 @@ async function masterData() {
       tagGroups: effectRulesRaw.tagGroups || {},
       rules: effectRulesRaw.rules || [],
     },
+    startTemplates: startTemplatesRaw.templates || [],
   };
 }
 
@@ -185,13 +195,13 @@ function sendJson(res, status, value) {
   const body = JSON.stringify(value, null, 2);
   res.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
-    "cache-control": "no-store",
+    ...NO_CACHE_HEADERS,
   });
   res.end(body);
 }
 
 function sendText(res, status, text) {
-  res.writeHead(status, { "content-type": "text/plain; charset=utf-8" });
+  res.writeHead(status, { "content-type": "text/plain; charset=utf-8", ...NO_CACHE_HEADERS });
   res.end(text);
 }
 
@@ -214,9 +224,11 @@ async function serveFile(res, file) {
     const stat = await fs.stat(file);
     if (stat.isDirectory()) return false;
     const ext = path.extname(file).toLowerCase();
+    const noCache = [".html", ".js", ".mjs", ".css", ".json"].includes(ext);
     res.writeHead(200, {
       "content-type": mime.get(ext) || "application/octet-stream",
-      "cache-control": [".html", ".js", ".css"].includes(ext) ? "no-store" : "public, max-age=600",
+      ...(noCache ? NO_CACHE_HEADERS : { "cache-control": "public, max-age=600" }),
+      ...(ext === ".html" ? { "clear-site-data": '"cache"' } : {}),
     });
     createReadStream(file).pipe(res);
     return true;

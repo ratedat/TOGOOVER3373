@@ -355,6 +355,9 @@ a:hover { text-decoration: underline; }
 .overlay-kpis .difficulty-field { grid-template-columns: 70px minmax(0, 1fr); gap: 5px; font-size: 10px; }
 .overlay-kpis .difficulty-field strong { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .effect-block { margin-top: 12px; }
+.start-template-list { display: grid; gap: 8px; margin-top: 8px; }
+.start-template-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 8px; border: 1px solid var(--line); border-radius: 7px; background: rgba(255, 255, 255, 0.035); }
+.start-template-row strong { color: #fff7e2; }
 .effect-block-title { margin-bottom: 8px; color: #fff7e2; font-weight: 800; font-size: 12px; }
 .effect-list { display: grid; gap: 6px; }
 .effect-row {
@@ -401,6 +404,8 @@ a:hover { text-decoration: underline; }
 }
 .item-row.compact { grid-template-columns: minmax(0, 1fr) auto; }
 .item-row.active { border-color: rgba(216, 72, 63, 0.65); background: rgba(216, 72, 63, 0.12); }
+.item-row.template-active { border-color: rgba(91, 181, 176, 0.55); background: rgba(91, 181, 176, 0.11); }
+.item-row.active.template-active { border-color: rgba(216, 72, 63, 0.72); background: linear-gradient(90deg, rgba(216, 72, 63, 0.16), rgba(91, 181, 176, 0.13)); box-shadow: inset 3px 0 0 rgba(216, 72, 63, 0.86); }
 .item-thumb {
   width: 42px; height: 42px; border-radius: 6px; object-fit: cover;
   background: rgba(255, 255, 255, 0.08);
@@ -409,6 +414,9 @@ a:hover { text-decoration: underline; }
 .item-title { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-meta { color: var(--muted); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .item-effect { color: #d9d1c2; font-size: 12px; margin-top: 2px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.item-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+.item-badge { display: inline-flex; align-items: center; min-height: 20px; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--line); font-size: 11px; color: var(--text); white-space: nowrap; }
+.item-badge.template { background: rgba(91, 181, 176, 0.16); border-color: rgba(91, 181, 176, 0.42); }
 .tag-list { display: flex; gap: 6px; flex-wrap: wrap; }
 .tag {
   display: inline-flex; align-items: center; gap: 5px;

@@ -15,13 +15,40 @@ function setChoicePressed(element, active) {
   element.setAttribute("aria-pressed", active ? "true" : "false");
 }
 
-function refreshChoiceCountLabels(ui, state) {
+export function getChoiceActive(type, id, state, context = {}) {
+  if (typeof context.getChoiceActive === "function") return context.getChoiceActive(type, id);
+  const key = type === "relic" ? "relics" : "operators";
+  return (state[key] || []).includes(id);
+}
+
+export function getChoiceCount(ui, state, context = {}) {
+  if (ui.tab === "relics") return typeof context.getEffectiveRelicCount === "function" ? context.getEffectiveRelicCount() : (state.relics || []).length;
+  if (ui.tab === "operators") return (state.operators || []).length;
+  return 0;
+}
+
+function relicBadges(meta = {}) {
+  const autoOnly = meta.template && !meta.manual;
+  return [
+    autoOnly ? '<span class="item-badge template">自動</span>' : '',
+    meta.manual && meta.template ? '<span class="item-badge template">手動+自動</span>' : '',
+  ].filter(Boolean).join("");
+}
+
+function updateRelicChoiceMeta(element, meta) {
+  if (!element || !meta) return;
+  element.classList.toggle("template-active", Boolean(meta.template && !meta.manual));
+  const badges = element.querySelector(".item-badges");
+  if (badges) badges.innerHTML = relicBadges(meta);
+}
+
+function refreshChoiceCountLabels(ui, state, context) {
   const subtitle = document.querySelector(".panel-header .panel-subtitle");
   if (!subtitle) return;
   if (ui.tab === "relics") {
-    subtitle.textContent = subtitle.textContent.replace(/所持\d+件/, `所持${state.relics.length}件`);
+    subtitle.textContent = subtitle.textContent.replace(/所持\d+件/, `所持${getChoiceCount(ui, state, context)}件`);
   } else if (ui.tab === "operators") {
-    subtitle.textContent = subtitle.textContent.replace(/招集\d+名/, `招集${state.operators.length}名`);
+    subtitle.textContent = subtitle.textContent.replace(/招集\d+名/, `招集${getChoiceCount(ui, state, context)}名`);
   }
 }
 
@@ -32,9 +59,10 @@ function toggleChoiceElement(element, type, id, context) {
   }
   context.mutate((state) => controlActions.toggleChoice(state, type, id), { render: false });
   const state = context.getState();
-  const active = type === "relic" ? state.relics.includes(id) : state.operators.includes(id);
+  const active = getChoiceActive(type, id, state, context);
   setChoicePressed(element, active);
-  refreshChoiceCountLabels(context.ui, state);
+  if (type === "relic") updateRelicChoiceMeta(element, context.getRelicChoiceMeta?.(id));
+  refreshChoiceCountLabels(context.ui, state, context);
 }
 
 function isControlView(context) {
@@ -198,6 +226,7 @@ export function registerControlEvents(app, context) {
     const field = target.dataset.field;
     if (field) {
       context.mutate((state) => controlActions.updateRunField(state, field, target.value, target.checked));
+      return;
     }
     const bossSelect = target.dataset.bossSelect;
     if (bossSelect) {

@@ -15,6 +15,7 @@ Long strategy text and comments are not copied. Relic and operator images are mi
 - data/performance-sources.json - wiki section configuration for selectable performance/event-buff extraction such as IS#2 演目
 - data/performances.json - generated performance/event-buff names, group labels, effects, optional flavor text, and source image metadata
 - data/operators.json - operator display name, rarity, class, branch, obtain/recruitment text, source page, source section, Japan-unreleased spoiler flags, display order, and image metadata
+- data/operator-implementation-history.json - Japan implementation dates and implementation order from the operator implementation history page
 - data/operator-images.json - operator image sync audit manifest, including source URLs, local paths, and failed downloads
 - assets/operators/wikiru/img - mirrored operator image files referenced by data/operators.json
 
@@ -47,7 +48,7 @@ Use the generated diff files as the first manual review surface. The older indiv
 
 ## Operator Sources
 
-Operator master data is sourced from https://arknights.wikiru.jp/?%E3%82%AD%E3%83%A3%E3%83%A9%E3%82%AF%E3%82%BF%E3%83%BC%E4%B8%80%E8%A6%A7. `tools/sync-operator-data.ps1` reads `data/wikiru-operator-sources.json`, discovers the `テーブル/★6` through `テーブル/★1` include pages, extracts name / rarity / class / branch, marks rows inside each `日本未実装キャラ` collapsed section as `isJapanUnreleased`, downloads the `attach2` icon files, and writes `data/operators.json` plus `data/operator-images.json`.
+Operator master data is sourced from https://arknights.wikiru.jp/?%E3%82%AD%E3%83%A3%E3%83%A9%E3%82%AF%E3%82%BF%E3%83%BC%E4%B8%80%E8%A6%A7. `tools/sync-operator-data.ps1` reads `data/wikiru-operator-sources.json`, discovers the `テーブル/★6` through `テーブル/★1` include pages, extracts name / rarity / class / branch, marks rows inside each `日本未実装キャラ` collapsed section as `isJapanUnreleased`, downloads the `attach2` icon files, and writes `data/operators.json` plus `data/operator-images.json`. `tools/sync-operator-implementation-history.ps1` reads https://arknights.wikiru.jp/index.php?%E3%82%AA%E3%83%9A%E3%83%AC%E3%83%BC%E3%82%BF%E3%83%BC%E5%AE%9F%E8%A3%85%E5%B1%A5%E6%AD%B4 and writes `data/operator-implementation-history.json`; the app merges this into operator master data at runtime for implementation-order sorting.
 
 Rows inside the wiki `日本未実装キャラ` collapsed sections are treated as spoiler-sensitive. The extractor writes `isJapanUnreleased: true` and `hiddenByDefault: true`; UI surfaces should hide those operators unless the user enables an explicit show-unreleased toggle.
 

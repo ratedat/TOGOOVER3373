@@ -1,5 +1,38 @@
+function finiteNumber(value) {
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : null;
+}
+
+function dateSortKey(value) {
+  const timestamp = Date.parse(String(value || ""));
+  return Number.isFinite(timestamp) ? timestamp : null;
+}
+
+function implementationSortValue(item) {
+  return finiteNumber(item?.implementationOrder)
+    ?? finiteNumber(item?.releaseOrder)
+    ?? dateSortKey(item?.implementationDate)
+    ?? dateSortKey(item?.releaseDate)
+    ?? dateSortKey(item?.jpReleaseDate);
+}
+
+function sourceOrderSortKey(item) {
+  return finiteNumber(item?.displayOrder) ?? Number.MAX_SAFE_INTEGER;
+}
+
+function compareImplementationOrder(a, b, direction) {
+  const aValue = implementationSortValue(a);
+  const bValue = implementationSortValue(b);
+  if (aValue != null && bValue != null) return direction * (aValue - bValue) || a.name.localeCompare(b.name, "ja");
+  if (aValue != null) return -1;
+  if (bValue != null) return 1;
+  return (sourceOrderSortKey(a) - sourceOrderSortKey(b)) || a.name.localeCompare(b.name, "ja");
+}
+
 export function sortOperators(operators, mode = "rarity_desc") {
   return [...operators].sort((a, b) => {
+    if (mode === "implementation_asc") return compareImplementationOrder(a, b, 1);
+    if (mode === "implementation_desc") return compareImplementationOrder(a, b, -1);
     if (mode === "rarity_asc") return (a.rarity - b.rarity) || (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name, "ja");
     if (mode === "name") return a.name.localeCompare(b.name, "ja");
     return (b.rarity - a.rarity) || (a.displayOrder - b.displayOrder) || a.name.localeCompare(b.name, "ja");

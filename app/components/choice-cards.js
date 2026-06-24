@@ -1,14 +1,20 @@
 import { assetUrl, html, stars } from "../lib/format.js";
 
-export function renderRelicControlRow(item, active, effectText) {
+export function renderRelicControlRow(item, active, effectText, meta = {}) {
+  const autoOnly = meta.template && !meta.manual;
+  const badges = [
+    autoOnly ? '<span class="item-badge template">自動</span>' : '',
+    meta.manual && meta.template ? '<span class="item-badge template">手動+自動</span>' : '',
+  ].filter(Boolean).join("");
   return `
-    <div class="item-row relic-choice ${active ? "active" : ""}" data-action="toggle-relic" data-id="${item.id}" role="button" tabindex="0" aria-pressed="${active ? "true" : "false"}">
+    <div class="item-row relic-choice ${active ? "active" : ""} ${autoOnly ? "template-active" : ""}" data-action="toggle-relic" data-id="${item.id}" role="button" tabindex="0" aria-pressed="${active ? "true" : "false"}">
       <img class="item-thumb" src="${html(assetUrl(item.image?.localPath))}" alt="" loading="lazy" />
       <div>
         <div class="item-title">No.${html(item.number)} ${html(item.name)}</div>
         <div class="item-meta">${html(item.category || "")}</div>
         <div class="item-effect">${html(effectText)}</div>
       </div>
+      <div class="item-badges">${badges}</div>
     </div>
   `;
 }
