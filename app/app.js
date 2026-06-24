@@ -5,13 +5,13 @@ import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
 import { mediaUrl, specialEffectImageSrc } from "./lib/media.js";
 import { clampGridColumns, gridColumnOptions, normalizePreferences } from "./lib/preferences.js";
+import { cancelOverlayAutoScroll, setupOverlayAutoScroll } from "./overlay/autoscroll.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
 const view = location.pathname.includes("overlay") || routeParams.get("view") === "overlay" ? "overlay" : "control";
 const overlayLayout = resolveOverlayLayout(routeParams.get("layout"));
 const overlaySize = resolveOverlaySize(routeParams.get("size") || routeParams.get("scale"));
-let overlayAutoScrollFrame = null;
 if (view === "overlay") document.documentElement.classList.add("overlay-mode");
 
 const ui = {
@@ -2027,58 +2027,7 @@ function renderOverlayDense({ campaign, squad, option, performance, activeEffect
     </section>
   `;
 }
-function cancelOverlayAutoScroll() {
-  if (overlayAutoScrollFrame !== null) {
-    clearInterval(overlayAutoScrollFrame);
-    overlayAutoScrollFrame = null;
-  }
-}
 
-function setupOverlayAutoScroll() {
-  cancelOverlayAutoScroll();
-  const scrollers = [...app.querySelectorAll("[data-autoscroll]")];
-  if (!scrollers.length) return;
-  const entries = scrollers.map((element, index) => {
-    const content = element.firstElementChild;
-    if (content) content.style.transform = "translateY(0px)";
-    return {
-      element,
-      content,
-      offset: 0,
-      direction: 1,
-      last: performance.now(),
-      pauseUntil: performance.now() + 900 + index * 700,
-      speed: Number.isFinite(Number(element.dataset.scrollSpeed)) ? Number(element.dataset.scrollSpeed) : 14,
-    };
-  }).filter((entry) => entry.content);
-  if (!entries.length) return;
-  overlayAutoScrollFrame = setInterval(() => {
-    const now = performance.now();
-    for (const entry of entries) {
-      const max = Math.max(0, entry.content.scrollHeight - entry.element.clientHeight);
-      if (max <= 1) {
-        entry.offset = 0;
-        entry.content.style.transform = "translateY(0px)";
-        entry.last = now;
-        continue;
-      }
-      const delta = Math.min(120, now - entry.last);
-      entry.last = now;
-      if (now < entry.pauseUntil) continue;
-      entry.offset += entry.direction * entry.speed * delta / 1000;
-      if (entry.offset >= max) {
-        entry.offset = max;
-        entry.direction = -1;
-        entry.pauseUntil = now + 1600;
-      } else if (entry.offset <= 0) {
-        entry.offset = 0;
-        entry.direction = 1;
-        entry.pauseUntil = now + 1200;
-      }
-      entry.content.style.transform = `translateY(${-entry.offset}px)`;
-    }
-  }, 80);
-}
 function renderOverlay() {
   cancelOverlayAutoScroll();
   app.dataset.loading = "false";
@@ -2096,12 +2045,12 @@ function renderOverlay() {
   const activeEffects = getActiveEffects({ overlay: true });
   if (overlayLayout === "compact") {
     app.innerHTML = renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade });
-    setupOverlayAutoScroll();
+    setupOverlayAutoScroll(app);
     return;
   }
   if (overlayLayout === "vertical" || overlayLayout === "horizontal") {
     app.innerHTML = renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, orientation: overlayLayout });
-    setupOverlayAutoScroll();
+    setupOverlayAutoScroll(app);
     return;
   }
   app.innerHTML = `
@@ -2172,7 +2121,7 @@ function renderOverlay() {
       </aside>
     </main>
   `;
-  setupOverlayAutoScroll();
+  setupOverlayAutoScroll(app);
 }
 
 function toggleId(list, id) {
