@@ -12,7 +12,7 @@ import { bossSectionAllowsMultiple, bossSelectionValues as readBossSelectionValu
 import { createLookupMaps } from "./domain/master-maps.js";
 import { applyDifficultyTier, difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getDifficultyTierLabel as readDifficultyTierLabel, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
-import { operatorReleaseMatches as operatorMatchesRelease, sortOperators as sortOperatorsByPreference, uniqueValues } from "./domain/operators.js";
+import { getOperatorFilterView, sortOperators as sortOperatorsByPreference } from "./domain/operators.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampSpecialNumber } from "./domain/special-values.js";
 import * as selectableEffects from "./domain/selectable-effects.js";
@@ -456,9 +456,6 @@ function renderDifficultyFields(grade, mode = "control") {
   </div>`;
 }
 
-function operatorReleaseMatches(item) {
-  return operatorMatchesRelease(item, ui.operatorRelease);
-}
 
 function getOverlayScrollSpeed(key) {
   return clampOverlayScrollSpeed(state?.preferences?.[key], overlayScrollSpeedDefaults[key] ?? 12);
@@ -478,19 +475,14 @@ function getOperatorGridColumns() {
 function getRelicGridColumns() {
   return clampGridColumns(state?.preferences?.relicGridColumns ?? 2);
 }
+function getOperatorFilterViewForUi() {
+  const viewData = getOperatorFilterView(master.operators, ui);
+  Object.assign(ui, viewData.filters);
+  return viewData;
+}
+
 function normalizeOperatorFilters() {
-  const releaseBase = master.operators.filter(operatorReleaseMatches);
-  const rarityValues = new Set(releaseBase.map((item) => String(item.rarity)));
-  if (ui.operatorRarity !== "all" && !rarityValues.has(ui.operatorRarity)) ui.operatorRarity = "all";
-  const rarityBase = releaseBase.filter((item) => ui.operatorRarity === "all" || String(item.rarity) === ui.operatorRarity);
-  const classValues = new Set(rarityBase.map((item) => item.class).filter(Boolean));
-  if (ui.operatorClass !== "all" && !classValues.has(ui.operatorClass)) {
-    ui.operatorClass = "all";
-    ui.operatorBranch = "all";
-  }
-  const classBase = rarityBase.filter((item) => ui.operatorClass === "all" || item.class === ui.operatorClass);
-  const branchValues = new Set(classBase.map((item) => item.branch).filter(Boolean));
-  if (ui.operatorBranch !== "all" && !branchValues.has(ui.operatorBranch)) ui.operatorBranch = "all";
+  getOperatorFilterViewForUi();
 }
 function deriveDifficultyTier() {
   return applyDifficultyTier(master, state?.run);
@@ -824,14 +816,7 @@ function renderRelicControlRow(item, active) {
 }
 
 function renderOperatorsTab() {
-  normalizeOperatorFilters();
-  const releaseBase = master.operators.filter(operatorReleaseMatches);
-  const rarityOptions = [6, 5, 4, 3, 2, 1].filter((rarity) => releaseBase.some((item) => Number(item.rarity) === rarity));
-  const rarityBase = releaseBase.filter((item) => ui.operatorRarity === "all" || String(item.rarity) === ui.operatorRarity);
-  const classOptions = uniqueValues(rarityBase, "class");
-  const classBase = rarityBase.filter((item) => ui.operatorClass === "all" || item.class === ui.operatorClass);
-  const branchOptions = uniqueValues(classBase, "branch");
-  const operators = classBase.filter((item) => ui.operatorBranch === "all" || item.branch === ui.operatorBranch);
+  const { rarityOptions, classOptions, branchOptions, operators } = getOperatorFilterViewForUi();
   const shown = sortOperators(operators).slice(0, 500);
   const selected = new Set(state.operators);
   const gridColumns = getOperatorGridColumns();
