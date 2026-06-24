@@ -3,13 +3,19 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "main": "app/electron/main.mjs",
   "scripts": {
     "dev": "node app/server.mjs",
     "dev:5174": "node app/server.mjs --port 5174",
-    "app": "node app/launcher.mjs",
-    "app:5174": "node app/launcher.mjs --port 5174",
+    "app": "electron .",
+    "app:5174": "electron . --port 5174",
+    "app:web": "node app/launcher.mjs",
+    "app:web:5174": "node app/launcher.mjs --port 5174",
     "data:update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1",
     "data:update:plan": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1 -PlanOnly",
     "data:diff": "node tools/compare-data-update.mjs --before data --after data --out review/update-runs/manual-compare"
+  },
+  "devDependencies": {
+    "electron": "^42.5.0"
   }
 }
