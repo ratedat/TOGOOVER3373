@@ -7,7 +7,7 @@ import * as specialControls from "./components/special-controls.js";
 import { renderCompactSpecialPicker as renderCompactSpecialPickerComponent, renderSpecialField as renderSpecialFieldComponent } from "./components/special-fields.js";
 import { renderCoinEntryRow as renderCoinEntryRowComponent, renderCoinLoadoutField as renderCoinLoadoutFieldComponent, renderEffectStackEntryRow as renderEffectStackEntryRowComponent, renderEffectStackLoadoutField as renderEffectStackLoadoutFieldComponent, renderEffectStackStateOptions as renderEffectStackStateOptionsComponent } from "./components/special-loadouts.js";
 import { renderSpecialOverlayBlock as renderSpecialOverlayBlockComponent } from "./components/special-overlay.js";
-import * as controlActions from "./control-actions.js";
+import { registerControlEvents } from "./control-events.js";
 import { bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
 import { difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
@@ -795,28 +795,6 @@ function mutate(fn, options = {}) {
   scheduleSave();
 }
 
-function setChoicePressed(element, active) {
-  if (!element) return;
-  element.classList.toggle("active", active);
-  element.setAttribute("aria-pressed", active ? "true" : "false");
-}
-
-function refreshChoiceCountLabels() {
-  const subtitle = document.querySelector(".panel-header .panel-subtitle");
-  if (!subtitle) return;
-  if (ui.tab === "relics") {
-    subtitle.textContent = subtitle.textContent.replace(/所持\d+件/, `所持${state.relics.length}件`);
-  } else if (ui.tab === "operators") {
-    subtitle.textContent = subtitle.textContent.replace(/招集\d+名/, `招集${state.operators.length}名`);
-  }
-}
-
-function toggleChoiceElement(element, type, id) {
-  mutate((s) => controlActions.toggleChoice(s, type, id), { render: false });
-  const active = type === "relic" ? state.relics.includes(id) : state.operators.includes(id);
-  setChoicePressed(element, active);
-  refreshChoiceCountLabels();
-}
 
 function renderControlHeaderStatus() {
   const el = document.querySelector(".save-status");
@@ -1217,229 +1195,31 @@ function renderOverlay() {
 }
 
 
-function parseImportDraft() {
-  if (!ui.importDraft.trim()) throw new Error("JSONが空です");
-  const parsed = JSON.parse(ui.importDraft);
-  if (!parsed || typeof parsed !== "object") throw new Error("状態JSONではありません");
-  return parsed;
+function replaceState(nextState) {
+  state = nextState;
+  ensureStateShape();
 }
 
-app.addEventListener("click", async (event) => {
-  const button = event.target.closest("[data-action]");
-  if (!button || view !== "control") return;
-  const action = button.dataset.action;
-  const id = button.dataset.id;
+function getControlEventContext() {
+  return {
+    view,
+    ui,
+    getState: () => state,
+    replaceState,
+    mutate,
+    renderControl,
+    scheduleSave,
+    setNotice,
+    refreshRelicListOnly,
+    getCampaign,
+    getSpecialFieldConfig,
+    getSpecialOverlayToggleKey,
+    mergeEffectStackEntries,
+    normalizeStackState,
+  };
+}
 
-  if (action === "add-special-effect") {
-    const fieldId = button.dataset.specialPickerField;
-    const container = button.closest("[data-special-picker]");
-    const value = container?.querySelector("[data-special-picker-select]")?.value;
-    if (fieldId && value) {
-      mutate((s) => controlActions.addSpecialEffect(s, getCampaign().id, fieldId, value));
-    }
-    return;
-  }
-  if (action === "remove-special-effect") {
-    const fieldId = button.dataset.specialPickerField;
-    if (fieldId && id) {
-      mutate((s) => controlActions.removeSpecialEffect(s, getCampaign().id, fieldId, id));
-    }
-    return;
-  }
-  if (action === "add-effect-stack-entry") {
-    const fieldId = button.dataset.effectStackField;
-    const container = button.closest("[data-effect-stack-builder]");
-    const effectId = container?.querySelector('[data-effect-stack-input="effect"]')?.value;
-    if (fieldId && effectId) {
-      const campaignId = getCampaign().id;
-      const fieldConfig = getSpecialFieldConfig(campaignId, fieldId) || { id: fieldId };
-      const count = clampCoinCount(container?.querySelector('[data-effect-stack-input="count"]')?.value);
-      const stateId = normalizeStackState(fieldConfig, container?.querySelector('[data-effect-stack-input="state"]')?.value, campaignId);
-      mutate((s) => controlActions.addEffectStackEntry(s, campaignId, fieldId, { effectId, count, stateId }, fieldConfig, mergeEffectStackEntries));
-    }
-    return;
-  }
-  if (action === "remove-effect-stack-entry") {
-    const fieldId = button.dataset.effectStackField;
-    const index = Number(button.dataset.index);
-    if (fieldId && Number.isInteger(index)) {
-      mutate((s) => controlActions.removeEffectStackEntry(s, getCampaign().id, fieldId, index));
-    }
-    return;
-  }
-  if (action === "add-coin-entry") {
-    const fieldId = button.dataset.coinField;
-    const container = button.closest("[data-coin-builder]");
-    const coinId = container?.querySelector('[data-coin-input="coin"]')?.value;
-    if (fieldId && coinId) {
-      const count = clampCoinCount(container?.querySelector('[data-coin-input="count"]')?.value);
-      const statusId = container?.querySelector('[data-coin-input="status"]')?.value || null;
-      const face = normalizeCoinFace(container?.querySelector('[data-coin-input="face"]')?.value);
-      mutate((s) => controlActions.addCoinEntry(s, getCampaign().id, fieldId, { coinId, count, statusId, face }));
-    }
-    return;
-  }
-  if (action === "remove-coin-entry") {
-    const fieldId = button.dataset.coinField;
-    const index = Number(button.dataset.index);
-    if (fieldId && Number.isInteger(index)) {
-      mutate((s) => controlActions.removeCoinEntry(s, getCampaign().id, fieldId, index));
-    }
-    return;
-  }
-  if (action === "tab") { ui.tab = button.dataset.tab; renderControl(); return; }
-  if (action === "toggle-relic") { toggleChoiceElement(button, "relic", id); return; }
-  if (action === "toggle-operator") { toggleChoiceElement(button, "operator", id); return; }
-  if (action === "clear-relics") mutate(controlActions.clearRelics);
-  if (action === "reset-state") {
-    if (confirm("状態を初期化しますか？")) {
-      state = await apiJson(resetStateUrl, { method: "POST" });
-      ensureStateShape();
-      renderControl();
-      setNotice("状態を初期化しました。");
-    }
-  }
-  if (action === "add-boss-flag") {
-    const text = ui.bossDraft.trim();
-    if (text) mutate((s) => { controlActions.addBossFlag(s, text); ui.bossDraft = ""; });
-  }
-  if (action === "remove-boss-flag") mutate((s) => controlActions.removeBossFlag(s, Number(button.dataset.index)));
-  if (action === "dismiss-suggestion") mutate((s) => controlActions.dismissSuggestion(s, Number(button.dataset.index)));
-  if (action === "copy-state-json") {
-    await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
-    setNotice("状態JSONをコピーしました。");
-  }
-  if (action === "import-state-now") {
-    try {
-      state = parseImportDraft();
-      ensureStateShape();
-      renderControl();
-      scheduleSave();
-      setNotice("JSONを直接反映しました。");
-    } catch (error) { setNotice(error.message); }
-  }
-  if (action === "submit-tournament-state") {
-    try {
-      const pending = parseImportDraft();
-      mutate((s) => controlActions.holdTournamentState(s, pending));
-      setNotice("大会入力として保留しました。ボス/大会タブで反映できます。");
-    } catch (error) { setNotice(error.message); }
-  }
-  if (action === "approve-tournament") {
-    const pending = state.tournament?.pendingState;
-    if (pending) {
-      state = pending;
-      ensureStateShape();
-      state.tournament = { pendingState: null, lastSubmissionAt: null, submittedBy: null };
-      renderControl();
-      scheduleSave();
-      setNotice("大会入力を反映しました。");
-    }
-  }
-  if (action === "reject-tournament") mutate(controlActions.clearTournamentState);
-});
-
-app.addEventListener("keydown", (event) => {
-  if (view !== "control") return;
-  if (event.key !== "Enter" && event.key !== " ") return;
-  const target = event.target.closest('.operator-choice[data-action="toggle-operator"], .relic-choice[data-action="toggle-relic"]');
-  if (!target) return;
-  event.preventDefault();
-  const id = target.dataset.id;
-  if (target.dataset.action === "toggle-relic") {
-    toggleChoiceElement(target, "relic", id);
-  } else {
-    toggleChoiceElement(target, "operator", id);
-  }
-});
-app.addEventListener("input", (event) => {
-  if (view !== "control") return;
-  const target = event.target;
-  if (!target.matches("[data-ui]")) return;
-  const key = target.dataset.ui;
-  ui[key] = target.value;
-  if (key === "relicSearch") {
-    if (!event.isComposing && !refreshRelicListOnly()) renderControl();
-  }
-});
-
-app.addEventListener("compositionend", (event) => {
-  if (view !== "control") return;
-  const target = event.target;
-  if (!target.matches('[data-ui="relicSearch"]')) return;
-  ui.relicSearch = target.value;
-  if (!refreshRelicListOnly()) renderControl();
-});
-
-app.addEventListener("change", (event) => {
-  if (view !== "control") return;
-  const target = event.target;
-  if (target.matches("[data-ui]")) {
-    ui[target.dataset.ui] = target.value;
-    renderControl();
-    return;
-  }
-  const field = target.dataset.field;
-  if (field) {
-    mutate((s) => controlActions.updateRunField(s, field, target.value, target.checked));
-  }
-  const bossSelect = target.dataset.bossSelect;
-  if (bossSelect) {
-    mutate((s) => controlActions.updateBossSelect(s, getCampaign().id, bossSelect, target.value));
-  }
-  const bossToggle = target.dataset.bossToggle;
-  if (bossToggle) {
-    mutate((s) => controlActions.updateBossToggle(s, getCampaign().id, bossToggle, target.value, target.checked));
-  }
-  const specialVisibility = target.dataset.specialVisibility;
-  if (specialVisibility) {
-    const campaign = getCampaign();
-    const fieldConfig = (campaign.specialFields || []).find((field) => field.id === specialVisibility) || { id: specialVisibility };
-    const key = getSpecialOverlayToggleKey(fieldConfig);
-    mutate((s) => controlActions.updateSpecialVisibility(s, campaign.id, key, target.checked));
-  }
-  const specialField = target.dataset.specialField;
-  if (specialField) {
-    const campaignId = getCampaign().id;
-    const fieldConfig = getSpecialFieldConfig(campaignId, specialField);
-    mutate((s) => controlActions.updateSpecialField(s, campaignId, specialField, target.value, fieldConfig));
-  }
-  const specialEffectToggle = target.dataset.specialEffectToggle;
-  if (specialEffectToggle) {
-    mutate((s) => controlActions.updateSpecialEffectToggle(s, getCampaign().id, specialEffectToggle, target.value, target.checked));
-  }
-  const specialRankedField = target.dataset.specialRankedField;
-  if (specialRankedField) {
-    mutate((s) => controlActions.updateSpecialRankedField(s, getCampaign().id, specialRankedField, target.dataset.effectParent, target.value));
-  }
-
-  const effectStackEntryCount = target.dataset.effectStackEntryCount;
-  if (effectStackEntryCount) {
-    const campaignId = getCampaign().id;
-    const fieldConfig = getSpecialFieldConfig(campaignId, effectStackEntryCount) || { id: effectStackEntryCount };
-    mutate((s) => controlActions.updateEffectStackEntryCount(s, campaignId, effectStackEntryCount, Number(target.dataset.index), target.value, fieldConfig, mergeEffectStackEntries));
-  }
-  const effectStackEntryState = target.dataset.effectStackEntryState;
-  if (effectStackEntryState) {
-    const campaignId = getCampaign().id;
-    const fieldConfig = getSpecialFieldConfig(campaignId, effectStackEntryState) || { id: effectStackEntryState };
-    const stateId = normalizeStackState(fieldConfig, target.value, campaignId);
-    mutate((s) => controlActions.updateEffectStackEntryState(s, campaignId, effectStackEntryState, Number(target.dataset.index), stateId, fieldConfig, mergeEffectStackEntries));
-  }
-  const coinEntryCount = target.dataset.coinEntryCount;
-  if (coinEntryCount) {
-    mutate((s) => controlActions.updateCoinEntryCount(s, getCampaign().id, coinEntryCount, Number(target.dataset.index), target.value));
-  }
-  const coinEntryStatus = target.dataset.coinEntryStatus;
-  if (coinEntryStatus) {
-    mutate((s) => controlActions.updateCoinEntryStatus(s, getCampaign().id, coinEntryStatus, Number(target.dataset.index), target.value));
-  }
-  const coinEntryFace = target.dataset.coinEntryFace;
-  if (coinEntryFace) {
-    mutate((s) => controlActions.updateCoinEntryFace(s, getCampaign().id, coinEntryFace, Number(target.dataset.index), target.value));
-  }
-});
-
+registerControlEvents(app, getControlEventContext());
 async function pollOverlay() {
   try {
     const next = await apiJson(stateUrl);
