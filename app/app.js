@@ -1,3 +1,5 @@
+import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
+
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
 const view = location.pathname.includes("overlay") || routeParams.get("view") === "overlay" ? "overlay" : "control";
@@ -31,31 +33,7 @@ let maps = null;
 let saveTimer = null;
 let lastStateJson = "";
 
-const html = (value) => String(value ?? "")
-  .replaceAll("&", "&amp;")
-  .replaceAll("<", "&lt;")
-  .replaceAll(">", "&gt;")
-  .replaceAll('"', "&quot;")
-  .replaceAll("'", "&#39;");
 
-function stableJson(value, ignoredKeys = new Set()) {
-  return JSON.stringify(value, (key, item) => {
-    if (ignoredKeys.has(key)) return undefined;
-    if (!item || typeof item !== "object" || Array.isArray(item)) return item;
-    return Object.keys(item).sort().reduce((result, objectKey) => {
-      result[objectKey] = item[objectKey];
-      return result;
-    }, {});
-  });
-}
-
-function stableOverlayStateJson(value) {
-  return stableJson(value, new Set(["updatedAt"]));
-}
-
-const normalizeText = (value) => String(value ?? "").toLowerCase().replace(/\s+/g, "");
-const assetUrl = (localPath) => localPath ? `/${String(localPath).replaceAll("\\", "/")}` : "";
-const stars = (rarity) => "★".repeat(Number(rarity) || 0);
 const overlayScrollSpeedDefaults = {
   compactRelicScrollSpeed: 9,
   verticalRelicScrollSpeed: 11,
