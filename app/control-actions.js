@@ -44,3 +44,31 @@ export function removeCoinEntry(state, campaignId, fieldId, index) {
   entries.splice(index, 1);
   special[fieldId] = entries;
 }
+
+export function clearRelics(state) {
+  state.relics = [];
+}
+
+export function addBossFlag(state, text) {
+  state.bossFlags = [...(state.bossFlags || []), text];
+}
+
+export function removeBossFlag(state, index) {
+  state.bossFlags.splice(index, 1);
+}
+
+export function dismissSuggestion(state, index) {
+  state.pendingSuggestions.splice(index, 1);
+}
+
+export function holdTournamentState(state, pendingState) {
+  state.tournament = {
+    pendingState,
+    lastSubmissionAt: new Date().toISOString(),
+    submittedBy: "external-json",
+  };
+}
+
+export function clearTournamentState(state) {
+  state.tournament = { pendingState: null, lastSubmissionAt: null, submittedBy: null };
+}

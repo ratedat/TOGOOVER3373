@@ -1298,7 +1298,7 @@ app.addEventListener("click", async (event) => {
   if (action === "tab") { ui.tab = button.dataset.tab; renderControl(); return; }
   if (action === "toggle-relic") { toggleChoiceElement(button, "relic", id); return; }
   if (action === "toggle-operator") { toggleChoiceElement(button, "operator", id); return; }
-  if (action === "clear-relics") mutate((s) => { s.relics = []; });
+  if (action === "clear-relics") mutate(controlActions.clearRelics);
   if (action === "reset-state") {
     if (confirm("状態を初期化しますか？")) {
       state = await apiJson(resetStateUrl, { method: "POST" });
@@ -1309,10 +1309,10 @@ app.addEventListener("click", async (event) => {
   }
   if (action === "add-boss-flag") {
     const text = ui.bossDraft.trim();
-    if (text) mutate((s) => { s.bossFlags = [...(s.bossFlags || []), text]; ui.bossDraft = ""; });
+    if (text) mutate((s) => { controlActions.addBossFlag(s, text); ui.bossDraft = ""; });
   }
-  if (action === "remove-boss-flag") mutate((s) => { s.bossFlags.splice(Number(button.dataset.index), 1); });
-  if (action === "dismiss-suggestion") mutate((s) => { s.pendingSuggestions.splice(Number(button.dataset.index), 1); });
+  if (action === "remove-boss-flag") mutate((s) => controlActions.removeBossFlag(s, Number(button.dataset.index)));
+  if (action === "dismiss-suggestion") mutate((s) => controlActions.dismissSuggestion(s, Number(button.dataset.index)));
   if (action === "copy-state-json") {
     await navigator.clipboard.writeText(JSON.stringify(state, null, 2));
     setNotice("状態JSONをコピーしました。");
@@ -1329,7 +1329,7 @@ app.addEventListener("click", async (event) => {
   if (action === "submit-tournament-state") {
     try {
       const pending = parseImportDraft();
-      mutate((s) => { s.tournament = { pendingState: pending, lastSubmissionAt: new Date().toISOString(), submittedBy: "external-json" }; });
+      mutate((s) => controlActions.holdTournamentState(s, pending));
       setNotice("大会入力として保留しました。ボス/大会タブで反映できます。");
     } catch (error) { setNotice(error.message); }
   }
@@ -1344,7 +1344,7 @@ app.addEventListener("click", async (event) => {
       setNotice("大会入力を反映しました。");
     }
   }
-  if (action === "reject-tournament") mutate((s) => { s.tournament = { pendingState: null, lastSubmissionAt: null, submittedBy: null }; });
+  if (action === "reject-tournament") mutate(controlActions.clearTournamentState);
 });
 
 app.addEventListener("keydown", (event) => {
