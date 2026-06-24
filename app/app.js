@@ -2,6 +2,7 @@ import { bossDisplaySubline, bossDisplayTitle, renderBossCard, renderBossChip } 
 import { renderEffectList } from "./components/effects.js";
 import { bossSectionAllowsMultiple, buildBossFlagEntries } from "./domain/boss-flags.js";
 import { createLookupMaps } from "./domain/master-maps.js";
+import { difficultyEffectTexts, difficultySummary as summarizeDifficultyGrade, getDifficultyGradeConfig as readDifficultyGradeConfig, getSelectedDifficultyGrade as readSelectedDifficultyGrade } from "./domain/difficulty.js";
 import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetrics, summarizeTextEffects } from "./domain/effect-metrics.js";
 import { operatorReleaseMatches as operatorMatchesRelease, sortOperators as sortOperatorsByPreference, uniqueValues } from "./domain/operators.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
@@ -686,15 +687,11 @@ function sortOperators(operators) {
 }
 
 function getDifficultyGradeConfig(campaignId = state?.run?.campaignId) {
-  return master?.difficultyGrades?.[campaignId] || null;
+  return readDifficultyGradeConfig(master, campaignId);
 }
 
 function getSelectedDifficultyGrade() {
-  const cfg = getDifficultyGradeConfig();
-  const raw = state?.run?.difficulty;
-  const value = raw === null || raw === undefined || raw === "" ? null : Number(raw);
-  if (!cfg || !Number.isFinite(value)) return null;
-  return (cfg.grades || []).find((item) => Number(item.grade) === value) || null;
+  return readSelectedDifficultyGrade(master, state?.run);
 }
 
 function renderDifficultySelect(campaignId) {
@@ -710,10 +707,7 @@ function renderDifficultySelect(campaignId) {
 }
 
 function difficultySummary(grade) {
-  return (grade?.fields || [])
-    .filter((item) => item.value !== null && item.value !== undefined && item.value !== "")
-    .map((item) => `${item.label}: ${item.value}`)
-    .join(" / ");
+  return summarizeDifficultyGrade(grade);
 }
 
 function renderDifficultyFields(grade, mode = "control") {
@@ -808,8 +802,7 @@ function summarizeRelicEffects() {
 }
 
 function getDifficultyEffectTexts(grade = getSelectedDifficultyGrade()) {
-  const condition = grade?.condition || (grade?.fields || []).find((item) => item.key === "condition")?.value;
-  return condition ? [String(condition)] : [];
+  return difficultyEffectTexts(grade);
 }
 
 function summarizeDifficultyEffects(grade = getSelectedDifficultyGrade()) {
