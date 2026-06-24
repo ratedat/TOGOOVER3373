@@ -2,6 +2,7 @@ import { bossFloorLabel, bossImages, bossSectionAllowsMultiple, buildBossFlagEnt
 import { createLookupMaps } from "./domain/master-maps.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asEffectStackEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, coinFaceLabels, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
+import * as selectableEffects from "./domain/selectable-effects.js";
 import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
 import { mediaUrl, specialEffectImageSrc } from "./lib/media.js";
@@ -66,60 +67,33 @@ function getSelectedPerformance() {
 }
 
 
-function matchesGroupLabels(item, groupLabels) {
-  return !Array.isArray(groupLabels) || !groupLabels.length || groupLabels.includes(item.groupLabel || item.slotLabel || "");
-}
-
-function getConfiguredStackOptions(rawOptions) {
-  return (Array.isArray(rawOptions) ? rawOptions : []).map((option) => {
-    if (typeof option === "string") return { id: option, label: option, effect: "" };
-    const id = option?.id || option?.value || option?.label || option?.name;
-    if (!id) return null;
-    return { id: String(id), label: option.label || option.name || String(id), effect: option.effect || option.description || "" };
-  }).filter(Boolean);
+function getSelectableEffectSource() {
+  return master.selectableEffects || [];
 }
 
 function getStackEmptyStateId(field) {
-  return field.emptyStateId || "none";
+  return selectableEffects.getStackEmptyStateId(field);
 }
 
 function getStackStateOptions(field, campaignId = getCampaign()?.id) {
-  const configured = getConfiguredStackOptions(field?.stateOptions);
-  const stateSlot = field?.stateEffectSlot || field?.effectSlot || field?.id;
-  const dynamic = stateSlot && Array.isArray(field?.stateGroupLabels)
-    ? getCampaignSelectableEffects(campaignId, stateSlot)
-      .filter((item) => matchesGroupLabels(item, field.stateGroupLabels))
-      .map((item) => ({ id: item.id, label: item.name, effect: item.effect || "" }))
-    : [];
-  const options = [...configured, ...dynamic];
-  const unique = [...new Map(options.map((option) => [option.id, option])).values()];
-  const allowEmpty = field?.allowEmptyState !== false;
-  const empty = { id: getStackEmptyStateId(field), label: field?.emptyStateLabel || "なし", effect: "", empty: true };
-  if (!unique.length) return allowEmpty ? [empty] : [{ id: "normal", label: "通常", effect: "" }];
-  return allowEmpty ? [empty, ...unique.filter((option) => option.id !== empty.id)] : unique;
+  return selectableEffects.getStackStateOptions(field, campaignId, getSelectableEffectSource());
 }
 
 function normalizeStackState(field, value, campaignId = getCampaign()?.id) {
-  const options = getStackStateOptions(field, campaignId);
-  const raw = value === null || value === undefined || value === "" ? "" : String(value);
-  return options.some((option) => option.id === raw) ? raw : options[0].id;
+  return selectableEffects.normalizeStackState(field, value, campaignId, getSelectableEffectSource());
 }
 
 function isEmptyStackState(field, value, campaignId = getCampaign()?.id) {
-  return normalizeStackState(field, value, campaignId) === getStackEmptyStateId(field);
+  return selectableEffects.isEmptyStackState(field, value, campaignId, getSelectableEffectSource());
 }
 
 function getStackStateLabel(field, value, campaignId = getCampaign()?.id) {
-  const stateId = normalizeStackState(field, value, campaignId);
-  return getStackStateOptions(field, campaignId).find((option) => option.id === stateId)?.label || stateId;
+  return selectableEffects.getStackStateLabel(field, value, campaignId, getSelectableEffectSource());
 }
 
 function getStackStateEffect(field, value, campaignId = getCampaign()?.id) {
-  const stateId = normalizeStackState(field, value, campaignId);
-  const fromOption = getStackStateOptions(field, campaignId).find((option) => option.id === stateId)?.effect;
-  return fromOption || field?.stateEffects?.[stateId] || "";
+  return selectableEffects.getStackStateEffect(field, value, campaignId, getSelectableEffectSource());
 }
-
 
 function normalizeEffectStackEntry(field, entry, campaignId = getCampaign()?.id) {
   return {
@@ -149,13 +123,11 @@ function mergeEffectStackEntries(field, entries, campaignId = getCampaign()?.id)
 }
 
 function getCampaignSelectableEffects(campaignId = getCampaign()?.id, slot = null) {
-  return (master.selectableEffects || [])
-    .filter((item) => item.campaignId === campaignId && (!slot || item.slot === slot))
-    .sort((a, b) => (a.order - b.order) || String(a.name).localeCompare(String(b.name), "ja"));
+  return selectableEffects.getCampaignSelectableEffects(getSelectableEffectSource(), campaignId, slot);
 }
 
 function getSelectableEffectsForField(field, campaignId = getCampaign()?.id) {
-  return getCampaignSelectableEffects(campaignId, field.effectSlot || field.id);
+  return selectableEffects.getSelectableEffectsForField(getSelectableEffectSource(), field, campaignId);
 }
 
 function getSpecialFieldConfig(campaignId, fieldId) {
@@ -164,17 +136,15 @@ function getSpecialFieldConfig(campaignId, fieldId) {
 }
 
 function getCoinOptions(field, campaignId = getCampaign()?.id) {
-  return getCampaignSelectableEffects(campaignId, field.effectSlot || field.id || "coin");
+  return selectableEffects.getCoinOptions(getSelectableEffectSource(), field, campaignId);
 }
 
 function getCoinStatusOptions(field, campaignId = getCampaign()?.id) {
-  return getCampaignSelectableEffects(campaignId, field.statusSlot || "coinStatus");
+  return selectableEffects.getCoinStatusOptions(getSelectableEffectSource(), field, campaignId);
 }
 
 function getEffectStackOptions(field, campaignId = getCampaign()?.id) {
-  return getSelectableEffectsForField(field, campaignId)
-    .filter((item) => matchesGroupLabels(item, field.optionGroupLabels))
-    .filter((item) => !Array.isArray(field.excludeOptionGroupLabels) || !field.excludeOptionGroupLabels.includes(item.groupLabel || item.slotLabel || ""));
+  return selectableEffects.getEffectStackOptions(getSelectableEffectSource(), field, campaignId);
 }
 
 function normalizeEffectStackEntries(field, campaignId, value) {
@@ -200,17 +170,7 @@ function normalizeCoinLoadoutEntries(field, campaignId, value) {
 }
 
 function getRankedEffectGroups(field, campaignId = getCampaign()?.id) {
-  const grouped = new Map();
-  for (const item of getSelectableEffectsForField(field, campaignId)) {
-    const key = item.parentKey || item.group || item.id;
-    if (!grouped.has(key)) grouped.set(key, { key, parentName: item.parentName || item.name, groupLabel: item.groupLabel || item.slotLabel || "", items: [] });
-    grouped.get(key).items.push(item);
-  }
-  const rankOrder = { lower: 1, upper: 2, formation: 1, expansion: 2, prime: 3, mourou: 1, meiryou: 2, nyuukotsu: 3 };
-  return [...grouped.values()].map((group) => ({
-    ...group,
-    items: group.items.sort((a, b) => (rankOrder[a.variantRank] || 99) - (rankOrder[b.variantRank] || 99) || (a.order - b.order)),
-  })).sort((a, b) => (a.items[0]?.order || 0) - (b.items[0]?.order || 0));
+  return selectableEffects.getRankedEffectGroups(getSelectableEffectSource(), field, campaignId);
 }
 
 function getSpecialEffectName(id) {
