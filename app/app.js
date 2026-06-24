@@ -1,4 +1,5 @@
 import { createLookupMaps } from "./domain/master-maps.js";
+import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, coinFaceLabels, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
 import { assetUrl, html, normalizeText, stableOverlayStateJson, stars } from "./lib/format.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults, overlayScrollSpeedLabels, resolveOverlayLayout, resolveOverlaySize } from "./lib/overlay-config.js";
@@ -13,8 +14,6 @@ const overlaySize = resolveOverlaySize(routeParams.get("size") || routeParams.ge
 let overlayAutoScrollFrame = null;
 if (view === "overlay") document.documentElement.classList.add("overlay-mode");
 
-const stateUrl = "/api/state";
-const masterUrl = "/api/master";
 const ui = {
   tab: "run",
   relicSearch: "",
@@ -1485,11 +1484,6 @@ function ensureStateShape() {
   deriveDifficultyTier();
 }
 
-async function apiJson(url, options) {
-  const response = await fetch(url, options);
-  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
-  return response.json();
-}
 
 function setNotice(text) {
   ui.notice = text;
@@ -2296,7 +2290,7 @@ app.addEventListener("click", async (event) => {
   if (action === "clear-relics") mutate((s) => { s.relics = []; });
   if (action === "reset-state") {
     if (confirm("状態を初期化しますか？")) {
-      state = await apiJson("/api/state/reset", { method: "POST" });
+      state = await apiJson(resetStateUrl, { method: "POST" });
       ensureStateShape();
       renderControl();
       setNotice("状態を初期化しました。");
