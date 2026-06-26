@@ -16,7 +16,7 @@ import { isActiveManualRule, summarizeRelicEffects as summarizeRelicEffectMetric
 import { getOperatorFilterView, sortOperators as sortOperatorsByPreference } from "./domain/operators.js";
 import { getRelicCategories, getRelicListView as buildRelicListView } from "./domain/relics.js";
 import { buildStartTemplateSummary, getEffectiveRelicIds, mergeEffectiveSpecial, phaseLabel } from "./domain/start-templates.js";
-import { controlModeOptions, getControlMode, getModeOrderedTabs, normalizeControlMode } from "./domain/ui-modes.js";
+import { controlModeOptions, getControlMode, normalizeControlMode } from "./domain/ui-modes.js";
 import { controlV2ScreenOptions, getControlV2ScreenMeta, normalizeControlV2Screen } from "./domain/control-v2-screens.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampSpecialNumber } from "./domain/special-values.js";
@@ -40,17 +40,7 @@ const overlayLayout = resolveOverlayLayout(routeParams.get("layout"));
 const overlaySize = resolveOverlaySize(routeParams.get("size") || routeParams.get("scale"));
 if (view === "overlay") document.documentElement.classList.add("overlay-mode");
 
-const controlTabs = [
-  { id: "run", label: "ラン状態", icon: "R" },
-  { id: "relics", label: "秘宝", icon: "T" },
-  { id: "operators", label: "招集", icon: "O" },
-  { id: "flags", label: "ボス/大会", icon: "F" },
-  { id: "obs", label: "OBSパーツ", icon: "P" },
-  { id: "json", label: "入出力", icon: "J" },
-];
-
 const ui = {
-  tab: controlTabs.some((tab) => tab.id === routeParams.get("tab")) ? routeParams.get("tab") : "run",
   controlV2Screen: normalizeControlV2Screen(routeParams.get("screen") || (["operators", "relics"].includes(routeParams.get("choice")) ? routeParams.get("choice") : "common")),
   controlV2ChoiceTab: ["operators", "relics"].includes(routeParams.get("choice")) ? routeParams.get("choice") : "operators",
   relicSearch: "",
@@ -173,27 +163,6 @@ function getCurrentControlMode() {
 function renderControlModeOptions() {
   const selected = getCurrentControlMode().id;
   return controlModeOptions.map((option) => `<option value="${option.id}" ${option.id === selected ? "selected" : ""}>${html(option.label)}</option>`).join("");
-}
-
-function renderModeCards() {
-  const selected = getCurrentControlMode().id;
-  return controlModeOptions.map((option) => `
-    <label class="mode-card ${option.id === selected ? "active" : ""}">
-      <input type="radio" name="control-mode" data-field="mode" value="${option.id}" ${option.id === selected ? "checked" : ""}>
-      <span class="mode-card-title">${html(option.label)}</span>
-      <span class="mode-card-meta">${html(option.subtitle)}</span>
-      <span class="mode-card-copy">${html(option.description)}</span>
-    </label>
-  `).join("");
-}
-
-function renderModeOrderedNavButtons() {
-  const tabMap = new Map(controlTabs.map((tab) => [tab.id, tab]));
-  return getModeOrderedTabs(state?.mode, controlTabs.map((tab) => tab.id))
-    .map((tabId) => tabMap.get(tabId))
-    .filter(Boolean)
-    .map((tab) => navButton(tab.id, tab.label, tab.icon))
-    .join("");
 }
 
 function absoluteAppUrl(path) {
@@ -606,7 +575,7 @@ function difficultySummary(grade) {
   return summarizeDifficultyGrade(grade);
 }
 
-function renderDifficultyFields(grade, mode = "control") {
+function renderDifficultyFields(grade, mode = "default") {
   const fields = (grade?.fields || []).filter((item) => item.value !== null && item.value !== undefined && item.value !== "");
   if (!grade || !fields.length) return "";
   return `<div class="difficulty-summary ${mode === "overlay" ? "overlay-detail" : ""}">
@@ -719,7 +688,7 @@ function ensureStateShape() {
 
 
 function isInteractiveView() {
-  return view === "control" || view === "control-v2" || view === "sidecar" || view === "licenses";
+  return view === "control-v2" || view === "sidecar" || view === "licenses";
 }
 
 function renderLicensesPage() {
@@ -734,7 +703,7 @@ function renderLicensesPage() {
         <div><h1>ライセンス / 謝辞</h1><p>RHODES OBS COMMANDER3373 のソース提供と第三者表記</p></div>
       </div>
       <nav class="licenses-actions" aria-label="ライセンス画面ナビゲーション">
-        <a href="/control-v2" target="_self">Control v2</a>
+        <a href="/control-v2" target="_self">Control</a>
         <a href="/sidecar" target="_self">Sidecar</a>
         <a href="/overlay" target="_blank" rel="noreferrer">Overlay</a>
       </nav>
@@ -774,8 +743,7 @@ function renderLicensesPage() {
 function renderInteractive() {
   if (view === "licenses") return renderLicensesPage();
   if (view === "sidecar") return renderSidecar();
-  if (view === "control-v2") return renderControlV2();
-  return renderControl();
+  return renderControlV2();
 }
 function setNotice(text) {
   ui.notice = text;
@@ -807,85 +775,9 @@ async function saveState() {
   renderControlHeaderStatus();
 }
 
-function captureListScroll() {
-  if (view !== "control") return null;
-  const list = document.querySelector(".list-area");
-  if (!list) return null;
-  return {
-    tab: ui.tab,
-    scrollTop: list.scrollTop,
-    scrollLeft: list.scrollLeft,
-  };
-}
-
-function restoreListScroll(snapshot) {
-  if (!snapshot || view !== "control" || snapshot.tab !== ui.tab) return;
-  requestAnimationFrame(() => {
-    const list = document.querySelector(".list-area");
-    if (!list) return;
-    list.scrollTop = snapshot.scrollTop;
-    list.scrollLeft = snapshot.scrollLeft;
-  });
-}
-
-function mutate(fn, options = {}) {
-  const { render = true } = options;
-  const scrollSnapshot = render ? captureListScroll() : null;
-  fn(state);
-  ensureStateShape();
-  if (isInteractiveView() && render) {
-    renderInteractive();
-    restoreListScroll(scrollSnapshot);
-  }
-  scheduleSave();
-}
-
-
 function renderControlHeaderStatus() {
   const el = document.querySelector(".save-status");
   if (el) el.textContent = ui.saveStatus;
-}
-
-function navButton(id, label, icon) {
-  return `<button class="nav-button ${ui.tab === id ? "active" : ""}" data-action="tab" data-tab="${id}"><span class="nav-icon">${icon}</span><span>${label}</span></button>`;
-}
-
-function renderControl() {
-  const mode = getCurrentControlMode();
-  app.dataset.loading = "false";
-  document.body.className = "";
-  app.className = "control-app";
-  app.innerHTML = `
-    <header class="control-topbar">
-      <div class="brand">
-        <div class="brand-mark">IS</div>
-        <div>
-          <h1>RHODES OBS COMMANDER3373</h1>
-          <p>${html(getCampaign()?.fullTitle)} / ${html(mode.label)}</p>
-        </div>
-      </div>
-      <div class="topbar-actions">
-        <label class="topbar-mode">モード<select data-field="mode">${renderControlModeOptions()}</select></label>
-        <a href="/control-v2" target="_self">Control v2</a>
-        <a href="/sidecar" target="_self">Sidecar</a>
-        <a href="/overlay" target="_blank">Overlay</a>
-        <a href="/licenses" target="_self">ライセンス</a>
-        <a href="/control" target="_self">Control</a>
-        <span class="save-status">${html(ui.saveStatus)}</span>
-        <button class="ghost" data-action="reset-state">リセット</button>
-      </div>
-    </header>
-    <div class="control-layout">
-      <nav class="control-nav">
-        <a class="nav-button" href="/control-v2" target="_self"><span class="nav-icon">V2</span><span>Control v2</span></a>
-          ${renderModeOrderedNavButtons()}
-      </nav>
-      <main class="control-main">
-        ${ui.notice ? `<div class="panel" style="margin-bottom:14px"><div class="panel-body">${html(ui.notice)}</div></div>` : ""}
-        ${renderCurrentTab()}
-      </main>
-    </div>
-  `;
 }
 
 function renderControlV2RunPanel() {
@@ -1219,7 +1111,7 @@ function renderControlV2SidecarScreen() {
           </div>
           <div class="control-v2-sidecar-launches">
             <a class="control-v2-launch-button primary" href="${html(sidecarUrl)}" target="_blank" rel="noreferrer">Sidecarを別画面で開く</a>
-            <a class="control-v2-launch-button" href="${html(absoluteAppUrl("/control"))}" target="_blank" rel="noreferrer">旧Controlを開く</a>
+            <a class="control-v2-launch-button" href="${html(absoluteAppUrl("/control-v2"))}" target="_blank" rel="noreferrer">Controlを別画面で開く</a>
           </div>
         </div>
       </section>
@@ -1361,109 +1253,6 @@ function renderControlV2() {
     </main>
   `;
 }
-function renderCurrentTab() {
-  if (ui.tab === "relics") return renderRelicsTab();
-  if (ui.tab === "operators") return renderOperatorsTab();
-  if (ui.tab === "flags") return renderFlagsTab();
-  if (ui.tab === "obs") return renderObsPartsTab();
-  if (ui.tab === "json") return renderJsonTab();
-  return renderRunTab();
-}
-
-function renderRunTab() {
-  const campaign = getCampaign();
-  const squads = getCampaignSquads();
-  const selectedSquad = getSelectedSquad();
-  const randomOptions = selectedSquad?.randomEffectOptions || [];
-  const performances = getCampaignPerformances(campaign.id);
-  const selectedPerformance = getSelectedPerformance();
-  const activeEffects = getActiveEffects();
-  const specialFields = campaign.specialFields || [];
-  const special = state.run.special?.[campaign.id] || {};
-  const specialTags = getSpecialTags(specialFields, special);
-  const startTemplateSummary = getStartTemplateSummary();
-  const effectiveRelicCount = getEffectiveRelicIdList().length;
-  const bossEntries = getBossFlagEntries(campaign.id);
-  const tierCfg = master.difficultyTiers?.[campaign.id];
-  const difficultyGrade = getSelectedDifficultyGrade();
-  const mode = getCurrentControlMode();
-  return `
-    <section class="panel-grid">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">マザーUIモード</h2><span class="panel-subtitle">${html(mode.subtitle)}</span></div>
-        <div class="panel-body">
-          <div class="mode-card-grid">${renderModeCards()}</div>
-        </div>
-      </div>
-
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">ラン基本情報</h2><span class="panel-subtitle">OBS表示の主状態</span></div>
-        <div class="panel-body form-grid two">
-          <label>統合戦略
-            <select data-field="campaignId">
-              ${master.campaigns.map((item) => `<option value="${item.id}" ${item.id === campaign.id ? "selected" : ""}>IS#${item.number} ${html(item.title)}</option>`).join("")}
-            </select>
-          </label>
-          <label>等級 / 難易度
-            ${renderDifficultySelect(campaign.id)}
-          </label>
-          <label class="field-wide">分隊
-            <select data-field="squadId">
-              <option value="">未選択</option>
-              ${squads.map((item) => `<option value="${item.id}" ${item.id === state.run.squadId ? "selected" : ""}>${html(item.name)}</option>`).join("")}
-            </select>
-          </label>
-          ${randomOptions.length ? `<label class="field-wide">ランダム分隊効果
-            <select data-field="squadRandomEffectOptionId">
-              <option value="">未選択</option>
-              ${randomOptions.map((item) => `<option value="${item.id}" ${item.id === state.run.squadRandomEffectOptionId ? "selected" : ""}>${html(item.label || item.id)}</option>`).join("")}
-            </select>
-          </label>` : ""}
-          ${performances.length ? `<label class="field-wide">演目
-            ${renderPerformanceSelect(campaign.id)}
-          </label>` : ""}
-          ${renderRunStatInputs()}
-        </div>
-      </div>
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">特殊表示</h2><span class="panel-subtitle">シリーズ固有値</span></div>
-        <div class="panel-body form-grid two">
-          ${specialFields.length ? specialFields.map((field) => renderSpecialField(field, campaign.id, special)).join("") : `<div class="empty-state field-wide">この統合戦略に特殊表示はありません。</div>`}
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">OBSスクロール速度</h2><span class="panel-subtitle">0で停止 / 30が最速</span></div>
-        <div class="panel-body form-grid">
-          ${Object.keys(overlayScrollSpeedDefaults).map((key) => renderScrollSpeedControl(key)).join("")}
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">現在の表示サマリー</h2><span class="panel-subtitle">保存するとOverlayへ反映</span></div>
-        <div class="panel-body">
-          <div class="tag-list">
-            <span class="tag accent">秘宝 ${effectiveRelicCount}${effectiveRelicCount !== state.relics.length ? " / 手入力 " + state.relics.length : ""}</span>
-            <span class="tag info">招集 ${state.operators.length}</span>
-            <span class="tag">ボス ${bossEntries.length}</span>
-            <span class="tag">等級 ${html(difficultyGrade?.label || "未選択")}</span>
-            <span class="tag">難易度ティア ${html(tierCfg ? getDifficultyTierLabel() : "対象外")}</span>
-            ${performances.length ? `<span class="tag">演目 ${html(selectedPerformance?.title || "未選択")}</span>` : ""}
-            ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
-            ${renderRunStatTags()}
-          </div>
-          ${selectedSquad ? `<p><strong>${html(selectedSquad.name)}</strong><br><span class="panel-subtitle">${html(selectedSquad.effect)}</span></p>` : `<p class="panel-subtitle">分隊は未選択です。</p>`}
-          ${selectedPerformance ? `<p><strong>${html(selectedPerformance.name)}</strong><br><span class="panel-subtitle">${html(selectedPerformance.effect)}</span></p>` : ""}
-          ${difficultyGrade ? renderDifficultyFields(difficultyGrade) : `<p class="panel-subtitle">等級は未選択です。</p>`}
-          ${renderStartTemplateSummary(startTemplateSummary)}
-          <div class="effect-block">
-            <div class="effect-block-title">発動効果</div>
-            ${renderEffectList(activeEffects, "control-effect-list", "分隊・演目・等級・秘宝の発動効果は未設定です。")}
-          </div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function getRelicListView() {
   return buildRelicListView(getCampaignRelics(), ui, getEffectiveRelicIdList(), getRelicGridColumns());
 }
@@ -1477,11 +1266,8 @@ function renderRelicListArea(viewData) {
 }
 
 function refreshRelicListOnly() {
-  if (view !== "control" && view !== "control-v2") return false;
-  if (view === "control" && ui.tab !== "relics") return false;
+  if (view !== "control-v2") return false;
   const viewData = getRelicListView();
-  const subtitle = document.querySelector(".panel-header .panel-subtitle");
-  if (subtitle) subtitle.textContent = `${viewData.filtered.length}件 / 所持${viewData.owned.size}件`;
   const v2Count = document.querySelector(".control-v2-relic-count");
   if (v2Count) v2Count.textContent = `${viewData.filtered.length}件 / 所持${viewData.owned.size}件`;
   const list = document.querySelector(".relic-pick-grid");
@@ -1491,26 +1277,6 @@ function refreshRelicListOnly() {
   return true;
 }
 
-function renderRelicsTab() {
-  const categories = getRelicCategories(getCampaignRelics());
-  const viewData = getRelicListView();
-  return `
-    <section class="panel-grid">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">秘宝所持</h2><span class="panel-subtitle">${viewData.filtered.length}件 / 所持${viewData.owned.size}件</span></div>
-        <div class="panel-body">
-          <div class="search-strip relic-filter-strip">
-            <label>検索<input value="${html(ui.relicSearch)}" data-ui="relicSearch" placeholder="秘宝名、番号、効果" /></label>
-            <label>カテゴリ<select data-ui="relicCategory"><option value="all">すべて</option>${categories.map((cat) => `<option value="${html(cat)}" ${cat === ui.relicCategory ? "selected" : ""}>${html(cat)}</option>`).join("")}</select></label>
-            <label>表示列<select data-field="relicGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === viewData.gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
-            <button data-action="clear-relics">手入力秘宝を全解除</button>
-          </div>
-          ${renderRelicListArea(viewData)}
-        </div>
-      </div>
-    </section>
-  `;
-}
 
 function renderRelicControlRow(item, active) {
   const manual = new Set(state.relics || []).has(item.id);
@@ -1518,30 +1284,6 @@ function renderRelicControlRow(item, active) {
   return renderRelicControlRowComponent(item, active, relicEffectForDisplay(item), { manual, template });
 }
 
-function renderOperatorsTab() {
-  const { rarityOptions, classOptions, branchOptions, operators } = getOperatorFilterViewForUi();
-  const shown = sortOperators(operators).slice(0, 500);
-  const selected = new Set(state.operators);
-  const gridColumns = getOperatorGridColumns();
-  return `
-    <section class="panel-grid">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">招集オペレーター</h2><span class="panel-subtitle">${operators.length}件 / 招集${selected.size}名</span></div>
-        <div class="panel-body">
-          <div class="search-strip operator-filter-strip">
-            <label>実装状態<select data-ui="operatorRelease"><option value="released" ${ui.operatorRelease === "released" ? "selected" : ""}>日本実装のみ</option><option value="all" ${ui.operatorRelease === "all" ? "selected" : ""}>すべて</option><option value="unreleased" ${ui.operatorRelease === "unreleased" ? "selected" : ""}>日本未実装のみ</option></select></label>
-            <label>レア度<select data-ui="operatorRarity"><option value="all">すべて</option>${rarityOptions.map((rarity) => `<option value="${rarity}" ${String(rarity) === ui.operatorRarity ? "selected" : ""}>★${rarity}</option>`).join("")}</select></label>
-            <label>職業<select data-ui="operatorClass"><option value="all">すべて</option>${classOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorClass ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
-            <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
-            <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="class" ${state.preferences.operatorSort === "class" ? "selected" : ""}>職業順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
-            <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
-          </div>
-          ${renderOperatorListAreaComponent({ shown, operators, selected, gridColumns }, renderOperatorControlRow)}
-        </div>
-      </div>
-    </section>
-  `;
-}
 function renderOperatorControlRow(item, active) {
   return renderOperatorControlRowComponent(item, active);
 }
@@ -1579,105 +1321,6 @@ function renderBossSelector(section, campaignId) {
     '</select>' +
   '</label>';
 }
-function renderFlagsTab() {
-  const campaign = getCampaign();
-  const pending = state.tournament?.pendingState;
-  const entries = getBossFlagEntries(campaign.id);
-  const sections = getBossManualSections(campaign.id);
-  const bossConfig = getBossConfig(campaign.id);
-  const bossFlagSubtitle = bossConfig?.derivedFromRelics === false ? "手動切り替え / ランダム・追加ルートを統合表示" : "秘宝所持から自動判定 / ランダム・異相は手動選択";
-  return `
-    <section class="panel-grid">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">ボスフラグ</h2><span class="panel-subtitle">${html(bossFlagSubtitle)}</span></div>
-        <div class="panel-body form-grid two">
-          ${sections.length ? sections.map((section) => renderBossSelector(section, campaign.id)).join("") : `<div class="empty-state field-wide">この統合戦略のボスフラグ定義は未登録です。</div>`}
-          <div class="field-wide boss-card-grid">
-            ${entries.length ? entries.map((entry) => renderBossCard(entry)).join("") : `<div class="empty-state">ボスフラグは未設定です。</div>`}
-          </div>
-        </div>
-      </div>
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">手動メモ</h2><span class="panel-subtitle">大会・例外用の自由入力</span></div>
-        <div class="panel-body form-grid one">
-          <label>追加するメモ<input value="${html(ui.bossDraft)}" data-ui="bossDraft" placeholder="例: 3層で緊急、特殊ルールなど" /></label>
-          <button class="primary" data-action="add-boss-flag">追加</button>
-          <div class="tag-list">
-            ${(state.bossFlags || []).map((flag, index) => `<span class="tag accent">${html(flag)} <button class="icon ghost" data-action="remove-boss-flag" data-index="${index}" title="削除">x</button></span>`).join("") || `<span class="panel-subtitle">未設定</span>`}
-          </div>
-        </div>
-      </div>
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">大会入力</h2><span class="panel-subtitle">レビューしてから反映</span></div>
-        <div class="panel-body">
-          ${pending ? `<p>保留中の提出があります。</p><div class="inline-row"><button class="primary" data-action="approve-tournament">反映</button><button data-action="reject-tournament">破棄</button></div>` : `<div class="empty-state">保留中の大会入力はありません。JSON入出力タブから提出できます。</div>`}
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">ADB/OCR候補</h2><span class="panel-subtitle">取得結果は承認まで状態に反映しない</span></div>
-        <div class="panel-body">
-          ${renderRecognitionScanControls()}
-          ${renderRecognitionSuggestionList()}
-        </div>
-      </div>
-    </section>
-  `;
-}
-function renderObsPartsTab() {
-  return `
-    <section class="panel-grid">
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">OBSプリセット</h2><span class="panel-subtitle">現行でそのまま使えるURL</span></div>
-        <div class="panel-body obs-url-grid">
-          ${renderObsUrlCard("標準オーバーレイ", "全体情報を1枚で表示", "/overlay")}
-          ${renderObsUrlCard("コンパクト", "ゲーム画面上に重ねる小型表示", "/overlay?layout=compact")}
-          ${renderObsUrlCard("横長 S", "下帯向け / 小", "/overlay?layout=horizontal&size=small")}
-          ${renderObsUrlCard("横長 M", "下帯向け / 中", "/overlay?layout=horizontal&size=medium")}
-          ${renderObsUrlCard("横長 L", "下帯向け / 大", "/overlay?layout=horizontal&size=large")}
-          ${renderObsUrlCard("縦長 S", "左右サイドバー向け / 小", "/overlay?layout=vertical&size=small")}
-          ${renderObsUrlCard("縦長 M", "左右サイドバー向け / 中", "/overlay?layout=vertical&size=medium")}
-          ${renderObsUrlCard("縦長 L", "左右サイドバー向け / 大", "/overlay?layout=vertical&size=large")}
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">分割パーツ</h2><span class="panel-subtitle">OBSで個別ソースとして配置</span></div>
-        <div class="panel-body obs-url-grid">${renderObsPartCards()}</div>
-      </div>
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">サイドカー想定</h2><span class="panel-subtitle">配信外の支援画面</span></div>
-        <div class="panel-body obs-part-list">
-          <div><strong>Run Console</strong><span>入力、検索、選択操作を集約</span></div>
-          <div><strong>Review Queue</strong><span>大会入力やOCR候補の確認</span></div>
-          <div><strong>Effect Inspector</strong><span>条件付き効果と合算根拠の確認</span></div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
-function renderJsonTab() {
-  const exportJson = JSON.stringify(state, null, 2);
-  return `
-    <section class="panel-grid">
-
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">現在状態をエクスポート</h2><span class="panel-subtitle">大会共有・バックアップ用</span></div>
-        <div class="panel-body form-grid one">
-          <textarea readonly>${html(exportJson)}</textarea>
-          <button data-action="copy-state-json">コピー</button>
-        </div>
-      </div>
-      <div class="panel half">
-        <div class="panel-header"><h2 class="panel-title">JSONインポート</h2><span class="panel-subtitle">直接反映または大会提出</span></div>
-        <div class="panel-body form-grid one">
-          <textarea data-ui="importDraft" placeholder="状態JSONを貼り付け">${html(ui.importDraft)}</textarea>
-          <div class="inline-row"><button class="primary" data-action="import-state-now">直接反映</button><button data-action="submit-tournament-state">大会入力として保留</button></div>
-        </div>
-      </div>
-    </section>
-  `;
-}
-
 function renderSidecarRelics(relics) {
   if (!relics.length) return `<div class="empty-state">所持秘宝はありません。</div>`;
   return `<div class="sidecar-mini-list sidecar-relic-list">
@@ -1734,7 +1377,7 @@ function renderSidecar() {
       </div>
       <div class="sidecar-actions">
         <label>モード<select data-field="mode">${renderControlModeOptions()}</select></label>
-        <a href="/control" target="_self">Control</a>
+        <a href="/control-v2" target="_self">Control</a>
         <a href="/overlay" target="_blank">Overlay</a>
         <a href="/licenses" target="_self">ライセンス</a>
         <span class="save-status">${html(ui.saveStatus)}</span>
@@ -1779,15 +1422,15 @@ function renderSidecar() {
           <div class="sidecar-scroll sidecar-effect-scroll">${renderEffectList(activeEffects, "sidecar-effect-list", "分隊・演目・等級・秘宝の発動効果は未設定です。")}</div>
         </section>
         <section class="sidecar-panel">
-          <div class="sidecar-panel-head"><h2>所持秘宝</h2><a href="/control?tab=relics" target="_self">編集</a></div>
+          <div class="sidecar-panel-head"><h2>所持秘宝</h2><a href="/control-v2?screen=relics" target="_self">編集</a></div>
           ${renderSidecarRelics(relics)}
         </section>
         <section class="sidecar-panel">
-          <div class="sidecar-panel-head"><h2>招集オペレーター</h2><a href="/control?tab=operators" target="_self">編集</a></div>
+          <div class="sidecar-panel-head"><h2>招集オペレーター</h2><a href="/control-v2?screen=operators" target="_self">編集</a></div>
           ${renderSidecarOperators(operators)}
         </section>
         <section class="sidecar-panel">
-          <div class="sidecar-panel-head"><h2>レビュー</h2><a href="/control?tab=flags" target="_self">詳細</a></div>
+          <div class="sidecar-panel-head"><h2>レビュー</h2><a href="/control-v2?screen=sidecar" target="_self">詳細</a></div>
           <div class="sidecar-review-list">${renderSidecarReviewQueue()}</div>
         </section>
       </div>

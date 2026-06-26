@@ -84,7 +84,7 @@ Responsibilities are intentionally separated:
 - Human debugging should use the Electron shell as the primary surface. Plain browser tabs are fallback/debugging aids for the local web server and OBS URL checks.
 - Desktop-impacting changes should be verified with `npm test` and an Electron package compile via `npm run pack:win` or `npm run verify:desktop`.
 - Split OBS parts are routed under `/overlay/part/<part>`, currently `status`, `relics`, `operators`, `effects`, `bosses`, and `special`.
-- `/control` remains the full editing surface for manual input, tournament review, and future OCR/ADB suggestions.
+- `/control-v2` is the primary editing surface for manual input, tournament review, OBS settings, Sidecar workflow, and future OCR/ADB suggestions. `/control` remains only as a compatibility URL that resolves to Control v2.
 - `/sidecar` is the compact emulator-adjacent support surface for run state, effects, selected relics/operators, boss flags, and review queues.
 
 Packaged builds wrap these same local URLs. Runtime state is stored outside the packaged app via `ARKNIGHTS_STATE_DIR`, while master data remains bundled with the app.

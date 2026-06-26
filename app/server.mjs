@@ -273,6 +273,21 @@ async function serveFile(res, file) {
   }
 }
 
+function legacyControlRedirectLocation(url) {
+  const tabToScreen = new Map([
+    ["run", "common"],
+    ["relics", "relics"],
+    ["operators", "operators"],
+    ["flags", "sidecar"],
+    ["obs", "obs"],
+  ]);
+  const screen = tabToScreen.get(url.searchParams.get("tab")) || url.searchParams.get("screen");
+  const params = new URLSearchParams();
+  if (screen) params.set("screen", screen);
+  const query = params.toString();
+  return `/control-v2${query ? `?${query}` : ""}`;
+}
+
 export function createAppServer({ recognitionRunner = defaultRecognitionRunner } = {}) {
   let activeScanController = null;
 
@@ -346,8 +361,8 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner }
       return sendText(res, 405, "Method not allowed");
     }
 
-    if (url.pathname === "/") {
-      res.writeHead(302, { location: "/control" });
+    if (url.pathname === "/" || url.pathname === "/control") {
+      res.writeHead(302, { location: legacyControlRedirectLocation(url) });
       return res.end();
     }
 
@@ -377,7 +392,7 @@ export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner
       const address = server.address();
       const actualPort = typeof address === "object" && address ? address.port : port;
       console.log(`RHODES OBS COMMANDER3373`);
-      console.log(`Control: http://${host}:${actualPort}/control`);
+      console.log(`Control: http://${host}:${actualPort}/control-v2`);
       console.log(`Overlay: http://${host}:${actualPort}/overlay`);
       resolve({ server, port: actualPort, host });
     });

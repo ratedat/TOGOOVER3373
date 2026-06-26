@@ -23,7 +23,7 @@ import { launchRequestData, resolveSecondInstanceView } from "../runtime/launch-
 import { isInternalAppUrl } from "../runtime/window-open.mjs";
 
 let port = resolveStartupPort({ args: process.argv, env: process.env });
-const initialView = normalizeView(readArg(process.argv, "--view", "control"));
+const initialView = normalizeView(readArg(process.argv, "--view", "control-v2"));
 const smokeTest = hasFlag(process.argv, "--smoke-test");
 
 let serverController = null;
@@ -69,8 +69,7 @@ function buildMenu() {
     {
       label: "表示",
       submenu: [
-        { label: "Control", accelerator: "CmdOrCtrl+1", click: () => loadView("control") },
-        { label: "Control v2", accelerator: "CmdOrCtrl+Shift+1", click: () => loadView("control-v2") },
+        { label: "Control", accelerator: "CmdOrCtrl+1", click: () => loadView("control-v2") },
         { label: "Sidecar", accelerator: "CmdOrCtrl+2", click: () => loadView("sidecar") },
         { label: "Overlay Preview", accelerator: "CmdOrCtrl+3", click: () => loadView("overlay") },
         { label: "ライセンス / 謝辞", accelerator: "CmdOrCtrl+4", click: () => loadView("licenses") },

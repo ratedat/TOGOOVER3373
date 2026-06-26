@@ -27,12 +27,11 @@ export function normalizePort(value) {
 export function normalizeView(value) {
   if (value === "overlay") return "overlay";
   if (value === "sidecar") return "sidecar";
-  if (value === "control-v2") return "control-v2";
   if (value === "licenses") return "licenses";
-  return "control";
+  return "control-v2";
 }
 
-export function appUrl(port, view = "control") {
+export function appUrl(port, view = "control-v2") {
   return `http://127.0.0.1:${port}/${normalizeView(view)}`;
 }
 

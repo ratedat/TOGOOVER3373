@@ -66,12 +66,13 @@ npm.cmd run dev
 
 | 用途 | URL |
 | --- | --- |
-| 旧Control | `http://127.0.0.1:5173/control` |
-| Control v2 | `http://127.0.0.1:5173/control-v2` |
+| Control | `http://127.0.0.1:5173/control-v2` |
 | Sidecar | `http://127.0.0.1:5173/sidecar` |
 | OBS overlay | `http://127.0.0.1:5173/overlay` |
 
-Control v2は画面を分けて開けます。
+`/control` は旧ブックマーク互換用で、現在はControl v2と同じ画面を開きます。
+
+Controlは画面を分けて開けます。
 
 ```text
 http://127.0.0.1:5173/control-v2?screen=common

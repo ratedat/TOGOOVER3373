@@ -1,7 +1,8 @@
-const viewIds = new Set(["control", "control-v2", "sidecar", "overlay", "licenses"]);
+const viewIds = new Set(["control-v2", "sidecar", "overlay", "licenses"]);
 
 export function normalizeAppView(value) {
-  return viewIds.has(value) ? value : "control";
+  if (value === "control") return "control-v2";
+  return viewIds.has(value) ? value : "control-v2";
 }
 
 export function resolveAppView(pathname = "/", search = "") {
@@ -10,9 +11,8 @@ export function resolveAppView(pathname = "/", search = "") {
   if (requested) return normalizeAppView(requested);
   if (String(pathname).startsWith("/overlay")) return "overlay";
   if (pathname === "/sidecar") return "sidecar";
-  if (pathname === "/control-v2") return "control-v2";
   if (pathname === "/licenses") return "licenses";
-  return "control";
+  return "control-v2";
 }
 
 export function isAppShellPath(pathname = "/") {

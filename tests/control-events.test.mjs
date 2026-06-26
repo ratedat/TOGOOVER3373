@@ -10,5 +10,5 @@ test("template relics count as active choices even when not manually selected", 
   };
 
   assert.equal(getChoiceActive("relic", "is3_mizuki_relic_261", state, context), true);
-  assert.equal(getChoiceCount({ tab: "relics" }, state, context), 2);
+  assert.equal(getChoiceCount({ controlV2ChoiceTab: "relics" }, state, context), 2);
 });

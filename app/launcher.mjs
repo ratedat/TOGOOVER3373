@@ -13,7 +13,7 @@ import {
 } from "./runtime/local-server.mjs";
 
 const port = normalizePort(readArg(process.argv, "--port", process.env.PORT || DEFAULT_PORT));
-const view = normalizeView(readArg(process.argv, "--view", "control"));
+const view = normalizeView(readArg(process.argv, "--view", "control-v2"));
 const noOpen = hasFlag(process.argv, "--no-open") || process.env.ARKNIGHTS_APP_NO_OPEN === "1";
 const exitAfterReady = hasFlag(process.argv, "--exit-after-ready");
 const targetUrl = appUrl(port, view);

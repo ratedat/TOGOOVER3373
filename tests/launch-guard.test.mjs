@@ -27,7 +27,7 @@ test("isLocalServerReady detects a responsive local server", async () => {
   });
   const port = await listen(server);
   try {
-    assert.equal(await isLocalServerReady(appUrl(port, "control"), 2), true);
+    assert.equal(await isLocalServerReady(appUrl(port, "control-v2"), 2), true);
   } finally {
     await close(server);
   }
@@ -40,16 +40,16 @@ test("isLocalServerReady returns false when the local server is unavailable", as
   });
   const port = await listen(server);
   await close(server);
-  assert.equal(await isLocalServerReady(appUrl(port, "control"), 1), false);
+  assert.equal(await isLocalServerReady(appUrl(port, "control-v2"), 1), false);
 });
 
 test("launchRequestData normalizes port and view for second Electron launches", () => {
   assert.deepEqual(launchRequestData({ port: "5188", view: "sidecar" }), { port: 5188, view: "sidecar" });
-  assert.deepEqual(launchRequestData({ port: "bad", view: "unknown" }), { port: 5173, view: "control" });
+  assert.deepEqual(launchRequestData({ port: "bad", view: "unknown" }), { port: 5173, view: "control-v2" });
 });
 
 test("resolveSecondInstanceView prefers Electron additionalData before command line args", () => {
-  assert.equal(resolveSecondInstanceView(["electron", ".", "--view", "overlay"], { view: "sidecar" }, "control"), "sidecar");
-  assert.equal(resolveSecondInstanceView(["electron", ".", "--view", "overlay"], {}, "control"), "overlay");
+  assert.equal(resolveSecondInstanceView(["electron", ".", "--view", "overlay"], { view: "sidecar" }, "control-v2"), "sidecar");
+  assert.equal(resolveSecondInstanceView(["electron", ".", "--view", "overlay"], {}, "control-v2"), "overlay");
   assert.equal(resolveSecondInstanceView(["electron", "."], {}, "sidecar"), "sidecar");
 });

@@ -7,6 +7,6 @@ export function launchRequestData({ port, view } = {}) {
   };
 }
 
-export function resolveSecondInstanceView(commandLine = [], additionalData = {}, fallback = "control") {
+export function resolveSecondInstanceView(commandLine = [], additionalData = {}, fallback = "control-v2") {
   return normalizeView(additionalData?.view ?? readArg(commandLine, "--view", fallback));
 }

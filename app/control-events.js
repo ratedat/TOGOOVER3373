@@ -38,8 +38,9 @@ export function getChoiceActive(type, id, state, context = {}) {
 }
 
 export function getChoiceCount(ui, state, context = {}) {
-  if (ui.tab === "relics") return typeof context.getEffectiveRelicCount === "function" ? context.getEffectiveRelicCount() : (state.relics || []).length;
-  if (ui.tab === "operators") return (state.operators || []).length;
+  const choiceTab = ui.controlV2ChoiceTab;
+  if (choiceTab === "relics") return typeof context.getEffectiveRelicCount === "function" ? context.getEffectiveRelicCount() : (state.relics || []).length;
+  if (choiceTab === "operators") return (state.operators || []).length;
   return 0;
 }
 
@@ -59,14 +60,6 @@ function updateRelicChoiceMeta(element, meta) {
 }
 
 function refreshChoiceCountLabels(ui, state, context) {
-  const subtitle = document.querySelector(".panel-header .panel-subtitle");
-  if (subtitle) {
-    if (ui.tab === "relics") {
-      subtitle.textContent = subtitle.textContent.replace(/所持\d+件/, `所持${getChoiceCount(ui, state, context)}件`);
-    } else if (ui.tab === "operators") {
-      subtitle.textContent = subtitle.textContent.replace(/招集\d+名/, `招集${getChoiceCount(ui, state, context)}名`);
-    }
-  }
   document.querySelectorAll(".control-v2-relic-count").forEach((node) => {
     node.textContent = node.textContent.replace(/所持\d+件/, `所持${context.getEffectiveRelicCount?.() ?? (state.relics || []).length}件`);
   });
@@ -89,7 +82,7 @@ function toggleChoiceElement(element, type, id, context) {
 }
 
 function isControlView(context) {
-  return context.view === "control" || context.view === "control-v2" || context.view === "sidecar";
+  return context.view === "control-v2" || context.view === "sidecar";
 }
 
 export function registerControlEvents(app, context) {
@@ -176,7 +169,6 @@ export function registerControlEvents(app, context) {
       }
       return;
     }
-    if (action === "tab") { context.ui.tab = button.dataset.tab; context.renderControl(); return; }
     if (action === "control-v2-screen") {
       const screen = normalizeControlV2Screen(button.dataset.screen);
       context.ui.controlV2Screen = screen;
