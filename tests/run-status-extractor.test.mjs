@@ -86,6 +86,24 @@ test("run status extractor does not use command exp 0/10 as command level", () =
   assert.equal(candidates.some((item) => item.field === "commandLevel"), false);
 });
 
+
+test("run status extractor reads hope and originium ingots from dedicated resource regions", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "6 < 6", regionId: "run.hope" },
+      { text: "20", regionId: "run.ingot" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 6],
+    ["ingot", 20],
+  ]);
+});
+
 test("run status extractor reads life and shield values from dedicated OCR regions", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [

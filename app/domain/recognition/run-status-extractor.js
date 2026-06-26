@@ -148,6 +148,14 @@ function candidateFromNumber({ field, label, value, confidence = 0.75 }) {
   };
 }
 
+function findHopeCandidate(frame) {
+  return findRegionNumberCandidate(frame, { field: "hope", label: "希望", regionIdPart: "hope", min: 0, max: 999, prefer: "first" });
+}
+
+function findIngotCandidate(frame) {
+  return findRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "ingot", min: 0, max: 9999, prefer: "first" });
+}
+
 function findLifePointsCandidate(frame) {
   const direct = findRegionNumberCandidate(frame, { field: "lifePoints", label: "耐久値", regionIdPart: "life_points", min: 0, prefer: "first" });
   if (direct) return direct;
@@ -195,6 +203,8 @@ export function extractRunStatusCandidates(frame, { campaignId, squads = [], dif
     findSquadCandidate(numericText, { campaignId, squads }),
     findDifficultyCandidate(compactText, { campaignId, difficultyGrades, frame }),
     commandLevel,
+    findHopeCandidate(frame),
+    findIngotCandidate(frame),
     findLifePointsCandidate(frame),
     findRegionNumberCandidate(frame, { field: "shield", label: "シールド", regionIdPart: "shield", min: 0, prefer: "first" }),
   ].filter(Boolean);

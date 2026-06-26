@@ -134,6 +134,32 @@
       "scale": 5
     },
     {
+      "id": "run.hope",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        940,
+        10,
+        170,
+        52
+      ],
+      "scale": 8
+    },
+    {
+      "id": "run.ingot",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        1190,
+        10,
+        90,
+        52
+      ],
+      "scale": 8
+    },
+    {
       "id": "run.squad_card",
       "profileIds": [
         "runStatusFull"

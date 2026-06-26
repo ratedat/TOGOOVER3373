@@ -35,6 +35,7 @@
     "difficultyTierId": null,
     "performanceId": null,
     "hope": null,
+    "ingot": null,
     "lifePoints": null,
     "shield": null,
     "commandLevel": null
