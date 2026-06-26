@@ -14,6 +14,7 @@ Target campaigns:
 
 See:
 
+- `docs/startup-guide.md` for app startup, OBS URL, port, and ADB setup notes
 - `docs/architecture.md` for state and overlay architecture
 - `docs/data-sources.md` for source extraction notes
 - `docs/data-summary.md` for extracted campaign data coverage

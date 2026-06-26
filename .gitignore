@@ -47,3 +47,6 @@ review/update-runs/
 outputs/
 *.inspect.ndjson
 review/*.png
+
+# Local Codex/Stitch working notes and generated design drafts
+.agent-work/
