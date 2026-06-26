@@ -20,6 +20,7 @@ import {
   shouldPromptForPort,
 } from "../runtime/port-config.mjs";
 import { launchRequestData, resolveSecondInstanceView } from "../runtime/launch-guard.mjs";
+import { isInternalAppUrl } from "../runtime/window-open.mjs";
 
 let port = resolveStartupPort({ args: process.argv, env: process.env });
 const initialView = normalizeView(readArg(process.argv, "--view", "control"));
@@ -36,6 +37,10 @@ function currentPort() {
 function loadView(view) {
   if (!mainWindow) return;
   mainWindow.loadURL(appUrl(currentPort(), view));
+}
+
+function controlV2ScreenUrl(screen) {
+  return `${appUrl(currentPort(), "control-v2")}?screen=${encodeURIComponent(screen)}`;
 }
 
 function focusWindow(window) {
@@ -69,6 +74,18 @@ function buildMenu() {
         { label: "Sidecar", accelerator: "CmdOrCtrl+2", click: () => loadView("sidecar") },
         { label: "Overlay Preview", accelerator: "CmdOrCtrl+3", click: () => loadView("overlay") },
         { type: "separator" },
+        {
+          label: "Control v2 別ウィンドウ",
+          submenu: [
+            { label: "共通設定", click: () => createAuxWindow(controlV2ScreenUrl("common")) },
+            { label: "オペレーター", click: () => createAuxWindow(controlV2ScreenUrl("operators")) },
+            { label: "秘宝", click: () => createAuxWindow(controlV2ScreenUrl("relics")) },
+            { label: "特殊", click: () => createAuxWindow(controlV2ScreenUrl("special")) },
+            { label: "OBS設定", click: () => createAuxWindow(controlV2ScreenUrl("obs")) },
+            { label: "サイドカー", click: () => createAuxWindow(appUrl(currentPort(), "sidecar")) },
+          ],
+        },
+        { type: "separator" },
         { label: "OBS Compact URLを開く", click: () => shell.openExternal(overlayUrl(currentPort(), "?layout=compact")) },
         { label: "OBS 横長URLを開く", click: () => shell.openExternal(overlayUrl(currentPort(), "?layout=horizontal&size=medium")) },
         { label: "OBS 縦長URLを開く", click: () => shell.openExternal(overlayUrl(currentPort(), "?layout=vertical&size=medium")) },
@@ -98,13 +115,22 @@ function buildMenu() {
   ]);
 }
 
-function createWindow(targetUrl) {
-  mainWindow = new BrowserWindow({
-    width: 1360,
-    height: 920,
-    minWidth: 980,
-    minHeight: 680,
-    title: "Arknights Rogue OBS Tool",
+function handleWindowOpen({ url }) {
+  if (isInternalAppUrl(url, currentPort())) {
+    createAuxWindow(url);
+    return { action: "deny" };
+  }
+  if (/^https?:\/\//i.test(url)) shell.openExternal(url);
+  return { action: "deny" };
+}
+
+function createAppBrowserWindow({ targetUrl, width, height, minWidth, minHeight }) {
+  const browserWindow = new BrowserWindow({
+    width,
+    height,
+    minWidth,
+    minHeight,
+    title: "RHODES OBS COMMANDER3373",
     backgroundColor: "#10100f",
     autoHideMenuBar: false,
     webPreferences: {
@@ -113,16 +139,33 @@ function createWindow(targetUrl) {
       sandbox: true,
     },
   });
+  browserWindow.webContents.setWindowOpenHandler(handleWindowOpen);
+  browserWindow.loadURL(targetUrl);
+  return browserWindow;
+}
 
-  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
-    shell.openExternal(url);
-    return { action: "deny" };
+function createAuxWindow(targetUrl) {
+  return createAppBrowserWindow({
+    targetUrl,
+    width: 1180,
+    height: 840,
+    minWidth: 820,
+    minHeight: 560,
+  });
+}
+
+function createWindow(targetUrl) {
+  mainWindow = createAppBrowserWindow({
+    targetUrl,
+    width: 1360,
+    height: 920,
+    minWidth: 980,
+    minHeight: 680,
   });
   mainWindow.on("closed", () => {
     mainWindow = null;
   });
   Menu.setApplicationMenu(buildMenu());
-  mainWindow.loadURL(targetUrl);
 }
 
 function settingsPath() {

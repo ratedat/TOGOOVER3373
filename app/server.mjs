@@ -6,6 +6,12 @@ import { fileURLToPath } from "node:url";
 import { normalizeControlMode } from "./domain/ui-modes.js";
 import { mergeImplementationHistory } from "./domain/operator-implementation-history.js";
 import { isAppShellPath } from "./lib/view-route.js";
+import { normalizeRunStats } from "./domain/run-stats.js";
+import { createMetadataRecognizer } from "./domain/recognition/placeholder-recognizer.js";
+import { findScanProfile, findScanProfileByTriggerPath, normalizeScanProfiles, profileIdFromScanBody } from "./domain/recognition/profiles.js";
+import { runScanProfile } from "./domain/recognition/scan-runner.js";
+import { appendRecognitionSuggestionsToState } from "./domain/recognition/suggestions.js";
+import { createAdbAdapter } from "./recognition/adapters/adb-adapter.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -14,6 +20,7 @@ const APP = path.join(ROOT, "app");
 const STATE_DIR = process.env.ARKNIGHTS_STATE_DIR ? path.resolve(process.env.ARKNIGHTS_STATE_DIR) : DATA;
 const CURRENT_STATE = path.join(STATE_DIR, "current-state.json");
 const EXAMPLE_STATE = path.join(DATA, "overlay-state.example.json");
+const SCAN_PROFILES = path.join(DATA, "recognition", "scan-profiles.json");
 
 const argvPort = (() => {
   const index = process.argv.indexOf("--port");
@@ -75,6 +82,7 @@ function initialStateFromExample(example) {
   state.run.difficulty = state.run.difficulty ?? null;
   state.run.performanceId = state.run.performanceId ?? null;
   state.run.squadRandomEffectOptionId = state.run.squadRandomEffectOptionId ?? null;
+  normalizeRunStats(state.run);
   state.relics = Array.isArray(state.relics) ? state.relics : [];
   state.operators = Array.isArray(state.operators) ? state.operators : [];
   state.bossFlags = Array.isArray(state.bossFlags) ? state.bossFlags : [];
@@ -127,6 +135,7 @@ function normalizeState(state) {
   next.run.difficulty = next.run.difficulty === "" ? null : next.run.difficulty;
   next.run.performanceId = next.run.performanceId || null;
   next.run.squadRandomEffectOptionId = next.run.squadRandomEffectOptionId || null;
+  normalizeRunStats(next.run);
   next.relics = Array.isArray(next.relics) ? [...new Set(next.relics.filter(Boolean))] : [];
   next.operators = Array.isArray(next.operators) ? [...new Set(next.operators.filter(Boolean))] : [];
   next.bossFlags = Array.isArray(next.bossFlags) ? next.bossFlags.filter(Boolean) : [];
@@ -156,6 +165,30 @@ async function ensureState() {
     await writeJsonAtomic(CURRENT_STATE, state);
     return state;
   }
+}
+
+async function recognitionProfiles() {
+  return normalizeScanProfiles(await readJson(SCAN_PROFILES).catch(() => ({ profiles: [] })));
+}
+
+function httpError(status, message, details = {}) {
+  return Object.assign(new Error(message), { status, details });
+}
+
+async function defaultRecognitionRunner({ profile, source = "adb", signal } = {}) {
+  if (source !== "adb") throw httpError(400, `unsupported recognition source: ${source}`);
+  return runScanProfile({
+    profile,
+    adapter: createAdbAdapter(),
+    recognizer: createMetadataRecognizer(),
+    source,
+    signal,
+  });
+}
+
+function responseStatusForScanResult(result) {
+  if (result?.status === "aborted") return 409;
+  return 200;
 }
 
 async function masterData() {
@@ -238,7 +271,27 @@ async function serveFile(res, file) {
   }
 }
 
-export function createAppServer() {
+export function createAppServer({ recognitionRunner = defaultRecognitionRunner } = {}) {
+  let activeScanController = null;
+
+  async function runRecognitionRequest({ profile, source = "adb" }) {
+    if (activeScanController) throw httpError(409, "recognition scan already running");
+    const controller = new AbortController();
+    activeScanController = controller;
+    try {
+      const result = await recognitionRunner({ profile, source, signal: controller.signal });
+      const state = await ensureState();
+      if (result?.status === "completed" && Array.isArray(result.suggestions) && result.suggestions.length) {
+        const nextState = normalizeState(appendRecognitionSuggestionsToState(state, result.suggestions));
+        await writeJsonAtomic(CURRENT_STATE, nextState);
+        return { result, state: nextState };
+      }
+      return { result, state };
+    } finally {
+      activeScanController = null;
+    }
+  }
+
   return http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url || "/", `http://${req.headers.host || "localhost"}`);
@@ -263,6 +316,30 @@ export function createAppServer() {
       return sendJson(res, 200, state);
     }
 
+    if (req.method === "POST" && url.pathname === "/api/recognition/scan") {
+      const bodyText = await readBody(req);
+      const body = bodyText ? JSON.parse(bodyText) : {};
+      const profiles = await recognitionProfiles();
+      const profile = findScanProfile(profiles, profileIdFromScanBody(body));
+      const payload = await runRecognitionRequest({ profile, source: body.source || "adb" });
+      return sendJson(res, responseStatusForScanResult(payload.result), payload);
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/recognition/scan/cancel") {
+      if (activeScanController) {
+        activeScanController.abort();
+        return sendJson(res, 202, { cancelled: true });
+      }
+      return sendJson(res, 200, { cancelled: false });
+    }
+
+    if (req.method === "GET" && url.pathname.startsWith("/trigger/scan/")) {
+      const profiles = await recognitionProfiles();
+      const profile = findScanProfileByTriggerPath(profiles, url.pathname);
+      const payload = await runRecognitionRequest({ profile, source: "adb" });
+      return sendJson(res, responseStatusForScanResult(payload.result), payload);
+    }
+
     if (req.method !== "GET" && req.method !== "HEAD") {
       return sendText(res, 405, "Method not allowed");
     }
@@ -280,20 +357,24 @@ export function createAppServer() {
     if (file && (await serveFile(res, file))) return;
     sendText(res, 404, "Not found");
   } catch (error) {
-    sendJson(res, 500, { error: error instanceof Error ? error.message : String(error) });
+    const status = Number(error?.status) || 500;
+    sendJson(res, status, {
+      error: error instanceof Error ? error.message : String(error),
+      ...(error?.details ? { details: error.details } : {}),
+    });
   }
   });
 }
 
-export function startServer({ port = PORT, host = "127.0.0.1" } = {}) {
-  const server = createAppServer();
+export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner } = {}) {
+  const server = createAppServer({ recognitionRunner });
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, () => {
       server.off("error", reject);
       const address = server.address();
       const actualPort = typeof address === "object" && address ? address.port : port;
-      console.log(`Arknights Rogue OBS Tool`);
+      console.log(`RHODES OBS COMMANDER3373`);
       console.log(`Control: http://${host}:${actualPort}/control`);
       console.log(`Overlay: http://${host}:${actualPort}/overlay`);
       resolve({ server, port: actualPort, host });

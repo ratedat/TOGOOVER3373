@@ -1,13 +1,16 @@
 import { html } from "../lib/format.js";
+import { coinFaceLabels } from "../domain/special-values.js";
 import { specialEffectImageSrc } from "../lib/media.js";
 
 export function renderCoinEntryRow(field, entry, index, statusOptions, context) {
   const coin = context.selectableEffectById.get(entry.coinId);
   if (!coin) return "";
+  const status = statusOptions.find((option) => option.id === entry.statusId);
   const imageSrc = specialEffectImageSrc(coin);
+  const meta = [coin.groupLabel || coin.slotLabel || "通宝", status?.name ? `状態:${status.name}` : "状態なし", `面:${coinFaceLabels[entry.face] || entry.face}`].filter(Boolean).join(" / ");
   return `<div class="coin-entry-row">
     ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(coin.name.slice(0, 1))}</span>`}
-    <div class="coin-entry-title"><strong>${html(coin.name)}</strong><span>${html(coin.groupLabel || coin.slotLabel || "通宝")}</span></div>
+    <div class="coin-entry-title"><strong>${html(coin.name)}</strong><span>${html(meta)}</span></div>
     <input type="number" min="1" max="99" value="${html(entry.count)}" data-coin-entry-count="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}の個数" />
     <select data-coin-entry-status="${html(field.id)}" data-index="${html(index)}" aria-label="${html(coin.name)}の状態">
       ${context.renderSpecialEffectSelectOptions(statusOptions, entry.statusId || "", "状態なし")}
@@ -75,6 +78,77 @@ export function renderEffectStackLoadoutField(field, campaignId, special, contex
     <div class="effect-stack-entry-summary">${html(context.formatEffectStackValue(field, entries) || "未選択")}</div>
     <div class="effect-stack-entry-list">
       ${entries.length ? entries.map((entry, index) => renderEffectStackEntryRow(field, entry, index, campaignId, context)).join("") : `<div class="empty-state">${html(field.label)}なし</div>`}
+    </div>
+  </div>`;
+}
+function renderRevelationBoardSelect(field, kind, label, currentId, options) {
+  return `<label class="revelation-board-slot revelation-board-${html(kind)}">${html(label)}
+    <select data-revelation-board-select="${html(field.id)}" data-kind="${html(kind)}">
+      <option value="">未選択</option>
+      ${options.map((item) => `<option value="${html(item.id)}" ${item.id === currentId ? "selected" : ""}>${html(item.name)}</option>`).join("")}
+    </select>
+  </label>`;
+}
+
+function renderRevelationBoardEffectPreview(item, emptyText) {
+  if (!item) return `<div class="revelation-board-preview muted">${html(emptyText)}</div>`;
+  const imageSrc = specialEffectImageSrc(item);
+  return `<div class="revelation-board-preview">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(item.name.slice(0, 1))}</span>`}
+    <div><strong>${html(item.name)}</strong><span>${html(item.effect || "効果文なし")}</span></div>
+  </div>`;
+}
+
+export function renderRevelationBoardRhetoricRow(field, entry, index, context) {
+  const item = context.selectableEffectById.get(entry.effectId);
+  if (!item) return "";
+  const imageSrc = specialEffectImageSrc(item);
+  return `<div class="revelation-rhetoric-row">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(item.name.slice(0, 1))}</span>`}
+    <div class="coin-entry-title"><strong>${html(item.name)}</strong><span>${html(item.effect || "効果文なし")}</span></div>
+    <input type="number" min="1" max="99" value="${html(entry.count)}" data-revelation-board-rhetoric-count="${html(field.id)}" data-index="${html(index)}" aria-label="${html(item.name)}の重複数" />
+    <button type="button" data-action="remove-revelation-board-rhetoric" data-revelation-board-field="${html(field.id)}" data-index="${html(index)}" aria-label="${html(item.name)}を削除">×</button>
+  </div>`;
+}
+
+function renderRevelationBoardRhetoricCandidate(field, item) {
+  const imageSrc = specialEffectImageSrc(item);
+  return `<article class="revelation-rhetoric-candidate">
+    ${imageSrc ? `<img src="${html(imageSrc)}" alt="" loading="lazy" />` : `<span class="coin-entry-fallback">${html(item.name.slice(0, 1))}</span>`}
+    <div class="coin-entry-title"><strong>${html(item.name)}</strong><span>${html(item.effect || "効果文なし")}</span></div>
+    <button type="button" data-action="add-revelation-board-rhetoric" data-revelation-board-field="${html(field.id)}" data-rhetoric-id="${html(item.id)}">追加</button>
+  </article>`;
+}
+
+export function renderRevelationBoardLoadoutField(field, campaignId, special, context) {
+  const board = context.normalizeRevelationBoardValue(field, campaignId, special[field.id]);
+  const causeOptions = context.getRevelationBoardOptions(field, campaignId, "cause");
+  const structureOptions = context.getRevelationBoardOptions(field, campaignId, "structure");
+  const rhetoricOptions = context.getRevelationBoardOptions(field, campaignId, "rhetoric");
+  const cause = context.selectableEffectById.get(board.causeId);
+  const structure = context.selectableEffectById.get(board.structureId);
+  return `<div class="field-wide special-effect-group revelation-board-loadout-field">
+    ${context.renderSpecialEffectGroupHeader(field, special)}
+    <div class="revelation-board-slots">
+      ${renderRevelationBoardSelect(field, "cause", field.causeLabel || "本因", board.causeId, causeOptions)}
+      ${renderRevelationBoardSelect(field, "structure", field.structureLabel || "構成", board.structureId, structureOptions)}
+    </div>
+    <div class="revelation-board-previews">
+      ${renderRevelationBoardEffectPreview(cause, "本因未選択")}
+      ${renderRevelationBoardEffectPreview(structure, "構成未選択")}
+    </div>
+    <div class="effect-stack-entry-summary">${html(context.formatRevelationBoardValue(field, board) || "未選択")}</div>
+    <div class="revelation-rhetoric-section">
+      <div class="special-effect-group-title">修辞候補（効果込みで追加）</div>
+      <div class="revelation-rhetoric-candidates">
+        ${rhetoricOptions.length ? rhetoricOptions.map((item) => renderRevelationBoardRhetoricCandidate(field, item)).join("") : `<div class="empty-state">修辞候補なし</div>`}
+      </div>
+    </div>
+    <div class="revelation-rhetoric-section">
+      <div class="special-effect-group-title">選択中の修辞</div>
+      <div class="revelation-rhetoric-list">
+        ${board.rhetorics.length ? board.rhetorics.map((entry, index) => renderRevelationBoardRhetoricRow(field, entry, index, context)).join("") : `<div class="empty-state">修辞なし</div>`}
+      </div>
     </div>
   </div>`;
 }

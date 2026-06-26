@@ -79,3 +79,14 @@ export function asEffectStackEntries(value) {
     };
   }).filter((entry) => entry?.effectId);
 }
+
+export function asRevelationBoardValue(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return { causeId: null, structureId: null, rhetorics: [] };
+  }
+  return {
+    causeId: value.causeId || value.cause || null,
+    structureId: value.structureId || value.structure || null,
+    rhetorics: asEffectStackEntries(value.rhetorics || value.rhetoricEntries || value.rhetoricIds || []),
+  };
+}

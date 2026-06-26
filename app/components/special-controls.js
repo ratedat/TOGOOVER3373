@@ -36,15 +36,25 @@ export function renderRankedSpecialEffectRow(field, group, selectedId) {
   </div>`;
 }
 
+function getSelectOptionLabel(item, duplicateNames) {
+  if (!duplicateNames.has(item.name)) return item.name;
+  const prefix = item.groupLabel || item.slotLabel || "その他";
+  return `${prefix} / ${item.name}`;
+}
+
 export function renderSpecialEffectSelectOptions(options, current = "", placeholder = "未選択", excludedIds = new Set()) {
   const grouped = new Map();
+  const visibleOptions = [];
   for (const item of options) {
     if (excludedIds.has(item.id) && item.id !== current) continue;
+    visibleOptions.push(item);
     const key = item.groupLabel || item.slotLabel || "その他";
     if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(item);
   }
-  return `<option value="">${html(placeholder)}</option>${[...grouped.entries()].map(([group, items]) => `<optgroup label="${html(group)}">${items.map((item) => `<option value="${html(item.id)}" ${item.id === current ? "selected" : ""}>${html(item.name)}</option>`).join("")}</optgroup>`).join("")}`;
+  const nameCounts = visibleOptions.reduce((counts, item) => counts.set(item.name, (counts.get(item.name) || 0) + 1), new Map());
+  const duplicateNames = new Set([...nameCounts.entries()].filter(([, count]) => count > 1).map(([name]) => name));
+  return `<option value="">${html(placeholder)}</option>${[...grouped.entries()].map(([group, items]) => `<optgroup label="${html(group)}">${items.map((item) => `<option value="${html(item.id)}" ${item.id === current ? "selected" : ""}>${html(getSelectOptionLabel(item, duplicateNames))}</option>`).join("")}</optgroup>`).join("")}`;
 }
 
 export function renderSpecialSelectedChip(field, item) {

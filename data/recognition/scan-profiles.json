@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "baseResolutionNote": "Coordinates follow MAA-style scaling from baseResolution to the active device resolution.",
+  "profiles": [
+    {
+      "id": "runStatusFull",
+      "label": "基本情報スキャン",
+      "triggerPath": "/trigger/scan/run/status",
+      "candidateKind": "runStatus",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "run-status"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 700,
+        "y": 24,
+        "width": 540,
+        "height": 92
+      },
+      "scrollAxis": "none",
+      "scrollDirection": "none",
+      "restoreSteps": [],
+      "maxScrolls": 0,
+      "endFingerprintStableCount": 1,
+      "captureDelayMs": 120
+    },
+    {
+      "id": "operatorsFull",
+      "label": "オペレーターフルスキャン",
+      "triggerPath": "/trigger/scan/operators/full",
+      "candidateKind": "operator",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "operator-list",
+        "squad-list"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 90,
+        "y": 84,
+        "width": 1100,
+        "height": 540
+      },
+      "scrollAxis": "vertical",
+      "scrollDirection": "down",
+      "scroll": {
+        "start": {
+          "x": 1080,
+          "y": 610
+        },
+        "end": {
+          "x": 1080,
+          "y": 180
+        },
+        "durationMs": 450
+      },
+      "restoreSteps": [
+        {
+          "type": "back",
+          "label": "元画面へ戻る"
+        }
+      ],
+      "maxScrolls": 18,
+      "endFingerprintStableCount": 2,
+      "captureDelayMs": 160
+    },
+    {
+      "id": "relicsFull",
+      "label": "秘宝フルスキャン",
+      "triggerPath": "/trigger/scan/relics/full",
+      "candidateKind": "relic",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "relic-list"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 90,
+        "y": 84,
+        "width": 1100,
+        "height": 540
+      },
+      "scrollAxis": "vertical",
+      "scrollDirection": "down",
+      "scroll": {
+        "start": {
+          "x": 1080,
+          "y": 610
+        },
+        "end": {
+          "x": 1080,
+          "y": 180
+        },
+        "durationMs": 450
+      },
+      "restoreSteps": [
+        {
+          "type": "back",
+          "label": "元画面へ戻る"
+        }
+      ],
+      "maxScrolls": 20,
+      "endFingerprintStableCount": 2,
+      "captureDelayMs": 160
+    },
+    {
+      "id": "is4RevelationFull",
+      "label": "啓示フルスキャン",
+      "triggerPath": "/trigger/scan/sami/revelation",
+      "campaignId": "is4_sami",
+      "candidateKind": "revelation",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "sami-revelation-list"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 90,
+        "y": 84,
+        "width": 1100,
+        "height": 540
+      },
+      "scrollAxis": "vertical",
+      "scrollDirection": "down",
+      "scroll": {
+        "start": {
+          "x": 1080,
+          "y": 610
+        },
+        "end": {
+          "x": 1080,
+          "y": 180
+        },
+        "durationMs": 450
+      },
+      "restoreSteps": [
+        {
+          "type": "back",
+          "label": "元画面へ戻る"
+        }
+      ],
+      "maxScrolls": 16,
+      "endFingerprintStableCount": 2,
+      "captureDelayMs": 160
+    },
+    {
+      "id": "is5ThoughtFull",
+      "label": "思案フルスキャン",
+      "triggerPath": "/trigger/scan/sarkaz/thought",
+      "campaignId": "is5_sarkaz",
+      "candidateKind": "thought",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "sarkaz-thought-list"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 90,
+        "y": 84,
+        "width": 1100,
+        "height": 540
+      },
+      "scrollAxis": "vertical",
+      "scrollDirection": "down",
+      "scroll": {
+        "start": {
+          "x": 1080,
+          "y": 610
+        },
+        "end": {
+          "x": 1080,
+          "y": 180
+        },
+        "durationMs": 450
+      },
+      "restoreSteps": [
+        {
+          "type": "back",
+          "label": "元画面へ戻る"
+        }
+      ],
+      "maxScrolls": 16,
+      "endFingerprintStableCount": 2,
+      "captureDelayMs": 160
+    },
+    {
+      "id": "is6CoinsFull",
+      "label": "通宝フルスキャン",
+      "triggerPath": "/trigger/scan/sui/coins",
+      "campaignId": "is6_sui",
+      "candidateKind": "coin",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "sui-coin-list"
+      ],
+      "openSteps": [],
+      "scanRegion": {
+        "x": 120,
+        "y": 96,
+        "width": 1040,
+        "height": 500
+      },
+      "scrollAxis": "horizontal",
+      "scrollDirection": "right",
+      "scroll": {
+        "start": {
+          "x": 1100,
+          "y": 540
+        },
+        "end": {
+          "x": 250,
+          "y": 540
+        },
+        "durationMs": 450
+      },
+      "restoreSteps": [
+        {
+          "type": "back",
+          "label": "元画面へ戻る"
+        }
+      ],
+      "maxScrolls": 14,
+      "endFingerprintStableCount": 2,
+      "captureDelayMs": 160
+    }
+  ]
+}

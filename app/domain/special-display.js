@@ -1,5 +1,5 @@
 import * as selectableEffects from "./selectable-effects.js";
-import { normalizeEffectStackEntry } from "./special-loadouts.js";
+import { normalizeEffectStackEntry, normalizeRevelationBoardValue } from "./special-loadouts.js";
 import { asCoinEntries, asEffectStackEntries, asSpecialArray, asSpecialObject, clampCoinCount, coinFaceLabels } from "./special-values.js";
 
 function getSelectableEffect(context, id) {
@@ -42,6 +42,14 @@ export function formatEffectStackValue(field, value, context) {
   return `${total}${unit} / ${entries.length}枠`;
 }
 
+export function formatRevelationBoardValue(field, value, context) {
+  const board = normalizeRevelationBoardValue(field, context.campaignId, value, context.selectableEffectSource);
+  const cause = getSelectableEffect(context, board.causeId);
+  const structure = getSelectableEffect(context, board.structureId);
+  const rhetoricTotal = board.rhetorics.reduce((sum, entry) => sum + clampCoinCount(entry.count), 0);
+  return [cause?.name, structure?.name, rhetoricTotal ? `修辞${rhetoricTotal}枚` : ""].filter(Boolean).join(" / ");
+}
+
 export function formatSpecialValue(field, value, context) {
   if (field.type === "effectSelect") return value ? getSpecialEffectName(value, context.selectableEffectMap) : "";
   if (field.type === "effectMultiSelect") {
@@ -55,6 +63,7 @@ export function formatSpecialValue(field, value, context) {
     return `${names.length}件`;
   }
   if (field.type === "effectStackLoadout") return formatEffectStackValue(field, value, context);
+  if (field.type === "revelationBoardLoadout") return formatRevelationBoardValue(field, value, context);
   if (field.type === "coinLoadout") return formatCoinLoadoutValue(field, value, context);
   if (field.type === "number") return value === null || value === undefined || value === "" ? "" : String(value);
   return value ?? "";
@@ -106,6 +115,21 @@ export function getSelectedSpecialEffectsForField(field, special, context) {
         slotLabel: field.label || item.slotLabel,
         name: `${item.name} ${titleParts.join(" / ")}`,
         effect: effectParts.join(" / "),
+      });
+    }
+  } else if (field.type === "revelationBoardLoadout") {
+    const board = normalizeRevelationBoardValue(field, context.campaignId, special[field.id], context.selectableEffectSource);
+    const cause = getSelectableEffect(context, board.causeId);
+    if (cause) effects.push({ ...cause, slotLabel: `${field.label || cause.slotLabel} 本因` });
+    const structure = getSelectableEffect(context, board.structureId);
+    if (structure) effects.push({ ...structure, slotLabel: `${field.label || structure.slotLabel} 構成` });
+    for (const entry of board.rhetorics) {
+      const item = getSelectableEffect(context, entry.effectId);
+      if (!item) continue;
+      effects.push({
+        ...item,
+        slotLabel: `${field.label || item.slotLabel} 修辞`,
+        name: `${item.name} x${entry.count}`,
       });
     }
   } else if (field.type === "coinLoadout") {

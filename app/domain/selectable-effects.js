@@ -76,6 +76,18 @@ export function getEffectStackOptions(selectableEffects, field, campaignId) {
     .filter((item) => !Array.isArray(field.excludeOptionGroupLabels) || !field.excludeOptionGroupLabels.includes(item.groupLabel || item.slotLabel || ""));
 }
 
+export function getRevelationBoardGroupLabels(field, group) {
+  if (group === "cause") return field?.causeGroupLabels || ["本因"];
+  if (group === "structure") return field?.structureGroupLabels || ["構成"];
+  if (group === "rhetoric") return field?.rhetoricGroupLabels || ["修辞"];
+  return [];
+}
+
+export function getRevelationBoardOptions(selectableEffects, field, campaignId, group) {
+  return getSelectableEffectsForField(selectableEffects, field, campaignId)
+    .filter((item) => matchesGroupLabels(item, getRevelationBoardGroupLabels(field, group)));
+}
+
 export function getRankedEffectGroups(selectableEffects, field, campaignId) {
   const grouped = new Map();
   for (const item of getSelectableEffectsForField(selectableEffects, field, campaignId)) {

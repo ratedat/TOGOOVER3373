@@ -1,5 +1,5 @@
 {
-  "name": "arknights-rogue-obs-tool",
+  "name": "rhodes-obs-commander3373",
   "version": "0.1.0",
   "description": "Desktop sidecar and OBS overlay tool for Arknights Integrated Strategies.",
   "author": "ratedat",
@@ -18,15 +18,18 @@
     "pack:win": "electron-builder --win portable --x64 --dir --publish never",
     "data:update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1",
     "data:update:plan": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1 -PlanOnly",
-    "data:diff": "node tools/compare-data-update.mjs --before data --after data --out review/update-runs/manual-compare"
+    "data:diff": "node tools/compare-data-update.mjs --before data --after data --out review/update-runs/manual-compare",
+    "app:debug": "set \"ARKNIGHTS_STATE_DIR=data\" && electron . --view control-v2 --port 5173",
+    "app:smoke": "set \"ARKNIGHTS_STATE_DIR=data\" && electron . --smoke-test --view control-v2 --port 5174",
+    "verify:desktop": "npm test && npm run pack:win"
   },
   "devDependencies": {
     "electron": "^42.5.0",
     "electron-builder": "^26.15.3"
   },
   "build": {
-    "appId": "com.ratedat.arknights-rogue-obs-tool",
-    "productName": "Arknights Rogue OBS Tool",
+    "appId": "com.ratedat.rhodes.obs.commander3373",
+    "productName": "RHODES OBS COMMANDER3373",
     "directories": {
       "output": "dist"
     },

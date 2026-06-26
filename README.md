@@ -1,4 +1,4 @@
-# Arknights Rogue OBS Tool
+# RHODES OBS COMMANDER3373
 
 OBS overlay tool for displaying Arknights Integrated Strategies run state.
 
@@ -38,7 +38,7 @@ See:
 
 The first manual-first MVP is implemented as a dependency-free Node app.
 
-For streamers and tournament staff, use the Windows desktop app build when available: download `Arknights Rogue OBS Tool.exe` from the release package and double-click it.
+For streamers and tournament staff, use the Windows desktop app build when available: download `RHODES OBS COMMANDER3373.exe` from the release package and double-click it.
 
 When running from the source folder on Windows, double-click this file instead of typing commands:
 
@@ -48,17 +48,25 @@ The first launch may run a one-time setup if dependencies are missing. After tha
 
 The desktop app uses a single-instance guard. Launching it again brings the existing window to the front instead of starting another local server. The web launcher also reuses an already-running server on the selected port and exits after opening the existing URL.
 
-Developer fallback commands:
+Developer Electron workflow:
+
+Human debugging should use the Electron app window, not a standalone browser tab. The browser URLs remain useful for OBS Browser Source setup and fallback checks, but normal UI/UX verification should start here:
 
 ```powershell
 cd O:\Arknights_Rogue_OBSTool
-npm.cmd run app
+npm.cmd run app:debug
 ```
 
-To bypass the desktop port picker during development, pass a port explicitly:
+Run the Electron startup smoke test on a secondary port:
 
 ```powershell
-npm.cmd run app -- --port 5174
+npm.cmd run app:smoke
+```
+
+After code changes, run the desktop verification command. It runs the test suite and compiles the Electron app directory build:
+
+```powershell
+npm.cmd run verify:desktop
 ```
 
 Build a portable Windows exe for distribution:
@@ -67,7 +75,7 @@ Build a portable Windows exe for distribution:
 npm.cmd run dist:win
 ```
 
-Start only the local server without the desktop window:
+Start only the local server without the desktop window as a fallback:
 
 ```powershell
 cd O:\Arknights_Rogue_OBSTool

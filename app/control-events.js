@@ -1,6 +1,7 @@
 import * as controlActions from "./control-actions.js";
 import { clampCoinCount, normalizeCoinFace } from "./domain/special-values.js";
-import { apiJson, resetStateUrl } from "./lib/api.js";
+import { apiJson, recognitionScanCancelUrl, recognitionScanUrl, resetStateUrl } from "./lib/api.js";
+import { normalizeControlV2Screen } from "./domain/control-v2-screens.js";
 
 function parseImportDraft(ui) {
   if (!ui.importDraft.trim()) throw new Error("JSONが空です");
@@ -9,6 +10,21 @@ function parseImportDraft(ui) {
   return parsed;
 }
 
+async function postRecognitionScan(profileId) {
+  const response = await fetch(recognitionScanUrl, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ profile: profileId, source: "adb" }),
+  });
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    const message = payload?.error || payload?.result?.reason || `${response.status} ${response.statusText}`;
+    const error = new Error(message);
+    error.payload = payload;
+    throw error;
+  }
+  return payload;
+}
 function setChoicePressed(element, active) {
   if (!element) return;
   element.classList.toggle("active", active);
@@ -51,10 +67,12 @@ function refreshChoiceCountLabels(ui, state, context) {
       subtitle.textContent = subtitle.textContent.replace(/招集\d+名/, `招集${getChoiceCount(ui, state, context)}名`);
     }
   }
-  const v2RelicCount = document.querySelector(".control-v2-relic-count");
-  if (v2RelicCount) v2RelicCount.textContent = v2RelicCount.textContent.replace(/所持\d+件/, `所持${context.getEffectiveRelicCount?.() ?? (state.relics || []).length}件`);
-  const v2OperatorCount = document.querySelector(".control-v2-operator-count");
-  if (v2OperatorCount) v2OperatorCount.textContent = v2OperatorCount.textContent.replace(/招集\d+名/, `招集${(state.operators || []).length}名`);
+  document.querySelectorAll(".control-v2-relic-count").forEach((node) => {
+    node.textContent = node.textContent.replace(/所持\d+件/, `所持${context.getEffectiveRelicCount?.() ?? (state.relics || []).length}件`);
+  });
+  document.querySelectorAll(".control-v2-operator-count").forEach((node) => {
+    node.textContent = node.textContent.replace(/招集\d+名/, `招集${(state.operators || []).length}名`);
+  });
 }
 
 function toggleChoiceElement(element, type, id, context) {
@@ -94,6 +112,26 @@ export function registerControlEvents(app, context) {
       const fieldId = button.dataset.specialPickerField;
       if (fieldId && id) {
         context.mutate((state) => controlActions.removeSpecialEffect(state, context.getCampaign().id, fieldId, id));
+      }
+      return;
+    }
+    if (action === "add-revelation-board-rhetoric") {
+      const fieldId = button.dataset.revelationBoardField;
+      const rhetoricId = button.dataset.rhetoricId;
+      if (fieldId && rhetoricId) {
+        const campaignId = context.getCampaign().id;
+        const fieldConfig = context.getSpecialFieldConfig(campaignId, fieldId) || { id: fieldId };
+        context.mutate((state) => controlActions.addRevelationBoardRhetoric(state, campaignId, fieldId, rhetoricId, fieldConfig, context.normalizeRevelationBoardValue));
+      }
+      return;
+    }
+    if (action === "remove-revelation-board-rhetoric") {
+      const fieldId = button.dataset.revelationBoardField;
+      const index = Number(button.dataset.index);
+      if (fieldId && Number.isInteger(index)) {
+        const campaignId = context.getCampaign().id;
+        const fieldConfig = context.getSpecialFieldConfig(campaignId, fieldId) || { id: fieldId };
+        context.mutate((state) => controlActions.removeRevelationBoardRhetoric(state, campaignId, fieldId, index, fieldConfig, context.normalizeRevelationBoardValue));
       }
       return;
     }
@@ -139,9 +177,46 @@ export function registerControlEvents(app, context) {
       return;
     }
     if (action === "tab") { context.ui.tab = button.dataset.tab; context.renderControl(); return; }
+    if (action === "control-v2-screen") {
+      const screen = normalizeControlV2Screen(button.dataset.screen);
+      context.ui.controlV2Screen = screen;
+      if (screen === "operators" || screen === "relics") context.ui.controlV2ChoiceTab = screen;
+      context.renderControl();
+      return;
+    }
+    if (action === "control-v2-choice-tab") {
+      const choiceTab = button.dataset.choiceTab === "relics" ? "relics" : "operators";
+      context.ui.controlV2ChoiceTab = choiceTab;
+      context.ui.controlV2Screen = choiceTab;
+      context.renderControl();
+      return;
+    }
     if (action === "toggle-relic") { toggleChoiceElement(button, "relic", id, context); return; }
     if (action === "toggle-operator") { toggleChoiceElement(button, "operator", id, context); return; }
     if (action === "clear-relics") context.mutate(controlActions.clearRelics);
+    if (action === "trigger-recognition-scan") {
+      const profileId = button.dataset.profile;
+      if (!profileId) return;
+      button.disabled = true;
+      context.setNotice("ADBスキャンを開始しました。完了後に候補だけ追加します。");
+      try {
+        const payload = await postRecognitionScan(profileId);
+        if (payload.state) context.replaceState(payload.state);
+        context.renderControl();
+        const count = payload.result?.suggestions?.length || 0;
+        context.setNotice(`ADBスキャン完了: 候補${count}件をレビュー待ちに追加しました。`);
+      } catch (error) {
+        context.setNotice(`ADBスキャン中止/失敗: ${error.message}`);
+      } finally {
+        button.disabled = false;
+      }
+      return;
+    }
+    if (action === "cancel-recognition-scan") {
+      await fetch(recognitionScanCancelUrl, { method: "POST" });
+      context.setNotice("ADBスキャン停止を要求しました。");
+      return;
+    }
     if (action === "reset-state") {
       if (confirm("状態を初期化しますか？")) {
         context.replaceState(await apiJson(resetStateUrl, { method: "POST" }));
@@ -155,6 +230,13 @@ export function registerControlEvents(app, context) {
     }
     if (action === "remove-boss-flag") context.mutate((state) => controlActions.removeBossFlag(state, Number(button.dataset.index)));
     if (action === "dismiss-suggestion") context.mutate((state) => controlActions.dismissSuggestion(state, Number(button.dataset.index)));
+    if (action === "copy-text") {
+      const value = button.dataset.value || "";
+      if (!value) return;
+      await navigator.clipboard.writeText(value);
+      context.setNotice(`${button.dataset.copyLabel || "URL"}をコピーしました。`);
+      return;
+    }
     if (action === "copy-state-json") {
       await navigator.clipboard.writeText(JSON.stringify(context.getState(), null, 2));
       context.setNotice("状態JSONをコピーしました。");
@@ -248,6 +330,12 @@ export function registerControlEvents(app, context) {
       const key = context.getSpecialOverlayToggleKey(fieldConfig);
       context.mutate((state) => controlActions.updateSpecialVisibility(state, campaign.id, key, target.checked));
     }
+    const revelationBoardSelect = target.dataset.revelationBoardSelect;
+    if (revelationBoardSelect) {
+      const campaignId = context.getCampaign().id;
+      const fieldConfig = context.getSpecialFieldConfig(campaignId, revelationBoardSelect) || { id: revelationBoardSelect };
+      context.mutate((state) => controlActions.updateRevelationBoardSlot(state, campaignId, revelationBoardSelect, target.dataset.kind, target.value, fieldConfig, context.normalizeRevelationBoardValue));
+    }
     const specialField = target.dataset.specialField;
     if (specialField) {
       const campaignId = context.getCampaign().id;
@@ -275,6 +363,12 @@ export function registerControlEvents(app, context) {
       const fieldConfig = context.getSpecialFieldConfig(campaignId, effectStackEntryState) || { id: effectStackEntryState };
       const stateId = context.normalizeStackState(fieldConfig, target.value, campaignId);
       context.mutate((state) => controlActions.updateEffectStackEntryState(state, campaignId, effectStackEntryState, Number(target.dataset.index), stateId, fieldConfig, context.mergeEffectStackEntries));
+    }
+    const revelationRhetoricCount = target.dataset.revelationBoardRhetoricCount;
+    if (revelationRhetoricCount) {
+      const campaignId = context.getCampaign().id;
+      const fieldConfig = context.getSpecialFieldConfig(campaignId, revelationRhetoricCount) || { id: revelationRhetoricCount };
+      context.mutate((state) => controlActions.updateRevelationBoardRhetoricCount(state, campaignId, revelationRhetoricCount, Number(target.dataset.index), target.value, fieldConfig, context.normalizeRevelationBoardValue));
     }
     const coinEntryCount = target.dataset.coinEntryCount;
     if (coinEntryCount) {

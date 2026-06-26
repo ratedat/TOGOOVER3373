@@ -1,7 +1,8 @@
-import { asCoinEntries, asEffectStackEntries, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
+import { asCoinEntries, asEffectStackEntries, asRevelationBoardValue, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults } from "./lib/overlay-config.js";
 import { clampGridColumns } from "./lib/preferences.js";
 import { normalizeControlMode } from "./domain/ui-modes.js";
+import { RUN_STAT_FIELD_IDS, normalizeRunStatValue } from "./domain/run-stats.js";
 
 function ensureCampaignSpecial(state, campaignId) {
   state.run.special[campaignId] ||= {};
@@ -25,6 +26,36 @@ export function addEffectStackEntry(state, campaignId, fieldId, entry, fieldConf
   const entries = asEffectStackEntries(special[fieldId]);
   entries.push(entry);
   special[fieldId] = mergeEffectStackEntries(fieldConfig, entries, campaignId);
+}
+
+export function updateRevelationBoardSlot(state, campaignId, fieldId, kind, value, fieldConfig, normalizeRevelationBoardValue) {
+  const special = ensureCampaignSpecial(state, campaignId);
+  const board = asRevelationBoardValue(special[fieldId]);
+  if (kind === "cause") board.causeId = value || null;
+  if (kind === "structure") board.structureId = value || null;
+  special[fieldId] = normalizeRevelationBoardValue(fieldConfig, campaignId, board);
+}
+
+export function addRevelationBoardRhetoric(state, campaignId, fieldId, rhetoricId, fieldConfig, normalizeRevelationBoardValue) {
+  const special = ensureCampaignSpecial(state, campaignId);
+  const board = asRevelationBoardValue(special[fieldId]);
+  board.rhetorics.push({ effectId: rhetoricId, count: 1 });
+  special[fieldId] = normalizeRevelationBoardValue(fieldConfig, campaignId, board);
+}
+
+export function removeRevelationBoardRhetoric(state, campaignId, fieldId, index, fieldConfig, normalizeRevelationBoardValue) {
+  const special = ensureCampaignSpecial(state, campaignId);
+  const board = asRevelationBoardValue(special[fieldId]);
+  board.rhetorics.splice(index, 1);
+  special[fieldId] = normalizeRevelationBoardValue(fieldConfig, campaignId, board);
+}
+
+export function updateRevelationBoardRhetoricCount(state, campaignId, fieldId, index, value, fieldConfig, normalizeRevelationBoardValue) {
+  const special = ensureCampaignSpecial(state, campaignId);
+  const board = asRevelationBoardValue(special[fieldId]);
+  const entry = board.rhetorics[index];
+  if (entry) entry.count = clampCoinCount(value);
+  special[fieldId] = normalizeRevelationBoardValue(fieldConfig, campaignId, board);
 }
 
 export function removeEffectStackEntry(state, campaignId, fieldId, index) {
@@ -93,6 +124,8 @@ export function updateRunField(state, field, value, checked) {
     state.bossSelections[value] ||= {};
   } else if (field === "difficulty") {
     state.run.difficulty = value === "" ? null : Number(value);
+  } else if (RUN_STAT_FIELD_IDS.has(field)) {
+    state.run[field] = normalizeRunStatValue(field, value);
   } else if (field === "squadId") {
     state.run.squadId = value || null;
     state.run.squad = null;

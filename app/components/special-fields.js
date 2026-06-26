@@ -51,6 +51,7 @@ export function renderSpecialField(field, campaignId, special, context) {
     </div>`;
   }
   if (field.type === "effectStackLoadout") return context.renderEffectStackLoadoutField(field, campaignId, special);
+  if (field.type === "revelationBoardLoadout") return context.renderRevelationBoardLoadoutField(field, campaignId, special);
   if (field.type === "coinLoadout") return context.renderCoinLoadoutField(field, campaignId, special);
   const minAttr = field.min !== undefined ? ` min="${html(field.min)}"` : "";
   const maxAttr = field.max !== undefined ? ` max="${html(field.max)}"` : "";

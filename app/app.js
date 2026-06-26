@@ -6,7 +6,7 @@ import { overlayPartOptions, renderOverlayPart as renderOverlayPartComponent } f
 import { renderEffectList } from "./components/effects.js";
 import * as specialControls from "./components/special-controls.js";
 import { renderCompactSpecialPicker as renderCompactSpecialPickerComponent, renderSpecialField as renderSpecialFieldComponent } from "./components/special-fields.js";
-import { renderCoinEntryRow as renderCoinEntryRowComponent, renderCoinLoadoutField as renderCoinLoadoutFieldComponent, renderEffectStackEntryRow as renderEffectStackEntryRowComponent, renderEffectStackLoadoutField as renderEffectStackLoadoutFieldComponent, renderEffectStackStateOptions as renderEffectStackStateOptionsComponent } from "./components/special-loadouts.js";
+import { renderCoinEntryRow as renderCoinEntryRowComponent, renderCoinLoadoutField as renderCoinLoadoutFieldComponent, renderEffectStackEntryRow as renderEffectStackEntryRowComponent, renderEffectStackLoadoutField as renderEffectStackLoadoutFieldComponent, renderEffectStackStateOptions as renderEffectStackStateOptionsComponent, renderRevelationBoardLoadoutField as renderRevelationBoardLoadoutFieldComponent } from "./components/special-loadouts.js";
 import { renderSpecialOverlayBlock as renderSpecialOverlayBlockComponent } from "./components/special-overlay.js";
 import { registerControlEvents } from "./control-events.js";
 import { bossSectionAllowsMultiple, bossSelectionValues as readBossSelectionValues, buildBossFlagEntries, getBossManualSections as readBossManualSections, getSelectedFloor3Boss as readSelectedFloor3Boss, getSelectedManualBosses as readSelectedManualBosses, normalizeBossSelections as normalizeBossSelectionsState } from "./domain/boss-flags.js";
@@ -17,6 +17,7 @@ import { getOperatorFilterView, sortOperators as sortOperatorsByPreference } fro
 import { getRelicCategories, getRelicListView as buildRelicListView } from "./domain/relics.js";
 import { buildStartTemplateSummary, getEffectiveRelicIds, mergeEffectiveSpecial, phaseLabel } from "./domain/start-templates.js";
 import { controlModeOptions, getControlMode, getModeOrderedTabs, normalizeControlMode } from "./domain/ui-modes.js";
+import { controlV2ScreenOptions, getControlV2ScreenMeta, normalizeControlV2Screen } from "./domain/control-v2-screens.js";
 import { apiJson, masterUrl, resetStateUrl, stateUrl } from "./lib/api.js";
 import { asCoinEntries, asSpecialArray, asSpecialObject, clampSpecialNumber } from "./domain/special-values.js";
 import * as selectableEffects from "./domain/selectable-effects.js";
@@ -28,6 +29,8 @@ import { mediaUrl } from "./lib/media.js";
 import { clampGridColumns, gridColumnOptions, normalizePreferences } from "./lib/preferences.js";
 import { resolveAppView } from "./lib/view-route.js";
 import { cancelOverlayAutoScroll, setupOverlayAutoScroll } from "./overlay/autoscroll.js";
+import { RUN_STAT_FIELDS, formatRunStatValue, normalizeRunStats, runStatDisplayItems } from "./domain/run-stats.js";
+import { getRecognitionScanActions } from "./domain/recognition/scan-actions.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
@@ -48,6 +51,8 @@ const controlTabs = [
 
 const ui = {
   tab: controlTabs.some((tab) => tab.id === routeParams.get("tab")) ? routeParams.get("tab") : "run",
+  controlV2Screen: normalizeControlV2Screen(routeParams.get("screen") || (["operators", "relics"].includes(routeParams.get("choice")) ? routeParams.get("choice") : "common")),
+  controlV2ChoiceTab: ["operators", "relics"].includes(routeParams.get("choice")) ? routeParams.get("choice") : "operators",
   relicSearch: "",
   relicCategory: "all",
   operatorRarity: "all",
@@ -94,6 +99,17 @@ function getCampaignPerformances(campaignId = getCampaign()?.id) {
 function getSelectedPerformance() {
   const id = state?.run?.performanceId;
   return id ? maps.performance.get(id) : null;
+}
+
+function renderRunStatInputs(extraClass = "") {
+  const className = ["run-stat-input-grid", "field-wide", extraClass].filter(Boolean).join(" ");
+  return `<div class="${className}" aria-label="ラン基本値">
+    ${RUN_STAT_FIELDS.map((field) => `<label>${html(field.label)}<input type="number" min="${field.min}" max="${field.max}" step="1" inputmode="numeric" data-field="${field.id}" value="${html(formatRunStatValue(state.run, field.id) === "-" ? "" : formatRunStatValue(state.run, field.id))}" placeholder="-" /></label>`).join("")}
+  </div>`;
+}
+
+function renderRunStatTags() {
+  return runStatDisplayItems(state.run).map((item) => `<span class="tag">${html(item.label)} ${html(item.value)}</span>`).join("");
 }
 
 
@@ -197,7 +213,10 @@ function renderObsUrlCard(title, subtitle, path) {
         <span>${html(subtitle)}</span>
       </div>
       <input readonly value="${html(url)}" aria-label="${html(title)} URL">
-      <a href="${html(path)}" target="_blank">別画面で開く</a>
+      <div class="obs-url-actions">
+        <button type="button" data-action="copy-text" data-copy-label="${html(title)}" data-value="${html(url)}">URLをコピー</button>
+        <a href="${html(path)}" target="_blank" rel="noreferrer">プレビューを開く</a>
+      </div>
     </div>
   `;
 }
@@ -208,6 +227,18 @@ function getCoinStatusOptions(field, campaignId = getCampaign()?.id) {
 
 function getEffectStackOptions(field, campaignId = getCampaign()?.id) {
   return selectableEffects.getEffectStackOptions(getSelectableEffectSource(), field, campaignId);
+}
+
+function getRevelationBoardOptions(field, campaignId = getCampaign()?.id, group) {
+  return selectableEffects.getRevelationBoardOptions(getSelectableEffectSource(), field, campaignId, group);
+}
+
+function normalizeRevelationBoardValue(field, campaignId, value) {
+  return specialLoadouts.normalizeRevelationBoardValue(field, campaignId, value, getSelectableEffectSource());
+}
+
+function formatRevelationBoardValue(field, value) {
+  return specialDisplay.formatRevelationBoardValue(field, value, getSpecialDisplayContext());
 }
 
 function normalizeEffectStackEntries(field, campaignId, value) {
@@ -314,6 +345,7 @@ function renderSpecialFieldContext() {
     getRankedEffectGroups,
     renderRankedSpecialEffectRow,
     renderEffectStackLoadoutField,
+    renderRevelationBoardLoadoutField,
     renderCoinLoadoutField,
   };
 }
@@ -343,6 +375,9 @@ function renderSpecialLoadoutContext() {
     normalizeEffectStackEntry,
     normalizeEffectStackEntries,
     formatEffectStackValue,
+    getRevelationBoardOptions,
+    normalizeRevelationBoardValue,
+    formatRevelationBoardValue,
   };
 }
 
@@ -364,6 +399,10 @@ function renderEffectStackEntryRow(field, entry, index, campaignId = getCampaign
 
 function renderEffectStackLoadoutField(field, campaignId, special) {
   return renderEffectStackLoadoutFieldComponent(field, campaignId, special, renderSpecialLoadoutContext());
+}
+
+function renderRevelationBoardLoadoutField(field, campaignId, special) {
+  return renderRevelationBoardLoadoutFieldComponent(field, campaignId, special, renderSpecialLoadoutContext());
 }
 
 function renderSpecialField(field, campaignId, special) {
@@ -641,17 +680,17 @@ function summarizeDifficultyEffects(grade = getSelectedDifficultyGrade()) {
 
 function getActiveEffects({ includeRelics = true, includeDifficulty = true, overlay = false } = {}) {
   const effects = [];
-  const pushEffect = (type, title, effect) => {
+  const pushSummarizedEffect = (type, effect) => {
     if (!effect) return;
-    effects.push({ type, title: title || type, effect });
+    effects.push(...summarizeTextEffects(type, [effect]));
   };
   const squad = getSelectedSquad();
   const option = getSelectedSquadOption(squad);
   const performance = getSelectedPerformance();
-  pushEffect("分隊", squad?.name, squad?.effect);
-  pushEffect("分隊追加", option?.label || "ランダム効果", option?.effect);
-  pushEffect("演目", performance?.name || performance?.title, performance?.effect);
-  for (const effect of getSelectedSpecialEffects(getCampaign()?.id, { overlay, includeStartTemplates: overlay })) pushEffect(effect.slotLabel || "特殊", effect.name || effect.title, effect.effect);
+  pushSummarizedEffect("分隊", squad?.effect);
+  pushSummarizedEffect("分隊追加", option?.effect);
+  pushSummarizedEffect("演目", performance?.effect);
+  for (const effect of getSelectedSpecialEffects(getCampaign()?.id, { overlay, includeStartTemplates: overlay })) pushSummarizedEffect(effect.slotLabel || "特殊", effect.effect);
   if (includeDifficulty) effects.push(...summarizeDifficultyEffects());
   if (includeRelics) effects.push(...summarizeRelicEffects());
   return effects;
@@ -662,6 +701,7 @@ function ensureStateShape() {
   state.run ||= {};
   state.run.campaignId ||= "is5_sarkaz";
   state.run.performanceId ??= null;
+  normalizeRunStats(state.run);
   state.run.special ||= {};
   for (const campaign of master.campaigns) state.run.special[campaign.id] ||= {};
   if (state.run.performanceId && !getCampaignPerformances(state.run.campaignId).some((item) => item.id === state.run.performanceId)) state.run.performanceId = null;
@@ -770,7 +810,7 @@ function renderControl() {
       <div class="brand">
         <div class="brand-mark">IS</div>
         <div>
-          <h1>Arknights Rogue OBS Tool</h1>
+          <h1>RHODES OBS COMMANDER3373</h1>
           <p>${html(getCampaign()?.fullTitle)} / ${html(mode.label)}</p>
         </div>
       </div>
@@ -803,15 +843,10 @@ function renderControlV2RunPanel() {
   const selectedSquad = getSelectedSquad();
   const randomOptions = selectedSquad?.randomEffectOptions || [];
   const performances = getCampaignPerformances(campaign.id);
-  const difficultyGrade = getSelectedDifficultyGrade();
-  const startTemplateSummary = getStartTemplateSummary();
-  const specialFields = campaign.specialFields || [];
-  const special = state.run.special?.[campaign.id] || {};
-  const specialTags = getSpecialTags(specialFields, special);
   return `
     <section class="control-v2-panel control-v2-run-panel">
-      <div class="control-v2-panel-head"><h2>ラン設定</h2><span>run setup</span></div>
-      <div class="control-v2-form-stack">
+      <div class="control-v2-panel-head"><h2>ラン基本</h2><span>run setup</span></div>
+      <div class="control-v2-panel-body control-v2-form-grid">
         <label>統合戦略
           <select data-field="campaignId">
             ${master.campaigns.map((item) => `<option value="${item.id}" ${item.id === campaign.id ? "selected" : ""}>IS#${item.number} ${html(item.title)}</option>`).join("")}
@@ -820,32 +855,216 @@ function renderControlV2RunPanel() {
         <label>等級 / 難易度
           ${renderDifficultySelect(campaign.id)}
         </label>
-        <label>分隊
+        <label class="field-wide">分隊
           <select data-field="squadId">
             <option value="">未選択</option>
             ${squads.map((item) => `<option value="${item.id}" ${item.id === state.run.squadId ? "selected" : ""}>${html(item.name)}</option>`).join("")}
           </select>
         </label>
-        ${randomOptions.length ? `<label>ランダム分隊効果
+        ${randomOptions.length ? `<label class="field-wide">ランダム分隊効果
           <select data-field="squadRandomEffectOptionId">
             <option value="">未選択</option>
             ${randomOptions.map((item) => `<option value="${item.id}" ${item.id === state.run.squadRandomEffectOptionId ? "selected" : ""}>${html(item.label || item.id)}</option>`).join("")}
           </select>
         </label>` : ""}
-        ${performances.length ? `<label>演目${renderPerformanceSelect(campaign.id)}</label>` : ""}
-      </div>
-      <div class="control-v2-summary-block">
-        <div class="tag-list">
-          <span class="tag accent">秘宝 ${getEffectiveRelicIdList().length}</span>
-          <span class="tag info">招集 ${state.operators.length}</span>
-          <span class="tag">等級 ${html(difficultyGrade?.label || "未選択")}</span>
-          ${specialTags.slice(0, 4).map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
-        </div>
-        ${selectedSquad ? `<p><strong>${html(selectedSquad.name)}</strong><span>${html(selectedSquad.effect)}</span></p>` : `<p><strong>分隊未選択</strong><span>選択すると分隊効果がここに出ます。</span></p>`}
-        ${difficultyGrade ? renderDifficultyFields(difficultyGrade) : ""}
-        ${renderStartTemplateSummary(startTemplateSummary)}
+        ${performances.length ? `<label class="field-wide">演目${renderPerformanceSelect(campaign.id)}</label>` : ""}
+        ${renderRunStatInputs()}
       </div>
     </section>
+  `;
+}
+
+function renderControlV2SpecialPanel() {
+  const campaign = getCampaign();
+  const specialFields = campaign.specialFields || [];
+  const special = state.run.special?.[campaign.id] || {};
+  return `
+    <section class="control-v2-panel control-v2-special-panel">
+      <div class="control-v2-panel-head"><div><h2>特殊値</h2><p>状態・重複を含むIS固有値</p></div><span>series values</span></div>
+      <div class="control-v2-panel-body control-v2-special-grid">
+        ${specialFields.length ? specialFields.map((field) => renderSpecialField(field, campaign.id, special)).join("") : `<div class="empty-state field-wide">この統合戦略に特殊表示はありません。</div>`}
+      </div>
+    </section>
+  `;
+}
+
+function renderControlV2CommonSummaryPanel() {
+  const campaign = getCampaign();
+  const selectedSquad = getSelectedSquad();
+  const difficultyGrade = getSelectedDifficultyGrade();
+  const startTemplateSummary = getStartTemplateSummary();
+  const specialFields = campaign.specialFields || [];
+  const special = state.run.special?.[campaign.id] || {};
+  const specialTags = getSpecialTags(specialFields, special);
+  const bossEntries = getBossFlagEntries(campaign.id);
+  const activeEffects = getActiveEffects();
+  const rows = [
+    ["ラン", `IS#${campaign.number} ${campaign.title}`],
+    ["等級", difficultyGrade?.label || "未選択"],
+    ["分隊", selectedSquad?.name || "未選択"],
+    ["所持", `秘宝 ${getEffectiveRelicIdList().length} / 招集 ${state.operators.length}`],
+    ["特殊", specialTags.length ? specialTags.map((item) => `${item.label} ${item.value}`).join(" / ") : "未設定"],
+    ["ボス", bossEntries.length ? bossEntries.map((entry) => bossDisplayTitle(entry)).join(" / ") : "未設定"],
+    ["敵効果", activeEffects.length ? `${activeEffects.length}件` : "未設定"],
+  ];
+  return `
+    <section class="control-v2-panel control-v2-summary-panel">
+      <div class="control-v2-panel-head"><div><h2>現在反映中</h2><p>編集ではなく確認。詳細は各ワークスペースへ</p></div><span>summary</span></div>
+      <div class="control-v2-panel-body control-v2-summary-body">
+        <div class="control-v2-summary-list">
+          ${rows.map(([label, value]) => `<div><b>${html(label)}</b><span>${html(value)}</span></div>`).join("")}
+        </div>
+        <div class="control-v2-deep-links" aria-label="詳細画面への導線">
+          <button type="button" data-action="control-v2-screen" data-screen="operators">オペレーターへ</button>
+          <button type="button" data-action="control-v2-screen" data-screen="relics">秘宝へ</button>
+          <button type="button" data-action="control-v2-screen" data-screen="special">特殊値へ</button>
+          <button type="button" data-action="control-v2-screen" data-screen="obs">OBS設定へ</button>
+        </div>
+        ${startTemplateSummary.length ? `<div class="control-v2-inline-template">${renderStartTemplateSummary(startTemplateSummary)}</div>` : ""}
+      </div>
+    </section>
+  `;
+}
+
+function renderControlV2SpecialModelRail() {
+  const current = getCampaign();
+  const labels = (current.specialFields || []).map((field) => field.label).join(" / ");
+  return `
+    <aside class="control-v2-special-rail" aria-label="特殊値の対象統合戦略">
+      <div class="control-v2-special-rail-head"><strong>対象IS</strong><span>固定</span></div>
+      <div class="control-v2-special-current">
+        <strong>IS#${html(current.number)} ${html(current.title)}</strong>
+        <span>${html(labels || "特殊表示なし")}</span>
+        <em>変更は共通設定の統合戦略で行います。</em>
+      </div>
+    </aside>
+  `;
+}
+
+function renderControlV2SpecialScreen() {
+  const campaign = getCampaign();
+  const specialFields = campaign.specialFields || [];
+  const special = state.run.special?.[campaign.id] || {};
+  const activeTags = getSpecialTags(specialFields, special);
+  return `
+    <section class="control-v2-screen control-v2-special-screen" aria-label="特殊値">
+      ${renderControlV2SpecialModelRail()}
+      <div class="control-v2-special-editor">
+        ${renderControlV2SpecialPanel()}
+      </div>
+      <aside class="control-v2-panel control-v2-special-preview">
+        <div class="control-v2-panel-head"><div><h2>OBS表示</h2><p>選択済みだけを短く表示</p></div><span>active</span></div>
+        <div class="control-v2-panel-body">
+          <div class="control-v2-summary-list">
+            ${activeTags.length ? activeTags.map((item) => `<div><b>${html(item.label)}</b><span>${html(item.value)}</span></div>`).join("") : `<div><b>特殊</b><span>未設定</span></div>`}
+          </div>
+          <div class="control-v2-special-notes">
+            <span>啓示板: 本因/構成/修辞を分離</span>
+            <span>思案: 名称 + 状態のスロット</span>
+            <span>通宝: 名称 + 状態 + 表裏 + 個数</span>
+          </div>
+        </div>
+      </aside>
+    </section>
+  `;
+}
+
+function renderRecognitionScanControls() {
+  const campaign = getCampaign();
+  const actions = getRecognitionScanActions(campaign.id);
+  return `
+    <div class="recognition-scan-scope">IS#${html(campaign.number)}向け</div>
+    <div class="inline-row recognition-scan-actions">
+      ${actions.map(({ profile, label }) => `<button type="button" data-action="trigger-recognition-scan" data-profile="${html(profile)}">${html(label)}を取得</button>`).join("")}
+      <button type="button" class="ghost" data-action="cancel-recognition-scan">停止</button>
+    </div>
+  `;
+}
+
+
+function renderRecognitionSuggestionList(limit = Infinity) {
+  const suggestions = state.pendingSuggestions || [];
+  const visible = suggestions.slice(0, limit);
+  if (!visible.length) return `<div class="empty-state">候補はありません。</div>`;
+  return `
+    ${visible.map((item, index) => `<div class="item-row compact"><div><div class="item-title">${html(item.label || item.type || "候補")}</div><div class="item-meta">${html(item.rawText || item.value || "")}</div></div><button data-action="dismiss-suggestion" data-index="${index}">削除</button></div>`).join("")}
+    ${suggestions.length > visible.length ? `<div class="empty-state">ほか ${suggestions.length - visible.length} 件</div>` : ""}
+  `;
+}
+
+function renderControlV2RecognitionPanel() {
+  const suggestions = state.pendingSuggestions || [];
+  return `
+    <section class="control-v2-panel control-v2-recognition-panel">
+      <div class="control-v2-panel-head"><h2>ADB取得</h2><span>候補 ${suggestions.length}</span></div>
+      <div class="control-v2-panel-body control-v2-effect-stack">
+        <div class="control-v2-subsection">
+          <div class="control-v2-subhead"><strong>外部取得</strong><span>候補承認までOverlayには反映しません</span></div>
+          ${renderRecognitionScanControls()}
+        </div>
+        <div class="control-v2-subsection">
+          <div class="control-v2-subhead"><strong>レビュー待ち</strong><span>削除のみ / 反映UIは次段階</span></div>
+          ${renderRecognitionSuggestionList(4)}
+        </div>
+      </div>
+    </section>
+  `;
+}
+function renderControlV2EffectPanel() {
+  const campaign = getCampaign();
+  const activeEffects = getActiveEffects();
+  const entries = getBossFlagEntries(campaign.id);
+  const sections = getBossManualSections(campaign.id);
+  return `
+    <section class="control-v2-panel control-v2-effect-panel">
+      <div class="control-v2-panel-head"><h2>敵効果 / ボス</h2><span>${activeEffects.length} effects / ${entries.length} boss</span></div>
+      <div class="control-v2-panel-body control-v2-effect-stack">
+        <div class="control-v2-subsection">
+          <div class="control-v2-subhead"><strong>ボスフラグ</strong><span>手動・秘宝連動</span></div>
+          <div class="control-v2-boss-selectors">
+            ${sections.length ? sections.map((section) => renderBossSelector(section, campaign.id)).join("") : `<div class="empty-state field-wide">ボスフラグ定義は未登録です。</div>`}
+          </div>
+          <div class="boss-card-grid control-v2-boss-cards">
+            ${entries.length ? entries.map((entry) => renderBossCard(entry, "compact")).join("") : `<div class="empty-state">ボスフラグは未設定です。</div>`}
+          </div>
+        </div>
+        <div class="control-v2-subsection">
+          <div class="control-v2-subhead"><strong>発動効果</strong><span>敵・ラン・報酬系のみ</span></div>
+          ${renderEffectList(activeEffects, "control-effect-list control-v2-effect-list", "敵側に集計できる発動効果は未設定です。")}
+        </div>
+      </div>
+    </section>
+  `;
+}
+
+function renderControlV2StatusStrip() {
+  const campaign = getCampaign();
+  const difficultyGrade = getSelectedDifficultyGrade();
+  const selectedSquad = getSelectedSquad();
+  const performances = getCampaignPerformances(campaign.id);
+  const selectedPerformance = getSelectedPerformance();
+  const startTemplateSummary = getStartTemplateSummary();
+  const specialFields = campaign.specialFields || [];
+  const special = state.run.special?.[campaign.id] || {};
+  const specialTags = getSpecialTags(specialFields, special);
+  const tierCfg = master.difficultyTiers?.[campaign.id];
+  const bossEntries = getBossFlagEntries(campaign.id);
+  const activeEffects = getActiveEffects();
+  const runStatCards = runStatDisplayItems(state.run).map((item) => [item.label, item.value, "ラン基本値"]);
+  const cards = [
+    ["統合戦略", `IS#${campaign.number}`, campaign.title],
+    ["等級", difficultyGrade?.label || "未選択", tierCfg ? `Tier ${getDifficultyTierLabel()}` : "固定"],
+    ["分隊", selectedSquad?.name || "未選択", performances.length ? `演目 ${selectedPerformance?.title || "未選択"}` : ""],
+    ["所持", `秘宝 ${getEffectiveRelicIdList().length}`, `招集 ${state.operators.length}`],
+    ["フラグ", `ボス ${bossEntries.length}`, `効果 ${activeEffects.length}`],
+    ["特殊", specialTags[0] ? `${specialTags[0].label} ${specialTags[0].value}` : "未設定", specialTags.slice(1, 3).map((item) => `${item.label} ${item.value}`).join(" / ")],
+    ...runStatCards,
+  ];
+  return `
+    <section class="control-v2-status-strip" aria-label="現在のラン状態">
+      ${cards.map(([label, value, detail]) => `<div class="control-v2-status-card"><span>${html(label)}</span><strong>${html(value)}</strong>${detail ? `<em>${html(detail)}</em>` : ""}</div>`).join("")}
+    </section>
+    ${startTemplateSummary.length ? `<section class="control-v2-template-strip">${renderStartTemplateSummary(startTemplateSummary)}</section>` : ""}
   `;
 }
 
@@ -862,7 +1081,7 @@ function renderControlV2OperatorsPanel() {
         <label>レア度<select data-ui="operatorRarity"><option value="all">すべて</option>${rarityOptions.map((rarity) => `<option value="${rarity}" ${String(rarity) === ui.operatorRarity ? "selected" : ""}>★${rarity}</option>`).join("")}</select></label>
         <label>職業<select data-ui="operatorClass"><option value="all">すべて</option>${classOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorClass ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
         <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
-        <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
+        <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="class" ${state.preferences.operatorSort === "class" ? "selected" : ""}>職業順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
         <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
       </div>
       ${renderOperatorListAreaComponent({ shown, operators, selected, gridColumns }, renderOperatorControlRow)}
@@ -887,6 +1106,188 @@ function renderControlV2RelicsPanel() {
   `;
 }
 
+
+function getControlV2Screen() {
+  return normalizeControlV2Screen(ui.controlV2Screen);
+}
+
+function renderControlV2Nav() {
+  const screen = getControlV2Screen();
+  return `
+    <nav class="control-v2-actions" aria-label="Control v2 画面切り替え">
+      <div class="control-v2-nav-buttons" role="tablist" aria-label="編集画面">
+        ${controlV2ScreenOptions.map((item) => `<button type="button" role="tab" aria-selected="${screen === item.id ? "true" : "false"}" class="control-v2-nav-button ${screen === item.id ? "active" : ""}" data-action="control-v2-screen" data-screen="${html(item.id)}">${html(item.label)}</button>`).join("")}
+      </div>
+      <div class="control-v2-utility-actions">
+        <span class="save-status">${html(ui.saveStatus)}</span>
+        <button class="ghost" data-action="reset-state">リセット</button>
+      </div>
+    </nav>
+  `;
+}
+
+function renderControlV2ScreenToolbar(screen) {
+  const meta = getControlV2ScreenMeta(screen);
+  return `
+    <section class="control-v2-screen-toolbar" aria-label="現在の作業画面">
+      <div>
+        <h2>${html(meta.label)}</h2>
+        <p>${html(meta.description)}</p>
+      </div>
+      <a class="control-v2-detach-current" href="${html(absoluteAppUrl(meta.detachPath))}" target="_blank" rel="noreferrer">別ウィンドウで開く</a>
+    </section>
+  `;
+}
+
+
+
+function renderControlV2SidecarScreen() {
+  const campaign = getCampaign();
+  const suggestions = state.pendingSuggestions || [];
+  const pending = state.tournament?.pendingState;
+  const activeEffects = getActiveEffects();
+  const bossEntries = getBossFlagEntries(campaign.id);
+  const sidecarUrl = absoluteAppUrl("/sidecar");
+  const detachTargets = [
+    ["operators", "オペレーター", "招集画面を別ウィンドウで開く"],
+    ["relics", "秘宝", "所持秘宝画面を別ウィンドウで開く"],
+    ["special", "特殊値", "啓示・思案・通宝を別ウィンドウで開く"],
+    ["obs", "OBS設定", "配信ソース設定を別ウィンドウで開く"],
+  ];
+  return `
+    <section class="control-v2-screen control-v2-sidecar-screen" aria-label="サイドカー">
+      <section class="control-v2-panel control-v2-sidecar-hero">
+        <div class="control-v2-panel-head"><div><h2>サイドカー</h2><p>配信外で使う確認・自動取得・レビュー用の操作面</p></div><span>private support</span></div>
+        <div class="control-v2-panel-body control-v2-sidecar-hero-body">
+          <div class="control-v2-sidecar-kpis">
+            <div><span>候補</span><strong>${html(suggestions.length)}</strong><em>レビュー待ち</em></div>
+            <div><span>ボス</span><strong>${html(bossEntries.length)}</strong><em>表示中フラグ</em></div>
+            <div><span>敵効果</span><strong>${html(activeEffects.length)}</strong><em>集計対象</em></div>
+            <div><span>大会入力</span><strong>${pending ? "1" : "0"}</strong><em>保留</em></div>
+          </div>
+          <div class="control-v2-sidecar-launches">
+            <a class="control-v2-launch-button primary" href="${html(sidecarUrl)}" target="_blank" rel="noreferrer">Sidecarを別画面で開く</a>
+            <a class="control-v2-launch-button" href="${html(absoluteAppUrl("/control"))}" target="_blank" rel="noreferrer">旧Controlを開く</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="control-v2-panel control-v2-sidecar-scan-panel">
+        <div class="control-v2-panel-head"><div><h2>ADB / OCR取得</h2><p>取得結果は候補扱い。承認までOverlayへ反映しません</p></div><span>scan</span></div>
+        <div class="control-v2-panel-body control-v2-sidecar-stack">
+          ${renderRecognitionScanControls()}
+          <div class="control-v2-subsection">
+            <div class="control-v2-subhead"><strong>レビュー待ち</strong><span>${html(suggestions.length)}件</span></div>
+            ${renderRecognitionSuggestionList(8)}
+          </div>
+        </div>
+      </section>
+
+      <section class="control-v2-panel control-v2-sidecar-detach-panel">
+        <div class="control-v2-panel-head"><div><h2>剥離ウィンドウ</h2><p>大会スタッフや別モニター向けに作業面を分離</p></div><span>detachable</span></div>
+        <div class="control-v2-panel-body control-v2-detach-grid">
+          ${detachTargets.map(([screen, label, detail]) => `<a class="control-v2-detach-card" href="${html(absoluteAppUrl(`/control-v2?screen=${screen}`))}" target="_blank" rel="noreferrer"><strong>${html(label)}</strong><span>${html(detail)}</span></a>`).join("")}
+        </div>
+      </section>
+
+      <section class="control-v2-panel control-v2-sidecar-review-panel">
+        <div class="control-v2-panel-head"><div><h2>大会 / 反映確認</h2><p>第三者入力と例外状態の確認</p></div><span>review</span></div>
+        <div class="control-v2-panel-body control-v2-sidecar-stack">
+          ${pending ? `<div class="control-v2-pending-card"><strong>保留中の大会入力があります</strong><span>内容を確認してから反映してください。</span><div class="inline-row"><button class="primary" data-action="approve-tournament">反映</button><button data-action="reject-tournament">破棄</button></div></div>` : `<div class="empty-state">保留中の大会入力はありません。</div>`}
+          <div class="control-v2-subsection">
+            <div class="control-v2-subhead"><strong>敵効果インスペクタ</strong><span>${html(activeEffects.length)}件</span></div>
+            ${renderEffectList(activeEffects, "control-effect-list control-v2-effect-list", "敵側に集計できる発動効果は未設定です。")}
+          </div>
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function renderControlV2ObsScreen() {
+  return `
+    <section class="control-v2-screen control-v2-obs-screen" aria-label="OBS設定">
+      <section class="control-v2-panel control-v2-obs-panel">
+        <div class="control-v2-panel-head"><h2>OBSプリセット</h2><span>browser source URLs</span></div>
+        <div class="control-v2-panel-body obs-url-grid">
+          ${renderObsUrlCard("標準オーバーレイ", "全体情報を1枚で表示", "/overlay")}
+          ${renderObsUrlCard("コンパクト", "ゲーム画面上に重ねる小型表示", "/overlay?layout=compact")}
+          ${renderObsUrlCard("横長 S", "下帯向け / 小", "/overlay?layout=horizontal&size=small")}
+          ${renderObsUrlCard("横長 M", "下帯向け / 中", "/overlay?layout=horizontal&size=medium")}
+          ${renderObsUrlCard("横長 L", "下帯向け / 大", "/overlay?layout=horizontal&size=large")}
+          ${renderObsUrlCard("縦長 S", "左右サイドバー向け / 小", "/overlay?layout=vertical&size=small")}
+          ${renderObsUrlCard("縦長 M", "左右サイドバー向け / 中", "/overlay?layout=vertical&size=medium")}
+          ${renderObsUrlCard("縦長 L", "左右サイドバー向け / 大", "/overlay?layout=vertical&size=large")}
+        </div>
+      </section>
+      <section class="control-v2-panel control-v2-obs-panel">
+        <div class="control-v2-panel-head"><h2>分割パーツ</h2><span>OBSで個別ソースとして配置</span></div>
+        <div class="control-v2-panel-body obs-url-grid">${renderObsPartCards()}</div>
+      </section>
+      <section class="control-v2-panel control-v2-obs-panel control-v2-obs-sidecar-note">
+        <div class="control-v2-panel-head"><h2>サイドカー / 大会運用</h2><span>operator review workflow</span></div>
+        <div class="control-v2-panel-body obs-part-list">
+          <div><strong>Sidecar</strong><span>配信外で参照する支援画面。上部のサイドカーボタンから開きます。</span></div>
+          <div><strong>別ウィンドウ化</strong><span>オペレーター・秘宝は次段階でElectronの専用ウィンドウとして分離し、大会スタッフ入力に使える導線へ拡張します。</span></div>
+          <div><strong>OBS設定</strong><span>この画面は共通設定から独立しており、アンカー移動ではなくControl v2内の画面切り替えで扱います。</span></div>
+        </div>
+      </section>
+    </section>
+  `;
+}
+
+function renderControlV2Screen() {
+  const screen = getControlV2Screen();
+  const toolbar = renderControlV2ScreenToolbar(screen);
+  if (screen === "operators") {
+    ui.controlV2ChoiceTab = "operators";
+    return toolbar + `<section class="control-v2-screen control-v2-single-choice-screen">${renderControlV2OperatorsPanel()}</section>`;
+  }
+  if (screen === "relics") {
+    ui.controlV2ChoiceTab = "relics";
+    return toolbar + `<section class="control-v2-screen control-v2-single-choice-screen">${renderControlV2RelicsPanel()}</section>`;
+  }
+  if (screen === "special") return toolbar + renderControlV2SpecialScreen();
+  if (screen === "obs") return toolbar + renderControlV2ObsScreen();
+  if (screen === "sidecar") return toolbar + renderControlV2SidecarScreen();
+  return toolbar + `
+    <section class="control-v2-screen control-v2-common-screen">
+      ${renderControlV2RunPanel()}
+      ${renderControlV2CommonSummaryPanel()}
+      ${renderControlV2EffectPanel()}
+      ${renderControlV2RecognitionPanel()}
+    </section>
+  `;
+}
+
+
+function renderControlV2ChoiceTabs() {
+  const relicView = getRelicListView();
+  const operatorCount = state.operators.length;
+  const active = ui.controlV2ChoiceTab === "relics" ? "relics" : "operators";
+  const tabs = [
+    { id: "operators", label: "オペレーター", count: `招集${operatorCount}名`, countClass: "control-v2-operator-count", detail: "招集済み・職業/レア度フィルタ" },
+    { id: "relics", label: "秘宝", count: `所持${relicView.owned.size}件`, countClass: "control-v2-relic-count", detail: "所持秘宝・カテゴリ/検索" },
+  ];
+  return `
+    <div class="control-v2-selection-tabs" role="tablist" aria-label="選択作業の切り替え">
+      ${tabs.map((tab) => `<button type="button" role="tab" aria-selected="${tab.id === active ? "true" : "false"}" class="control-v2-tab-button ${tab.id === active ? "active" : ""}" data-action="control-v2-choice-tab" data-choice-tab="${tab.id}"><span>${html(tab.label)}</span><strong class="${tab.countClass}">${html(tab.count)}</strong><em>${html(tab.detail)}</em></button>`).join("")}
+    </div>
+  `;
+}
+
+function renderControlV2SelectionWorkspace() {
+  const active = ui.controlV2ChoiceTab === "relics" ? "relics" : "operators";
+  return `
+    <section id="selection" class="control-v2-selection-workspace">
+      ${renderControlV2ChoiceTabs()}
+      <div class="control-v2-selection-panel" role="tabpanel">
+        ${active === "relics" ? renderControlV2RelicsPanel() : renderControlV2OperatorsPanel()}
+      </div>
+    </section>
+  `;
+}
+
 function renderControlV2() {
   const campaign = getCampaign();
   const difficultyGrade = getSelectedDifficultyGrade();
@@ -899,19 +1300,12 @@ function renderControlV2() {
         <span>IS#${campaign.number}</span>
         <div><h1>${html(campaign.title)}</h1><p>${html(difficultyGrade?.label || "等級未選択")} / ${html(getSelectedSquad()?.name || "分隊未選択")}</p></div>
       </div>
-      <div class="control-v2-actions">
-        <a href="/control" target="_self">旧Control</a>
-        <a href="/sidecar" target="_self">Sidecar</a>
-        <a href="/overlay" target="_blank">Overlay</a>
-        <span class="save-status">${html(ui.saveStatus)}</span>
-        <button class="ghost" data-action="reset-state">リセット</button>
-      </div>
+      ${renderControlV2Nav()}
     </header>
-    <main class="control-v2-grid">
+    <main class="control-v2-workbench">
       ${ui.notice ? `<div class="control-v2-notice">${html(ui.notice)}</div>` : ""}
-      ${renderControlV2RunPanel()}
-      ${renderControlV2OperatorsPanel()}
-      ${renderControlV2RelicsPanel()}
+      ${renderControlV2StatusStrip()}
+      ${renderControlV2Screen()}
     </main>
   `;
 }
@@ -976,6 +1370,7 @@ function renderRunTab() {
           ${performances.length ? `<label class="field-wide">演目
             ${renderPerformanceSelect(campaign.id)}
           </label>` : ""}
+          ${renderRunStatInputs()}
         </div>
       </div>
       <div class="panel half">
@@ -1001,6 +1396,7 @@ function renderRunTab() {
             <span class="tag">難易度ティア ${html(tierCfg ? getDifficultyTierLabel() : "対象外")}</span>
             ${performances.length ? `<span class="tag">演目 ${html(selectedPerformance?.title || "未選択")}</span>` : ""}
             ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
+            ${renderRunStatTags()}
           </div>
           ${selectedSquad ? `<p><strong>${html(selectedSquad.name)}</strong><br><span class="panel-subtitle">${html(selectedSquad.effect)}</span></p>` : `<p class="panel-subtitle">分隊は未選択です。</p>`}
           ${selectedPerformance ? `<p><strong>${html(selectedPerformance.name)}</strong><br><span class="panel-subtitle">${html(selectedPerformance.effect)}</span></p>` : ""}
@@ -1085,7 +1481,7 @@ function renderOperatorsTab() {
             <label>レア度<select data-ui="operatorRarity"><option value="all">すべて</option>${rarityOptions.map((rarity) => `<option value="${rarity}" ${String(rarity) === ui.operatorRarity ? "selected" : ""}>★${rarity}</option>`).join("")}</select></label>
             <label>職業<select data-ui="operatorClass"><option value="all">すべて</option>${classOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorClass ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
             <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
-            <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
+            <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="class" ${state.preferences.operatorSort === "class" ? "selected" : ""}>職業順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
             <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
           </div>
           ${renderOperatorListAreaComponent({ shown, operators, selected, gridColumns }, renderOperatorControlRow)}
@@ -1166,9 +1562,10 @@ function renderFlagsTab() {
         </div>
       </div>
       <div class="panel">
-        <div class="panel-header"><h2 class="panel-title">OCR候補</h2><span class="panel-subtitle">今後ADB/OCRからここへ入る</span></div>
+        <div class="panel-header"><h2 class="panel-title">ADB/OCR候補</h2><span class="panel-subtitle">取得結果は承認まで状態に反映しない</span></div>
         <div class="panel-body">
-          ${(state.pendingSuggestions || []).length ? state.pendingSuggestions.map((item, index) => `<div class="item-row compact"><div><div class="item-title">${html(item.label || item.type || "候補")}</div><div class="item-meta">${html(item.rawText || item.value || "")}</div></div><button data-action="dismiss-suggestion" data-index="${index}">削除</button></div>`).join("") : `<div class="empty-state">候補はありません。</div>`}
+          ${renderRecognitionScanControls()}
+          ${renderRecognitionSuggestionList()}
         </div>
       </div>
     </section>
@@ -1299,6 +1696,7 @@ function renderSidecar() {
             <div><span>秘宝</span><strong>${relics.length}</strong></div>
             <div><span>招集</span><strong>${operators.length}</strong></div>
             <div><span>Boss</span><strong>${bossEntries.length}</strong></div>
+            ${runStatDisplayItems(state.run).map((item) => `<div><span>${html(item.label)}</span><strong>${html(item.value)}</strong></div>`).join("")}
           </div>
           <div class="sidecar-form-grid">
             <label>統合戦略<select data-field="campaignId">${master.campaigns.map((item) => `<option value="${item.id}" ${item.id === campaign.id ? "selected" : ""}>IS#${item.number} ${html(item.title)}</option>`).join("")}</select></label>
@@ -1306,11 +1704,13 @@ function renderSidecar() {
             <label class="sidecar-wide">分隊<select data-field="squadId"><option value="">未選択</option>${squads.map((item) => `<option value="${item.id}" ${item.id === state.run.squadId ? "selected" : ""}>${html(item.name)}</option>`).join("")}</select></label>
             ${randomOptions.length ? `<label class="sidecar-wide">ランダム分隊効果<select data-field="squadRandomEffectOptionId"><option value="">未選択</option>${randomOptions.map((item) => `<option value="${item.id}" ${item.id === state.run.squadRandomEffectOptionId ? "selected" : ""}>${html(item.label || item.id)}</option>`).join("")}</select></label>` : ""}
             ${performances.length ? `<label class="sidecar-wide">演目${renderPerformanceSelect(campaign.id)}</label>` : ""}
+            ${renderRunStatInputs("sidecar-wide")}
           </div>
           <div class="tag-list sidecar-tags">
             ${selectedSquad ? `<span class="tag accent">${html(selectedSquad.name)}</span>` : `<span class="tag">分隊未選択</span>`}
             ${selectedPerformance ? `<span class="tag info">${html(selectedPerformance.title || selectedPerformance.name)}</span>` : ""}
             ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
+            ${renderRunStatTags()}
           </div>
         </section>
         ${specialFields.length ? `<section class="sidecar-panel"><div class="sidecar-panel-head"><h2>特殊値</h2><span>${specialFields.length}</span></div><div class="sidecar-form-grid sidecar-special-grid">${specialFields.map((field) => renderSpecialField(field, campaign.id, special)).join("")}</div></section>` : ""}
@@ -1355,6 +1755,7 @@ function renderOverlayContext() {
     renderBossCard,
     renderDifficultyFields,
     relicEffectForDisplay,
+    runStatDisplayItems,
   };
 }
 
@@ -1386,17 +1787,17 @@ function renderOverlay() {
   const performance = getSelectedPerformance();
   const activeEffects = getActiveEffects({ overlay: true });
   if (overlayPart) {
-    app.innerHTML = renderOverlayPart({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, runDifficulty: state.run.difficulty, updatedAt: state.updatedAt });
+    app.innerHTML = renderOverlayPart({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run: state.run, runDifficulty: state.run.difficulty, updatedAt: state.updatedAt });
     setupOverlayAutoScroll(app);
     return;
   }
   if (overlayLayout === "compact") {
-    app.innerHTML = renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade });
+    app.innerHTML = renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run: state.run });
     setupOverlayAutoScroll(app);
     return;
   }
   if (overlayLayout === "vertical" || overlayLayout === "horizontal") {
-    app.innerHTML = renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, orientation: overlayLayout });
+    app.innerHTML = renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run: state.run, orientation: overlayLayout });
     setupOverlayAutoScroll(app);
     return;
   }
@@ -1411,6 +1812,7 @@ function renderOverlay() {
     specialFields,
     special,
     difficultyGrade,
+    run: state.run,
     mode: getCurrentControlMode().label,
     runDifficulty: state.run.difficulty,
     updatedAt: state.updatedAt,

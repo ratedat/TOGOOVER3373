@@ -172,13 +172,15 @@
         "id": "revelations",
         "label": "啓示",
         "type": "effectMultiSelect",
-        "effectSlot": "revelation"
+        "effectSlot": "revelation",
+        "compact": true
       },
       {
         "id": "hordeCalls",
         "label": "大群の呼び声",
         "type": "effectMultiSelect",
-        "effectSlot": "hordeCall"
+        "effectSlot": "hordeCall",
+        "compact": true
       }
     ],
     "bossFlags": {
@@ -485,18 +487,20 @@
       {
         "id": "revelation",
         "label": "啓示板",
-        "type": "effectStackLoadout",
+        "type": "revelationBoardLoadout",
         "effectSlot": "revelationBoard",
-        "optionGroupLabels": [
-          "構成",
+        "causeLabel": "本因",
+        "causeGroupLabels": [
           "本因"
         ],
-        "unitLabel": "枚",
-        "stateLabel": "修辞",
-        "stateGroupLabels": [
+        "structureLabel": "構成",
+        "structureGroupLabels": [
+          "構成"
+        ],
+        "rhetoricLabel": "修辞",
+        "rhetoricGroupLabels": [
           "修辞"
         ],
-        "emptyStateLabel": "修辞なし",
         "overlayToggle": true,
         "overlayToggleLabel": "OBS表示"
       }

@@ -1,7 +1,8 @@
 import { assetUrl, html, stars } from "../lib/format.js";
 
-export function renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade }, context) {
+export function renderOverlayCompact({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run }, context) {
   const specialTags = context.getSpecialTags(specialFields, special, { overlay: true });
+  const runStats = context.runStatDisplayItems(run);
   const specialItems = context.getOverlaySpecialEffects(campaign.id, specialFields, special);
   const flags = context.getBossFlagEntries(campaign.id);
   return `
@@ -22,6 +23,7 @@ export function renderOverlayCompact({ campaign, squad, option, performance, act
         <span class="tag accent">${html(difficultyGrade?.label || "等級未選択")}</span>
         <span class="tag">Tier ${html(context.getDifficultyTierLabel())}</span>
         ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
+        ${runStats.map((item) => `<span class="tag">${html(item.label)} ${html(item.value)}</span>`).join("")}
       </div>
       ${context.renderSpecialOverlayBlock(specialItems, "compact", "compactRelicScrollSpeed")}
       ${activeEffects.length ? `<section class="compact-section compact-effects-section">
@@ -50,8 +52,9 @@ export function renderOverlayCompact({ campaign, squad, option, performance, act
   `;
 }
 
-export function renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, orientation }, context) {
+export function renderOverlayDense({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run, orientation }, context) {
   const specialTags = context.getSpecialTags(specialFields, special, { overlay: true });
+  const runStats = context.runStatDisplayItems(run);
   const specialItems = context.getOverlaySpecialEffects(campaign.id, specialFields, special);
   const flags = context.getBossFlagEntries(campaign.id);
   return `
@@ -73,6 +76,7 @@ export function renderOverlayDense({ campaign, squad, option, performance, activ
           <span class="tag accent">${html(difficultyGrade?.label || "等級未選択")}</span>
           <span class="tag">Tier ${html(context.getDifficultyTierLabel())}</span>
           ${specialTags.map((item) => `<span class="tag info">${html(item.label)} ${html(item.value)}</span>`).join("")}
+          ${runStats.map((item) => `<span class="tag">${html(item.label)} ${html(item.value)}</span>`).join("")}
           ${flags.map((flag) => context.renderBossChip(flag)).join("")}
         </div>
         ${context.renderSpecialOverlayBlock(specialItems, "stream", orientation + "RelicScrollSpeed")}
@@ -99,8 +103,9 @@ export function renderOverlayDense({ campaign, squad, option, performance, activ
     </section>
   `;
 }
-export function renderOverlayDefault({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, mode, runDifficulty, updatedAt, bossFlagCount }, context) {
+export function renderOverlayDefault({ campaign, squad, option, performance, activeEffects, relics, operators, specialFields, special, difficultyGrade, run, mode, runDifficulty, updatedAt, bossFlagCount }, context) {
   const bossEntries = context.getBossFlagEntries();
+  const runStats = context.runStatDisplayItems(run);
   return `
     <header class="overlay-top">
       <section class="overlay-card">
@@ -115,6 +120,7 @@ export function renderOverlayDefault({ campaign, squad, option, performance, act
         <div class="overlay-card-body overlay-kpis">
           <div class="kpi"><div class="kpi-label">等級</div><div class="kpi-value">${html(difficultyGrade?.label || (runDifficulty ?? "-"))}</div></div>
           <div class="kpi"><div class="kpi-label">Tier</div><div class="kpi-value">${html(context.getDifficultyTierLabel())}</div></div>
+          ${runStats.map((item) => `<div class="kpi"><div class="kpi-label">${html(item.label)}</div><div class="kpi-value">${html(item.value)}</div></div>`).join("")}
           ${context.getSpecialTags(specialFields, special, { overlay: true }).map((item) => `<div class="kpi"><div class="kpi-label">${html(item.label)}</div><div class="kpi-value">${html(item.value || "-")}</div></div>`).join("")}
           ${difficultyGrade ? context.renderDifficultyFields(difficultyGrade, "overlay") : ""}
         </div>

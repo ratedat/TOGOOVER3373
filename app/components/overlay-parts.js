@@ -23,6 +23,7 @@ function empty(text) {
 
 function renderStatusPart(args, context) {
   const specialTags = context.getSpecialTags(args.specialFields, args.special, { overlay: true });
+  const runStats = context.runStatDisplayItems(args.run);
   const bossEntries = context.getBossFlagEntries(args.campaign.id);
   const updated = new Date(args.updatedAt || Date.now()).toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" });
   return `<section class="overlay-part-shell overlay-part-status">
@@ -36,6 +37,7 @@ function renderStatusPart(args, context) {
       <div class="overlay-part-status-cell"><span>秘宝</span><strong>${args.relics.length}</strong></div>
       <div class="overlay-part-status-cell"><span>招集</span><strong>${args.operators.length}</strong></div>
       <div class="overlay-part-status-cell"><span>Boss</span><strong>${bossEntries.length}</strong></div>
+      ${runStats.map((item) => `<div class="overlay-part-status-cell"><span>${html(item.label)}</span><strong>${html(item.value)}</strong></div>`).join("")}
       <div class="overlay-part-status-cell"><span>更新</span><strong>${html(updated)}</strong></div>
     </div>
     <div class="overlay-part-chip-row">

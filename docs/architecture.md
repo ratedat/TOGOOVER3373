@@ -81,6 +81,8 @@ Responsibilities are intentionally separated:
 - `app/launcher.mjs` remains a browser-based fallback for environments where Electron is not desired.
 - `start-windows.vbs` and `tools/windows/start-app.ps1` provide a double-click source-folder launcher for non-technical Windows users.
 - OBS remains a browser-source consumer of `/overlay` URLs, so desktop packaging must not make OBS depend on an embedded runtime.
+- Human debugging should use the Electron shell as the primary surface. Plain browser tabs are fallback/debugging aids for the local web server and OBS URL checks.
+- Desktop-impacting changes should be verified with `npm test` and an Electron package compile via `npm run pack:win` or `npm run verify:desktop`.
 - Split OBS parts are routed under `/overlay/part/<part>`, currently `status`, `relics`, `operators`, `effects`, `bosses`, and `special`.
 - `/control` remains the full editing surface for manual input, tournament review, and future OCR/ADB suggestions.
 - `/sidecar` is the compact emulator-adjacent support surface for run state, effects, selected relics/operators, boss flags, and review queues.

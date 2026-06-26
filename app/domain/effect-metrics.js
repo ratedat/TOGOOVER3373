@@ -359,7 +359,7 @@ function addManualRelicRuleMetrics(metrics, relic, ownedRelics, rulesByRelic, ta
   }
   return suppressAuto;
 }
-function summarizeEffectMetrics(sourceType, metrics) {
+function summarizeEffectMetrics(sourceType, metrics, { includeOperatorSummary = false } = {}) {
   const summaries = [];
   const runSummary = formatMetricSummary(metrics.runMetrics).replace(/^ラン\s*/, "");
   const recruitmentSummary = formatRecruitmentHope(metrics.recruitmentValues);
@@ -372,22 +372,22 @@ function summarizeEffectMetrics(sourceType, metrics) {
   if (battleVictorySummary) summaries.push({ type: sourceType, title: "【戦闘勝利時】", effect: battleVictorySummary });
   if (shopSummary) summaries.push({ type: sourceType, title: "【商店】", effect: shopSummary });
   for (const note of metrics.effectNotes) summaries.push({ type: sourceType, title: note.title, effect: note.effect });
-  if (operatorSummary) summaries.push({ type: sourceType, title: "【オペレーター】", effect: operatorSummary });
+  if (includeOperatorSummary && operatorSummary) summaries.push({ type: sourceType, title: "【オペレーター】", effect: operatorSummary });
   if (enemySummary) summaries.push({ type: sourceType, title: "【敵】", effect: enemySummary });
   return summaries;
 }
 
-export function summarizeTextEffects(sourceType, texts = []) {
+export function summarizeTextEffects(sourceType, texts = [], options = {}) {
   const metrics = createEffectMetricSet();
   for (const text of texts) addEffectTextToMetrics(metrics, text);
-  return summarizeEffectMetrics(sourceType, metrics);
+  return summarizeEffectMetrics(sourceType, metrics, options);
 }
 
-export function summarizeRelicEffects({ ownedRelics = [], rulesByRelic = new Map(), tagGroups = {}, effectTextForRelic = (relic) => relic?.effect || "" } = {}) {
+export function summarizeRelicEffects({ ownedRelics = [], rulesByRelic = new Map(), tagGroups = {}, effectTextForRelic = (relic) => relic?.effect || "", includeOperatorSummary = false } = {}) {
   const metrics = createEffectMetricSet();
   for (const relic of ownedRelics) {
     const suppressAuto = addManualRelicRuleMetrics(metrics, relic, ownedRelics, rulesByRelic, tagGroups);
     if (!suppressAuto) addEffectTextToMetrics(metrics, effectTextForRelic(relic));
   }
-  return summarizeEffectMetrics("秘宝", metrics);
+  return summarizeEffectMetrics("秘宝", metrics, { includeOperatorSummary });
 }
