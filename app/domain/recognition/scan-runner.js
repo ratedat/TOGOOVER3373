@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { computeResolutionScale, scaleAction, scaleRect, scaleSwipe } from "./geometry.js";
+import { computeResolutionScale, randomizeAction, scaleAction, scaleRect, scaleSwipe } from "./geometry.js";
 import { fingerprintsEqual } from "./fingerprint.js";
 import { createMetadataRecognizer } from "./placeholder-recognizer.js";
 import { buildRecognitionSuggestions, dedupeRecognitionCandidates } from "./suggestions.js";
@@ -19,16 +19,16 @@ async function wait(adapter, ms, signal) {
   await new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function executeAction(adapter, action, scale, log, signal) {
+async function executeAction(adapter, action, scale, log, signal, random) {
   throwIfAborted(signal);
-  const scaled = scaleAction(action, scale);
+  const scaled = randomizeAction(scaleAction(action, scale), random);
   if (scaled.type === "tap") {
     logEvent(log, "tap", { point: scaled.point, label: scaled.label || null });
-    return adapter.tap(scaled.point);
+    return adapter.tap(scaled.point, { randomized: true });
   }
   if (scaled.type === "swipe") {
     logEvent(log, "swipe", { start: scaled.start, end: scaled.end, durationMs: scaled.durationMs, label: scaled.label || null });
-    return adapter.swipe(scaled);
+    return adapter.swipe(scaled, { randomized: true });
   }
   if (scaled.type === "back") {
     logEvent(log, "restore", { method: "back", label: scaled.label || null });
@@ -41,11 +41,11 @@ async function executeAction(adapter, action, scale, log, signal) {
   throw new Error(`unsupported recognition action: ${scaled.type}`);
 }
 
-async function executeActions(adapter, actions, scale, log, signal) {
-  for (const action of actions || []) await executeAction(adapter, action, scale, log, signal);
+async function executeActions(adapter, actions, scale, log, signal, random) {
+  for (const action of actions || []) await executeAction(adapter, action, scale, log, signal, random);
 }
 
-export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal } = {}) {
+export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal, random = Math.random } = {}) {
   if (!profile?.id) throw new Error("scan profile is required");
   if (!adapter) throw new Error("scan adapter is required");
   const startedAt = now();
@@ -87,7 +87,7 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
     }
 
     const openSteps = profile.openSteps || [];
-    await executeActions(adapter, openSteps, scale, log, signal);
+    await executeActions(adapter, openSteps, scale, log, signal, random);
     openedTarget = openSteps.length > 0;
     logEvent(log, "open", { profileId: profile.id, actionCount: openSteps.length });
 
@@ -115,12 +115,13 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
       }
       if (iteration >= maxScrolls || !scroll) break;
       logEvent(log, "scroll", { axis: profile.scrollAxis, direction: profile.scrollDirection, status: "continue", iteration });
-      logEvent(log, "swipe", { start: scroll.start, end: scroll.end, durationMs: scroll.durationMs, axis: profile.scrollAxis, direction: profile.scrollDirection });
-      await adapter.swipe(scroll);
+      const randomizedScroll = randomizeAction({ type: "swipe", ...scroll }, random);
+      logEvent(log, "swipe", { start: randomizedScroll.start, end: randomizedScroll.end, durationMs: randomizedScroll.durationMs, axis: profile.scrollAxis, direction: profile.scrollDirection });
+      await adapter.swipe(randomizedScroll, { randomized: true });
       await wait(adapter, Number(profile.captureDelayMs || 0), signal);
     }
   } finally {
-    if (openedTarget) await executeActions(adapter, profile.restoreSteps || [], scale, log, null).catch((error) => logEvent(log, "restore", { status: "failed", error: error.message }));
+    if (openedTarget) await executeActions(adapter, profile.restoreSteps || [], scale, log, null, random).catch((error) => logEvent(log, "restore", { status: "failed", error: error.message }));
   }
 
   const candidates = dedupeRecognitionCandidates(rawCandidates);

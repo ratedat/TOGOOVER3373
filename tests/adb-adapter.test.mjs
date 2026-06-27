@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { adbExecOptions, detectAdbConnections, parseAdbDisplayResolution } from "../app/recognition/adapters/adb-adapter.js";
+import { adbExecOptions, createAdbAdapter, detectAdbConnections, parseAdbDisplayResolution } from "../app/recognition/adapters/adb-adapter.js";
 
 test("parseAdbDisplayResolution prefers active app bounds over portrait wm size", () => {
   const resolution = parseAdbDisplayResolution({
@@ -84,4 +84,27 @@ test("detectAdbConnections prefers an available MuMu candidate over an earlier B
   assert.equal(result.selectedAdbPath, "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe");
   assert.equal(result.adbCandidates[0].preset, "mumu");
   assert.equal(result.adbCandidates[0].selected, true);
+});
+
+
+test("createAdbAdapter randomizes direct tap and swipe commands unless already randomized", async () => {
+  const calls = [];
+  const values = [0, 1, 1, 0, 0, 1];
+  const adapter = createAdbAdapter({
+    adbPath: "adb",
+    env: {},
+    random: () => values.shift() ?? 0.5,
+    execFileImpl: (_file, args, _options, callback) => {
+      calls.push(args);
+      callback(null, "", "");
+    },
+  });
+
+  await adapter.tap({ x: 100, y: 200 });
+  await adapter.swipe({ start: { x: 300, y: 400 }, end: { x: 500, y: 600 }, durationMs: 450 });
+  await adapter.tap({ x: 100, y: 200 }, { randomized: true });
+
+  assert.deepEqual(calls[0], ["shell", "input", "tap", "92", "208"]);
+  assert.deepEqual(calls[1], ["shell", "input", "swipe", "312", "388", "488", "612", "450"]);
+  assert.deepEqual(calls[2], ["shell", "input", "tap", "100", "200"]);
 });

@@ -58,3 +58,19 @@ test("idea count ROI matches the annotated thought burden value area", async () 
 
   assert.deepEqual(ideaRegion.roi, [700, 648, 128, 60]);
 });
+
+
+test("ADB scan profiles keep annotated tap rectangles for randomized execution", async () => {
+  const profiles = await profilesById();
+  const expected = new Map([
+    ["runStatusFull", { x: 12, y: 634, width: 84, height: 86 }],
+    ["relicsFull", { x: 134, y: 648, width: 84, height: 60 }],
+    ["is5ThoughtFull", { x: 582, y: 649, width: 245, height: 59 }],
+    ["operatorsFull", { x: 904, y: 645, width: 88, height: 66 }],
+  ]);
+
+  for (const [id, area] of expected) {
+    const tap = (profiles.get(id).openSteps || []).find((step) => step.type === "tap");
+    assert.deepEqual(tap.area, area);
+  }
+});

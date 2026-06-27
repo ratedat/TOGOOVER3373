@@ -2,6 +2,7 @@ import { execFile } from "node:child_process";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
 import { buildAdbCandidatePaths, normalizeAdbPathKey, normalizeAdbSettings, parseAdbDevices, resolveAdbRuntimeSettings } from "../../domain/adb-settings.js";
+import { randomizeAction } from "../../domain/recognition/geometry.js";
 
 function adbArgs(serial, args) {
   return serial ? ["-s", serial, ...args] : args;
@@ -183,14 +184,14 @@ export async function detectAdbConnections({ settings = {}, env = process.env, c
   };
 }
 
-export function createAdbAdapter({ adbPath = null, serial = null, settings = {}, env = process.env, workDir = null } = {}) {
+export function createAdbAdapter({ adbPath = null, serial = null, settings = {}, env = process.env, workDir = null, execFileImpl = execFile, random = Math.random } = {}) {
   const runtime = resolveAdbRuntimeSettings({ ...settings, ...(adbPath ? { adbPath } : {}), ...(serial ? { serial } : {}) }, env);
   adbPath = runtime.adbPath;
   serial = runtime.serial;
   if (workDir) fsSync.mkdirSync(workDir, { recursive: true });
   function run(args, { encoding = "utf8" } = {}) {
     return new Promise((resolve, reject) => {
-      execFile(adbPath, adbArgs(serial, args), adbExecOptions({ encoding, workDir }), (error, stdout, stderr) => {
+      execFileImpl(adbPath, adbArgs(serial, args), adbExecOptions({ encoding, workDir }), (error, stdout, stderr) => {
         if (error) {
           error.stderr = stderr;
           reject(normalizeAdbError(error, { adbPath, args }));
@@ -216,19 +217,21 @@ export function createAdbAdapter({ adbPath = null, serial = null, settings = {},
       const bytes = await run(["exec-out", "screencap", "-p"], { encoding: "buffer" });
       return { bytes, capturedAt: new Date().toISOString(), ...meta };
     },
-    async tap(point) {
-      await run(["shell", "input", "tap", String(Math.round(point.x)), String(Math.round(point.y))]);
+    async tap(point, options = {}) {
+      const commandPoint = options.randomized ? point : randomizeAction({ type: "tap", point }, random).point;
+      await run(["shell", "input", "tap", String(Math.round(commandPoint.x)), String(Math.round(commandPoint.y))]);
     },
-    async swipe(swipe) {
+    async swipe(swipe, options = {}) {
+      const commandSwipe = options.randomized ? swipe : randomizeAction({ type: "swipe", ...swipe }, random);
       await run([
         "shell",
         "input",
         "swipe",
-        String(Math.round(swipe.start.x)),
-        String(Math.round(swipe.start.y)),
-        String(Math.round(swipe.end.x)),
-        String(Math.round(swipe.end.y)),
-        String(Math.round(swipe.durationMs ?? 350)),
+        String(Math.round(commandSwipe.start.x)),
+        String(Math.round(commandSwipe.start.y)),
+        String(Math.round(commandSwipe.end.x)),
+        String(Math.round(commandSwipe.end.y)),
+        String(Math.round(commandSwipe.durationMs ?? 350)),
       ]);
     },
     async back() {

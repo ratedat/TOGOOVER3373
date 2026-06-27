@@ -58,7 +58,7 @@ test("scan runner executes open -> scan -> scroll -> restore and dedupes candida
     { fingerprint: "page-2", candidates: [{ kind: "relic", relicId: "r2", name: "秘宝B", confidence: 0.8 }] },
   ], adapterLog);
 
-  const result = await runScanProfile({ profile: baseProfile(), adapter, recognizer: createMetadataRecognizer(), scanId: "scan-1", now: () => new Date("2026-06-25T00:00:00.000Z") });
+  const result = await runScanProfile({ profile: baseProfile(), adapter, recognizer: createMetadataRecognizer(), scanId: "scan-1", now: () => new Date("2026-06-25T00:00:00.000Z"), random: () => 0.5 });
 
   assert.equal(result.status, "completed");
   assert.equal(result.suggestions.length, 2);
@@ -84,6 +84,7 @@ test("coins profile keeps horizontal/right scroll semantics in operation log", a
     ], adapterLog),
     recognizer: createMetadataRecognizer(),
     scanId: "scan-coins",
+    random: () => 0.5,
   });
 
   assert.equal(result.status, "completed");
@@ -100,10 +101,40 @@ test("scan runner aborts before open when the current screen is unknown", async 
     adapter: createAdapter([{ knownScreenId: "unknown" }], adapterLog),
     recognizer: createMetadataRecognizer(),
     scanId: "scan-unknown",
+    random: () => 0.5,
   });
 
   assert.equal(result.status, "aborted");
   assert.equal(result.reason, "unknown_screen");
   assert.equal(result.suggestions.length, 0);
   assert.deepEqual(adapterLog.map((entry) => entry[0]), ["resolution", "capture"]);
+});
+
+test("scan runner randomizes tap areas and scroll swipes at execution time", async () => {
+  const adapterLog = [];
+  const randomValues = [0.25, 0.75, 0, 1, 1, 0];
+  const result = await runScanProfile({
+    profile: baseProfile({
+      openSteps: [{ type: "tap", point: { x: 54, y: 677 }, area: { x: 12, y: 634, width: 84, height: 86 }, label: "open" }],
+      maxScrolls: 1,
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "page-1", candidates: [] },
+      { fingerprint: "page-2", candidates: [] },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-randomized",
+    random: () => randomValues.shift() ?? 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  const tap = adapterLog.find((entry) => entry[0] === "tap")[1];
+  assert.notDeepEqual(tap, { x: 108, y: 1354 });
+  assert.ok(tap.x >= 24 && tap.x <= 192);
+  assert.ok(tap.y >= 1268 && tap.y <= 1440);
+
+  const swipe = adapterLog.find((entry) => entry[0] === "swipe")[1];
+  assert.notDeepEqual(swipe.start, { x: 2000, y: 1200 });
+  assert.notDeepEqual(swipe.end, { x: 2000, y: 400 });
 });
