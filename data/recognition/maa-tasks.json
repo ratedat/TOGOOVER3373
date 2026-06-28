@@ -380,19 +380,6 @@
       "scale": 10
     },
     {
-      "id": "run.top_idea",
-      "profileIds": [
-        "runStatusFull"
-      ],
-      "roi": [
-        1208,
-        13,
-        52,
-        38
-      ],
-      "scale": 10
-    },
-    {
       "id": "run.idea",
       "profileIds": [
         "runStatusFull"

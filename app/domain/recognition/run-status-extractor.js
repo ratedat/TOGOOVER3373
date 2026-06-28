@@ -472,15 +472,9 @@ function findIngotCandidate(frame) {
   return findRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "ingot", min: 0, max: 9999, prefer: "first" });
 }
 
-function findTopIdeaCandidate(frame) {
-  return findBestRegionNumberCandidate(frame, { field: "idea", label: "構想", regionIdPart: "top_idea", min: 0, max: 999, confidence: 0.86, prefer: "first" });
-}
-
 function findIdeaCandidate(frame, { campaignId } = {}) {
   if (campaignId !== "is5_sarkaz") return null;
-  const topIdea = findTopIdeaCandidate(frame);
-  if (topIdea) return topIdea;
-  return findRegionNumberCandidate(frame, { field: "idea", label: "構想", regionIdPart: "idea", min: 0, max: 999, prefer: "first" });
+  return findBestRegionNumberCandidate(frame, { field: "idea", label: "構想", regionIdPattern: /^run\.idea$/, min: 0, max: 999, prefer: "first" });
 }
 
 function findLifePointsCandidate(frame) {

@@ -157,7 +157,7 @@ test("run status extractor reads Sarkaz idea count from the bottom conception co
   assert.equal(idea.value, 2);
 });
 
-test("run status extractor reads IS5 top-bar resources and prefers higher-confidence OCR", () => {
+test("run status extractor reads IS5 top-bar resources and bottom conception count", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
       { text: "0", regionId: "run.top_ingot", confidence: 0.99 },
@@ -175,7 +175,7 @@ test("run status extractor reads IS5 top-bar resources and prefers higher-confid
   assert.deepEqual(candidates.filter((item) => ["hope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
     ["hope", 7],
     ["ingot", 0],
-    ["idea", 20],
+    ["idea", 9],
   ]);
 });
 
@@ -186,8 +186,8 @@ test("run status extractor switches to wide top-bar resource ROIs when the compa
       { text: "6", regionId: "run.top_ingot.wide", confidence: 0.99 },
       { text: "6", regionId: "run.top_hope.wide", confidence: 0.99 },
       { text: "14", regionId: "run.top_idea", confidence: 0.99 },
-      { text: "6<614", regionId: "run.resource_numbers", confidence: 0.91 },
-      { text: "6<6", regionId: "run.hope", confidence: 0.95 },
+      { text: "0<614", regionId: "run.resource_numbers", confidence: 0.91 },
+      { text: "0<6", regionId: "run.hope", confidence: 0.95 },
       { text: "1", regionId: "run.hope.current", confidence: 0.7 },
       { text: "66", regionId: "run.hope.max", confidence: 0.99 },
       { text: "14", regionId: "run.ingot", confidence: 0.99 },
@@ -199,11 +199,36 @@ test("run status extractor switches to wide top-bar resource ROIs when the compa
   }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
 
   assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
-    ["hope", 6],
+    ["hope", 0],
     ["maxHope", 6],
     ["ingot", 6],
-    ["idea", 14],
+    ["idea", 2],
   ]);
+});
+
+test("run status extractor does not treat top-bar originium as IS5 conception", () => {
+  for (const { topResource, bottomIdea } of [{ topResource: "14", bottomIdea: "2" }, { topResource: "20", bottomIdea: "3" }]) {
+    const candidates = extractRunStatusCandidates({
+      ocrResults: [
+        { text: "0", regionId: "run.top_hope", confidence: 0.99 },
+        { text: "6", regionId: "run.top_hope.wide", confidence: 0.99 },
+        { text: topResource, regionId: "run.top_idea", confidence: 0.99 },
+        { text: "0<6", regionId: "run.hope", confidence: 0.95 },
+        { text: topResource, regionId: "run.ingot", confidence: 0.99 },
+        { text: bottomIdea, regionId: "run.idea", confidence: 0.76 },
+        { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+        { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+        { text: "18", regionId: "run.difficulty_grade" },
+      ],
+    }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+    assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
+      ["hope", 0],
+      ["maxHope", 6],
+      ["ingot", Number(topResource)],
+      ["idea", Number(bottomIdea)],
+    ]);
+  }
 });
 
 test("run status extractor reads hope and originium ingots from dedicated resource regions", () => {
