@@ -467,14 +467,55 @@ function findTopIngotCandidate(frame) {
 }
 
 function findIngotCandidate(frame) {
+  const direct = findBestRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPattern: /^run\.ingot$/, min: 0, max: 9999, confidence: 0.86, prefer: "first" });
+  if (direct) return direct;
   const topIngot = findTopIngotCandidate(frame);
   if (topIngot) return topIngot;
   return findRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "ingot", min: 0, max: 9999, prefer: "first" });
 }
 
+function ideaCurrentValueFromText(text) {
+  const compact = normalizeRecognitionText(text, ["remove_spaces"]);
+  const fraction = compact.match(/([0-9０-９Oo図IiLl一丨イィ]{1,3})[\/／<＜]([0-9０-９Oo図IiLl一丨イィ]{1,3})/);
+  if (fraction) {
+    const current = digitValue(fraction[1]);
+    const max = digitValue(fraction[2]);
+    if (Number.isFinite(current) && Number.isFinite(max) && current >= 0 && max >= current) return current;
+  }
+
+  const digits = digitText(text);
+  if (digits.length === 2) {
+    const current = Number(digits[0]);
+    const max = Number(digits[1]);
+    if (max >= current) return current;
+  }
+  if (digits.length === 3) {
+    const current = Number(digits.slice(0, 1));
+    const max = Number(digits.slice(1));
+    if (max >= current && max <= 99) return current;
+  }
+  if (digits.length === 4) {
+    const current = Number(digits.slice(0, 2));
+    const max = Number(digits.slice(2));
+    if (max >= current && max <= 99) return current;
+  }
+
+  return firstNumericValueInRange({ text }, { min: 0, max: 999 });
+}
+
 function findIdeaCandidate(frame, { campaignId } = {}) {
   if (campaignId !== "is5_sarkaz") return null;
-  return findBestRegionNumberCandidate(frame, { field: "idea", label: "構想", regionIdPattern: /^run\.idea$/, min: 0, max: 999, prefer: "first" });
+  const candidates = asTextResults(frame)
+    .filter((item) => /^run\.idea$/.test(String(item.regionId || "")))
+    .map((item) => {
+      const value = ideaCurrentValueFromText(item.text);
+      if (!Number.isFinite(value) || value < 0 || value > 999) return null;
+      return { value, confidence: Number(item.confidence ?? 0.7) };
+    })
+    .filter(Boolean)
+    .toSorted((a, b) => b.confidence - a.confidence);
+  const best = candidates[0];
+  return best ? candidateFromNumber({ field: "idea", label: "構想", value: best.value, confidence: Math.min(0.98, Math.max(0.76, best.confidence)) }) : null;
 }
 
 function findLifePointsCandidate(frame) {
@@ -520,8 +561,7 @@ export function extractRunStatusCandidates(frame, { campaignId, squads = [], dif
   const commandLevel = findRegionNumberCandidate(frame, { field: "commandLevel", label: "指揮Lv", regionIdPart: "command_level", min: 1, max: 99, confidence: 0.75, prefer: "first", allowRoman: true })
     || findCommandLevelFromStatusRoi(frame)
     || findCommandLevelCandidate(compactText, frame);
-  const hasTopResourceCandidate = Boolean(findTopHopeCandidate(frame) || findTopIngotCandidate(frame));
-  const resourceCandidates = hasTopResourceCandidate ? [] : findResourceNumberCandidates(frame);
+  const resourceCandidates = findResourceNumberCandidates(frame);
   const runResourceCandidates = resourceCandidates.length === 3
     ? resourceCandidates
     : [...findHopeCandidates(frame), findIngotCandidate(frame)].filter(Boolean);

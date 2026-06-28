@@ -160,9 +160,14 @@ test("run status extractor reads Sarkaz idea count from the bottom conception co
 test("run status extractor reads IS5 top-bar resources and bottom conception count", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
-      { text: "0", regionId: "run.top_ingot", confidence: 0.99 },
-      { text: "7", regionId: "run.top_hope", confidence: 0.99 },
-      { text: "7", regionId: "run.top_ingot.wide", confidence: 0.99 },
+      { text: "3 <8 20", regionId: "run.resource_numbers", confidence: 0.91 },
+      { text: "3 <8", regionId: "run.hope", confidence: 0.95 },
+      { text: "3", regionId: "run.hope.current", confidence: 0.99 },
+      { text: "8", regionId: "run.hope.max", confidence: 0.99 },
+      { text: "20", regionId: "run.ingot", confidence: 0.99 },
+      { text: "3", regionId: "run.top_ingot", confidence: 0.99 },
+      { text: "8", regionId: "run.top_hope", confidence: 0.99 },
+      { text: "8", regionId: "run.top_ingot.wide", confidence: 0.99 },
       { text: "22", regionId: "run.top_idea", confidence: 0.7 },
       { text: "20", regionId: "run.top_idea", confidence: 0.99 },
       { text: "9", regionId: "run.idea", confidence: 0.76 },
@@ -172,9 +177,10 @@ test("run status extractor reads IS5 top-bar resources and bottom conception cou
     ],
   }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
 
-  assert.deepEqual(candidates.filter((item) => ["hope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
-    ["hope", 7],
-    ["ingot", 0],
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 3],
+    ["maxHope", 8],
+    ["ingot", 20],
     ["idea", 9],
   ]);
 });
@@ -193,6 +199,21 @@ test("run status extractor reads current conception from bottom fraction OCR", (
 
   const idea = candidates.find((item) => item.field === "idea");
   assert.equal(idea.value, 0);
+});
+
+test("run status extractor reads compact conception fractions as the current value", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "35", regionId: "run.idea", confidence: 0.99 },
+      { text: "思 考 負 荷", regionId: "run.idea", confidence: 0.7 },
+      { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  const idea = candidates.find((item) => item.field === "idea");
+  assert.equal(idea.value, 3);
 });
 
 test("run status extractor switches to wide top-bar resource ROIs when the compact ingot crop is blank", () => {
@@ -217,7 +238,7 @@ test("run status extractor switches to wide top-bar resource ROIs when the compa
   assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
     ["hope", 0],
     ["maxHope", 6],
-    ["ingot", 6],
+    ["ingot", 14],
     ["idea", 2],
   ]);
 });
