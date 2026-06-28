@@ -3,9 +3,13 @@ import assert from "node:assert/strict";
 
 import {
   adbConnectionPresetOptions,
+  adbDefaultSerialsByPreset,
+  buildAdbSerialCandidates,
+  buildBlueStacksConfigPathCandidates,
   buildAdbCandidatePaths,
   normalizeAdbSettings,
   parseAdbDevices,
+  parseBlueStacksConfigAdbPorts,
   resolveAdbRuntimeSettings,
   normalizeAdbPathKey,
 } from "../app/domain/adb-settings.js";
@@ -31,6 +35,8 @@ test("normalizeAdbSettings keeps GUI connection settings conservative", () => {
     screenshotExtension: false,
     restartServerOnFailure: false,
     restartProcessOnFailure: true,
+    reconnectAttempts: 5,
+    reconnectDelayMs: 1000,
     closeAdbOnExit: false,
     lightweightAdb: false,
   });
@@ -57,6 +63,8 @@ test("resolveAdbRuntimeSettings falls back to environment and then adb", () => {
     connectionPreset: "auto",
     restartServerOnFailure: true,
     restartProcessOnFailure: true,
+    reconnectAttempts: 5,
+    reconnectDelayMs: 1000,
   });
   assert.deepEqual(resolveAdbRuntimeSettings({}, {}), {
     adbPath: "adb",
@@ -65,6 +73,8 @@ test("resolveAdbRuntimeSettings falls back to environment and then adb", () => {
     connectionPreset: "auto",
     restartServerOnFailure: true,
     restartProcessOnFailure: true,
+    reconnectAttempts: 5,
+    reconnectDelayMs: 1000,
   });
 });
 
@@ -98,6 +108,8 @@ test("adbConnectionPresetOptions exposes auto, MuMu, and manual choices", () => 
     "mumu",
     "ldplayer",
     "bluestacks",
+    "nox",
+    "xyaz",
     "tencent",
     "google-play-games-dev",
     "avd",
@@ -151,4 +163,56 @@ test("buildAdbCandidatePaths includes Android SDK and Tencent ADB locations", ()
   assert.equal(candidates.some((item) => item.path === "C:/Users/test/AppData/Local\\Android\\Sdk\\platform-tools\\adb.exe" && item.preset === "google-play-games-dev"), true);
   assert.equal(candidates.some((item) => item.path === "D:/Android/Sdk\\platform-tools\\adb.exe" && item.preset === "avd"), true);
   assert.equal(candidates.some((item) => item.path === "C:/Program Files\\Tencent\\Androws\\Application\\adb.exe" && item.preset === "tencent"), true);
+});
+
+test("MAA-style default serials cover supported emulator presets", () => {
+  assert.deepEqual(adbDefaultSerialsByPreset.mumu.slice(0, 3), ["127.0.0.1:16384", "127.0.0.1:16416", "127.0.0.1:16448"]);
+  assert.equal(adbDefaultSerialsByPreset.bluestacks.includes("127.0.0.1:5555"), true);
+  assert.equal(adbDefaultSerialsByPreset.ldplayer.includes("emulator-5554"), true);
+  assert.deepEqual(adbDefaultSerialsByPreset.nox, ["127.0.0.1:62001", "127.0.0.1:59865"]);
+  assert.deepEqual(adbDefaultSerialsByPreset.xyaz, ["127.0.0.1:21503"]);
+  assert.deepEqual(adbDefaultSerialsByPreset.wsa, ["127.0.0.1:58526"]);
+});
+
+test("buildAdbSerialCandidates keeps explicit serial first and adds BlueStacks config ports", () => {
+  const serials = buildAdbSerialCandidates(
+    { connectionPreset: "bluestacks", serial: "127.0.0.1:6000" },
+    { blueStacksPorts: ["127.0.0.1:5599", "127.0.0.1:5555"] },
+  );
+
+  assert.deepEqual(serials.slice(0, 4), ["127.0.0.1:6000", "127.0.0.1:5599", "127.0.0.1:5555", "127.0.0.1:5556"]);
+  assert.equal(new Set(serials).size, serials.length);
+});
+
+test("parseBlueStacksConfigAdbPorts reads Hyper-V dynamic port keys", () => {
+  const ports = parseBlueStacksConfigAdbPorts(`
+bst.instance.Nougat64.status.adb_port="5585"
+bst.instance.Pie64_2.status.adb_port=5595
+bst.instance.Pie64_2.status.adb_port=5595
+unrelated=1
+`);
+
+  assert.deepEqual(ports, ["127.0.0.1:5585", "127.0.0.1:5595"]);
+});
+
+test("buildBlueStacksConfigPathCandidates includes env override and common MAA paths", () => {
+  assert.deepEqual(buildBlueStacksConfigPathCandidates({
+    ProgramData: "D:/ProgramData",
+    ARKNIGHTS_BLUESTACKS_CONFIG_PATH: "E:/bs/bluestacks.conf",
+  }), [
+    "E:/bs/bluestacks.conf",
+    "D:/ProgramData\\BlueStacks_nxt\\bluestacks.conf",
+    "D:/ProgramData\\BlueStacks_nxt_cn\\bluestacks.conf",
+  ]);
+});
+
+test("buildAdbCandidatePaths includes MAA-style Nox, MEmu, and BlueStacks relative adb paths", () => {
+  const candidates = buildAdbCandidatePaths({
+    env: { ProgramFiles: "C:/Program Files" },
+    driveLetters: [],
+  });
+
+  assert.equal(candidates.some((item) => item.path === "C:/Program Files\\BlueStacks_nxt\\Engine\\ProgramFiles\\HD-Adb.exe" && item.preset === "bluestacks"), true);
+  assert.equal(candidates.some((item) => item.path === "C:/Program Files\\Nox\\bin\\nox_adb.exe" && item.preset === "nox"), true);
+  assert.equal(candidates.some((item) => item.path === "C:/Program Files\\Microvirt\\MEmu\\adb.exe" && item.preset === "xyaz"), true);
 });

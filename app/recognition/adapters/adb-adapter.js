@@ -1,7 +1,16 @@
 import { execFile } from "node:child_process";
 import fsSync from "node:fs";
 import fs from "node:fs/promises";
-import { buildAdbCandidatePaths, normalizeAdbPathKey, normalizeAdbSettings, parseAdbDevices, resolveAdbRuntimeSettings } from "../../domain/adb-settings.js";
+import {
+  buildAdbCandidatePaths,
+  buildAdbSerialCandidates,
+  buildBlueStacksConfigPathCandidates,
+  normalizeAdbPathKey,
+  normalizeAdbSettings,
+  parseAdbDevices,
+  parseBlueStacksConfigAdbPorts,
+  resolveAdbRuntimeSettings,
+} from "../../domain/adb-settings.js";
 import { randomizeAction } from "../../domain/recognition/geometry.js";
 
 function adbArgs(serial, args) {
@@ -97,20 +106,86 @@ async function restartAdbServer(adbPath, runCommand) {
   await runCommand(adbPath, ["start-server"]).catch(() => null);
 }
 
-async function ensureTcpAdbConnection(adbPath, runtime, runCommand) {
-  const address = String(runtime.serial || "").trim();
+async function sleep(ms) {
+  if (!ms) return;
+  await new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function ensureTcpAdbConnection(adbPath, runtime, runCommand, address) {
+  address = String(address || runtime.serial || "").trim();
   if (!isTcpAdbSerial(address)) return null;
-  try {
-    const output = await runCommand(adbPath, ["connect", address]);
-    return { address, output: String(output || "").trim(), recovered: false };
-  } catch (error) {
-    if (!runtime.restartProcessOnFailure && !runtime.restartServerOnFailure) {
-      return { address, output: null, error: error?.message || String(error), recovered: false };
+  const attempts = Math.max(1, runtime.reconnectAttempts || 1);
+  let lastError = null;
+  for (let index = 0; index < attempts; index += 1) {
+    try {
+      const output = await runCommand(adbPath, ["connect", address]);
+      return { address, output: String(output || "").trim(), recovered: index > 0, attempts: index + 1 };
+    } catch (error) {
+      lastError = error;
+      if (!runtime.restartProcessOnFailure && !runtime.restartServerOnFailure) break;
+      await restartAdbServer(adbPath, runCommand);
+      await sleep(runtime.reconnectDelayMs);
     }
-    await restartAdbServer(adbPath, runCommand);
-    const output = await runCommand(adbPath, ["connect", address]);
-    return { address, output: String(output || "").trim(), recovered: true };
   }
+  return { address, output: null, error: lastError?.message || String(lastError), recovered: false, attempts };
+}
+
+async function readBlueStacksConfigPorts({ settings, env, readFile = fs.readFile } = {}) {
+  if (normalizeAdbSettings(settings).connectionPreset !== "bluestacks") return [];
+  const ports = [];
+  const seen = new Set();
+  for (const file of buildBlueStacksConfigPathCandidates(env)) {
+    try {
+      const text = await readFile(file, "utf8");
+      for (const serial of parseBlueStacksConfigAdbPorts(text)) {
+        if (seen.has(serial)) continue;
+        seen.add(serial);
+        ports.push(serial);
+      }
+    } catch {
+      // Missing BlueStacks config files are normal when that emulator is not installed.
+    }
+  }
+  return ports;
+}
+
+function selectDetectedSerial(devices, serialCandidates) {
+  const usable = devices.filter((item) => item.state === "device");
+  if (!usable.length) return "";
+  const candidates = new Set(serialCandidates.map((item) => item.toLowerCase()));
+  return usable.find((item) => candidates.has(item.serial.toLowerCase()))?.serial || (usable.length === 1 ? usable[0].serial : "");
+}
+
+function isPngBytes(bytes) {
+  return Buffer.isBuffer(bytes)
+    && bytes.length >= 8
+    && bytes[0] === 0x89
+    && bytes[1] === 0x50
+    && bytes[2] === 0x4e
+    && bytes[3] === 0x47
+    && bytes[4] === 0x0d
+    && bytes[5] === 0x0a
+    && bytes[6] === 0x1a
+    && bytes[7] === 0x0a;
+}
+
+export function normalizeAdbScreenshotBytes(bytes) {
+  const buffer = Buffer.from(bytes || []);
+  if (isPngBytes(buffer)) return buffer;
+  const output = [];
+  for (let index = 0; index < buffer.length; index += 1) {
+    if (buffer[index] === 0x0d && buffer[index + 1] === 0x0d && buffer[index + 2] === 0x0a) {
+      output.push(0x0d, 0x0a);
+      index += 2;
+    } else if (buffer[index] === 0x0d && buffer[index + 1] === 0x0a) {
+      output.push(0x0a);
+      index += 1;
+    } else {
+      output.push(buffer[index]);
+    }
+  }
+  const repaired = Buffer.from(output);
+  return isPngBytes(repaired) ? repaired : buffer;
 }
 
 async function defaultFileExists(file) {
@@ -168,9 +243,19 @@ function sortAdbCandidates(candidates, normalized, runtime) {
   return [...candidates].sort((a, b) => adbCandidateScore(a, normalized, runtime) - adbCandidateScore(b, normalized, runtime) || String(a.path).localeCompare(String(b.path)));
 }
 
-export async function detectAdbConnections({ settings = {}, env = process.env, candidatePaths = null, driveLetters = defaultDriveLetters(), fileExists = defaultFileExists, runCommand = execAdbCommand } = {}) {
+export async function detectAdbConnections({
+  settings = {},
+  env = process.env,
+  candidatePaths = null,
+  driveLetters = defaultDriveLetters(),
+  fileExists = defaultFileExists,
+  runCommand = execAdbCommand,
+  readFile = fs.readFile,
+} = {}) {
   const normalized = normalizeAdbSettings(settings);
   const runtime = resolveAdbRuntimeSettings(normalized, env);
+  const blueStacksPorts = await readBlueStacksConfigPorts({ settings: normalized, env, readFile });
+  const serialCandidates = buildAdbSerialCandidates(normalized, { blueStacksPorts });
   const candidates = mergeCandidatePaths(normalized, env, candidatePaths, driveLetters);
   const adbCandidates = [];
 
@@ -192,18 +277,25 @@ export async function detectAdbConnections({ settings = {}, env = process.env, c
   const selected = orderedCandidates.find((item) => item.available) || null;
   const selectedPathKey = normalizeAdbPathKey(selected?.path || "");
   let devices = [];
+  let connect = null;
   if (selected) {
     try {
-      var connect = await ensureTcpAdbConnection(selected.path, runtime, runCommand);
+      const tcpCandidates = serialCandidates.filter(isTcpAdbSerial);
+      for (const address of tcpCandidates) {
+        const result = await ensureTcpAdbConnection(selected.path, runtime, runCommand, address);
+        if (!connect || !connect.output || result?.output) connect = result;
+        if (result && !result.error) break;
+      }
       devices = parseAdbDevices(await runCommand(selected.path, ["devices", "-l"]));
     } catch {
       devices = [];
     }
   }
+  const detectedSerial = runtime.serial || selectDetectedSerial(devices, serialCandidates);
 
   return {
     settings: normalized,
-    runtime: { ...runtime, adbPath: selected?.path || runtime.adbPath },
+    runtime: { ...runtime, adbPath: selected?.path || runtime.adbPath, serial: detectedSerial },
     selectedAdbPath: selected?.path || runtime.adbPath,
     adbCandidates: orderedCandidates.map((item) => ({ ...item, selected: normalizeAdbPathKey(item.path) === selectedPathKey })),
     devices,
@@ -248,15 +340,22 @@ export function createAdbAdapter({ adbPath = null, serial = null, settings = {},
     return true;
   }
   async function run(args, { encoding = "utf8" } = {}) {
-    try {
-      return await rawRun(args, { encoding });
-    } catch (error) {
-      const code = error?.details?.code;
-      if (!["adb_no_device", "adb_device_offline", "adb_command_failed"].includes(code)) throw error;
-      const recovered = await recoverConnection();
-      if (!recovered) throw error;
-      return rawRun(args, { encoding });
+    const attempts = Math.max(1, runtime.reconnectAttempts || 1);
+    let lastError = null;
+    for (let index = 0; index < attempts; index += 1) {
+      try {
+        return await rawRun(args, { encoding });
+      } catch (error) {
+        lastError = error;
+        if (index >= attempts - 1) break;
+        const code = error?.details?.code;
+        if (!["adb_no_device", "adb_device_offline", "adb_command_failed"].includes(code)) throw error;
+        const recovered = await recoverConnection();
+        if (!recovered) throw error;
+        await sleep(runtime.reconnectDelayMs);
+      }
     }
+    throw lastError;
   }
 
   return {
@@ -271,7 +370,10 @@ export function createAdbAdapter({ adbPath = null, serial = null, settings = {},
       return parseAdbDisplayResolution({ windowDisplaysOutput, wmSizeOutput });
     },
     async capture(meta = {}) {
-      const bytes = await run(["exec-out", "screencap", "-p"], { encoding: "buffer" });
+      let bytes = normalizeAdbScreenshotBytes(await run(["exec-out", "screencap", "-p"], { encoding: "buffer" }));
+      if (!isPngBytes(bytes)) {
+        bytes = normalizeAdbScreenshotBytes(await run(["shell", "screencap", "-p"], { encoding: "buffer" }));
+      }
       return { bytes, capturedAt: new Date().toISOString(), ...meta };
     },
     async tap(point, options = {}) {

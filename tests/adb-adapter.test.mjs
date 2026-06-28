@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { adbExecOptions, createAdbAdapter, detectAdbConnections, parseAdbDisplayResolution } from "../app/recognition/adapters/adb-adapter.js";
+import { adbExecOptions, createAdbAdapter, detectAdbConnections, normalizeAdbScreenshotBytes, parseAdbDisplayResolution } from "../app/recognition/adapters/adb-adapter.js";
 
 test("parseAdbDisplayResolution prefers active app bounds over portrait wm size", () => {
   const resolution = parseAdbDisplayResolution({
@@ -73,11 +73,60 @@ test("detectAdbConnections connects configured TCP serials before listing device
   assert.deepEqual(calls.map(([, args]) => args[0]), ["version", "connect", "devices"]);
 });
 
+test("detectAdbConnections tries MAA-style default serials for selected preset", async () => {
+  const calls = [];
+  const result = await detectAdbConnections({
+    settings: { connectionPreset: "nox", reconnectDelayMs: 0 },
+    env: {},
+    candidatePaths: [{ path: "C:/Nox/bin/nox_adb.exe", source: "known-path", preset: "nox" }],
+    fileExists: async () => true,
+    runCommand: async (_adbPath, args) => {
+      calls.push(args);
+      if (args[0] === "version") return "Android Debug Bridge version 1.0.41";
+      if (args[0] === "connect") {
+        if (args[1] === "127.0.0.1:62001") throw new Error("failed to connect");
+        return "connected to 127.0.0.1:59865";
+      }
+      if (args[0] === "kill-server" || args[0] === "start-server") return "";
+      if (args[0] === "devices") return "List of devices attached\n127.0.0.1:59865 device product:Nox\n";
+      throw new Error("unexpected command");
+    },
+  });
+
+  assert.equal(result.runtime.serial, "127.0.0.1:59865");
+  assert.equal(result.connect?.address, "127.0.0.1:59865");
+  assert.deepEqual(calls.filter((args) => args[0] === "connect").map((args) => args[1]), ["127.0.0.1:62001", "127.0.0.1:62001", "127.0.0.1:62001", "127.0.0.1:62001", "127.0.0.1:62001", "127.0.0.1:59865"]);
+});
+
+test("detectAdbConnections reads BlueStacks config ports before default ports", async () => {
+  const calls = [];
+  const result = await detectAdbConnections({
+    settings: { connectionPreset: "bluestacks", reconnectDelayMs: 0 },
+    env: { ProgramData: "C:/ProgramData" },
+    candidatePaths: [{ path: "C:/Program Files/BlueStacks_nxt/HD-Adb.exe", source: "known-path", preset: "bluestacks" }],
+    fileExists: async () => true,
+    readFile: async (file) => {
+      if (file.endsWith("BlueStacks_nxt\\bluestacks.conf")) return 'bst.instance.Pie64.status.adb_port="5595"';
+      throw new Error("missing");
+    },
+    runCommand: async (_adbPath, args) => {
+      calls.push(args);
+      if (args[0] === "version") return "Android Debug Bridge version 1.0.41";
+      if (args[0] === "connect") return "connected to 127.0.0.1:5595";
+      if (args[0] === "devices") return "List of devices attached\n127.0.0.1:5595 device product:BlueStacks\n";
+      throw new Error("unexpected command");
+    },
+  });
+
+  assert.equal(result.runtime.serial, "127.0.0.1:5595");
+  assert.equal(calls.find((args) => args[0] === "connect")?.[1], "127.0.0.1:5595");
+});
+
 test("detectAdbConnections restarts adb and retries the first Google Play Games connection", async () => {
   const calls = [];
   let connectCount = 0;
   const result = await detectAdbConnections({
-    settings: { connectionPreset: "google-play-games-dev", serial: "127.0.0.1:6520", restartProcessOnFailure: true },
+    settings: { connectionPreset: "google-play-games-dev", serial: "127.0.0.1:6520", restartProcessOnFailure: true, reconnectDelayMs: 0 },
     env: {},
     candidatePaths: [{ path: "adb", source: "path", preset: "google-play-games-dev" }],
     fileExists: async () => true,
@@ -162,7 +211,7 @@ test("createAdbAdapter retries commands after adb server restart for TCP serials
   const calls = [];
   let wmSizeCount = 0;
   const adapter = createAdbAdapter({
-    settings: { adbPath: "adb", serial: "127.0.0.1:6520", restartProcessOnFailure: true },
+    settings: { adbPath: "adb", serial: "127.0.0.1:6520", restartProcessOnFailure: true, reconnectDelayMs: 0 },
     env: {},
     execFileImpl: (_file, args, _options, callback) => {
       calls.push(args);
@@ -184,4 +233,56 @@ test("createAdbAdapter retries commands after adb server restart for TCP serials
 
   assert.deepEqual(await adapter.getActualResolution(), { width: 2560, height: 1440 });
   assert.deepEqual(calls.map((args) => args[0] === "-s" ? args[2] : args[0]), ["shell", "kill-server", "start-server", "connect", "shell", "shell"]);
+});
+
+test("createAdbAdapter retries adb commands up to the MAA-style reconnect limit", async () => {
+  const calls = [];
+  let wmSizeCount = 0;
+  const adapter = createAdbAdapter({
+    settings: { adbPath: "adb", serial: "127.0.0.1:6520", restartProcessOnFailure: true, reconnectAttempts: 5, reconnectDelayMs: 0 },
+    env: {},
+    execFileImpl: (_file, args, _options, callback) => {
+      calls.push(args);
+      if (args.includes("wm") && args.includes("size")) {
+        wmSizeCount += 1;
+        if (wmSizeCount < 3) {
+          const error = new Error("device offline");
+          callback(error, "", "device offline");
+          return;
+        }
+        callback(null, "Physical size: 1280x720", "");
+        return;
+      }
+      callback(null, "connected", "");
+    },
+  });
+
+  assert.deepEqual(await adapter.getActualResolution(), { width: 1280, height: 720 });
+  assert.equal(calls.filter((args) => args.includes("wm") && args.includes("size")).length, 3);
+});
+
+test("normalizeAdbScreenshotBytes repairs adb shell CRLF-expanded PNG bytes", () => {
+  const expanded = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0d, 0x0a, 0x1a, 0x0d, 0x0a, 0x00]);
+  const repaired = normalizeAdbScreenshotBytes(expanded);
+
+  assert.deepEqual([...repaired.slice(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+});
+
+test("createAdbAdapter falls back to adb shell screencap when exec-out is not a PNG", async () => {
+  const calls = [];
+  const shellPng = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0d, 0x0a, 0x1a, 0x0d, 0x0a, 0x00]);
+  const adapter = createAdbAdapter({
+    settings: { adbPath: "adb", serial: "127.0.0.1:6520" },
+    env: {},
+    execFileImpl: (_file, args, _options, callback) => {
+      calls.push(args);
+      if (args.includes("exec-out")) callback(null, Buffer.from("not png"), "");
+      else if (args.includes("screencap")) callback(null, shellPng, "");
+      else callback(null, "", "");
+    },
+  });
+
+  const result = await adapter.capture();
+  assert.deepEqual(calls.map((args) => args.includes("exec-out") ? "exec-out" : "shell"), ["exec-out", "shell"]);
+  assert.deepEqual([...result.bytes.slice(0, 8)], [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 });
