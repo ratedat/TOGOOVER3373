@@ -489,6 +489,7 @@ function ideaCurrentValueFromText(text, { allowCompact = false } = {}) {
     const current = Number(digits[0]);
     const max = Number(digits[1]);
     if (max >= current) return current;
+    if (allowCompact) return max;
   }
   if (digits.length === 3) {
     const current = Number(digits.slice(0, 1));
@@ -506,16 +507,23 @@ function ideaCurrentValueFromText(text, { allowCompact = false } = {}) {
 
 function findIdeaCandidate(frame, { campaignId } = {}) {
   if (campaignId !== "is5_sarkaz") return null;
-  const current = findBestRegionNumberCandidate(frame, {
-    field: "idea",
-    label: "構想",
-    regionIdPattern: /^run\.idea\.current$/,
-    min: 0,
-    max: 999,
-    confidence: 0.86,
-    prefer: "first",
-  });
-  if (current) return current;
+  const currentCandidates = asTextResults(frame)
+    .filter((item) => /^run\.idea\.current$/.test(String(item.regionId || "")))
+    .map((item) => {
+      const value = ideaCurrentValueFromText(item.text, { allowCompact: true });
+      if (!Number.isFinite(value) || value < 0 || value > 999) return null;
+      return { value, confidence: Number(item.confidence ?? 0.86) };
+    })
+    .filter(Boolean)
+    .toSorted((a, b) => b.confidence - a.confidence);
+  if (currentCandidates[0]) {
+    return candidateFromNumber({
+      field: "idea",
+      label: "構想",
+      value: currentCandidates[0].value,
+      confidence: Math.min(0.98, Math.max(0.86, currentCandidates[0].confidence)),
+    });
+  }
 
   const candidates = asTextResults(frame)
     .filter((item) => /^run\.idea$/.test(String(item.regionId || "")))

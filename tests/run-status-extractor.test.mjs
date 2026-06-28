@@ -217,6 +217,23 @@ test("run status extractor prefers the narrow conception current ROI over compac
   assert.equal(idea.value, 1);
 });
 
+test("run status extractor handles reversed compact OCR from the narrow conception current ROI", () => {
+  for (const text of ["51", "15"]) {
+    const candidates = extractRunStatusCandidates({
+      ocrResults: [
+        { text, regionId: "run.idea.current", confidence: 0.99 },
+        { text: "35", regionId: "run.idea", confidence: 0.99 },
+        { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+        { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+        { text: "18", regionId: "run.difficulty_grade" },
+      ],
+    }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+    const idea = candidates.find((item) => item.field === "idea");
+    assert.equal(idea.value, 1);
+  }
+});
+
 test("run status extractor ignores compact wide conception OCR without a separator", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
