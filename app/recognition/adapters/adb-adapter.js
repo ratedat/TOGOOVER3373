@@ -210,10 +210,19 @@ function mergeCandidatePaths(settings, env, candidatePaths, driveLetters) {
     ...buildAdbCandidatePaths({ env, driveLetters }),
   ];
   const seen = new Set();
+  const byKey = new Map();
   return raw.filter((candidate) => {
     const key = normalizeAdbPathKey(candidate?.path || "");
-    if (!key || seen.has(key)) return false;
+    if (!key) return false;
+    if (seen.has(key)) {
+      const existing = byKey.get(key);
+      if (existing && ["auto", "custom"].includes(existing.preset) && candidate.preset && !["auto", "custom"].includes(candidate.preset)) {
+        existing.preset = candidate.preset;
+      }
+      return false;
+    }
     seen.add(key);
+    byKey.set(key, candidate);
     return true;
   });
 }
@@ -276,11 +285,18 @@ export async function detectAdbConnections({
   const orderedCandidates = sortAdbCandidates(adbCandidates, normalized, runtime);
   const selected = orderedCandidates.find((item) => item.available) || null;
   const selectedPathKey = normalizeAdbPathKey(selected?.path || "");
+  const effectiveSettings = normalized.connectionPreset === "auto" && selected?.preset && !["auto", "custom"].includes(selected.preset)
+    ? normalizeAdbSettings({ ...normalized, connectionPreset: selected.preset })
+    : normalized;
+  const effectiveBlueStacksPorts = effectiveSettings.connectionPreset === normalized.connectionPreset
+    ? blueStacksPorts
+    : await readBlueStacksConfigPorts({ settings: effectiveSettings, env, readFile });
+  const effectiveSerialCandidates = buildAdbSerialCandidates(effectiveSettings, { blueStacksPorts: effectiveBlueStacksPorts });
   let devices = [];
   let connect = null;
   if (selected) {
     try {
-      const tcpCandidates = serialCandidates.filter(isTcpAdbSerial);
+      const tcpCandidates = effectiveSerialCandidates.filter(isTcpAdbSerial);
       for (const address of tcpCandidates) {
         const result = await ensureTcpAdbConnection(selected.path, runtime, runCommand, address);
         if (!connect || !connect.output || result?.output) connect = result;
@@ -291,7 +307,7 @@ export async function detectAdbConnections({
       devices = [];
     }
   }
-  const detectedSerial = runtime.serial || selectDetectedSerial(devices, serialCandidates);
+  const detectedSerial = runtime.serial || selectDetectedSerial(devices, effectiveSerialCandidates);
 
   return {
     settings: normalized,

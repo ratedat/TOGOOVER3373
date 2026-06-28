@@ -74,8 +74,13 @@ test("external trigger routes map to full scan profiles and return aborted scans
   }
 });
 test("default recognition runner reports missing adb as service unavailable", async () => {
-  const previousAdbPath = process.env.ARKNIGHTS_ADB_PATH;
-  process.env.ARKNIGHTS_ADB_PATH = "definitely-missing-adb-for-test";
+  const currentStateFile = new URL("../data/current-state.json", import.meta.url);
+  const previousState = await fs.readFile(currentStateFile, "utf8").catch(() => null);
+  await fs.writeFile(currentStateFile, JSON.stringify({
+    version: 1,
+    run: { campaignId: "is5_sarkaz" },
+    adb: { autoDetect: false, adbPath: "definitely-missing-adb-for-test", serial: "" },
+  }, null, 2), "utf8");
   const recognitionLogDir = await tempRecognitionLogDir();
   const { server, port } = await startServer({ port: 0, recognitionLogDir });
   try {
@@ -91,8 +96,8 @@ test("default recognition runner reports missing adb as service unavailable", as
     assert.equal(payload.details.code, "adb_not_found");
   } finally {
     await closeServer(server);
-    if (previousAdbPath == null) delete process.env.ARKNIGHTS_ADB_PATH;
-    else process.env.ARKNIGHTS_ADB_PATH = previousAdbPath;
+    if (previousState == null) await fs.rm(currentStateFile, { force: true });
+    else await fs.writeFile(currentStateFile, previousState, "utf8");
   }
 });
 

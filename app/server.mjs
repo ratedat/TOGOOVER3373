@@ -197,6 +197,17 @@ function httpError(status, message, details = {}) {
   return Object.assign(new Error(message), { status, details });
 }
 
+async function resolveRecognitionAdbSettings(settings) {
+  const normalized = normalizeAdbSettings(settings);
+  if (!normalized.autoDetect) return normalized;
+  const detected = await detectAdbConnections({ settings: normalized });
+  return normalizeAdbSettings({
+    ...normalized,
+    adbPath: detected.runtime?.adbPath || normalized.adbPath,
+    serial: detected.runtime?.serial || normalized.serial,
+  });
+}
+
 async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog, onCaptureFrame = null } = {}) {
   if (source !== "adb") throw httpError(400, `unsupported recognition source: ${source}`);
   const [profiles, tasks, state, master, operatorOcrMap] = await Promise.all([
@@ -231,9 +242,17 @@ async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog
     difficulty: state.run?.difficulty,
     difficultyGrades: master.difficultyGrades,
   });
+  const adbSettings = await resolveRecognitionAdbSettings(state.adb);
+  onLog?.({
+    event: "adb-resolve",
+    adbPath: adbSettings.adbPath || "adb",
+    serial: adbSettings.serial || null,
+    autoDetect: adbSettings.autoDetect,
+    connectionPreset: adbSettings.connectionPreset,
+  });
   return runScanProfile({
     profile,
-    adapter: createAdbAdapter({ settings: state.adb, workDir: ADB_WORK_DIR }),
+    adapter: createAdbAdapter({ settings: adbSettings, workDir: ADB_WORK_DIR }),
     recognizer: createMaaStyleRecognizer({
       tasks,
       textExtractor: createProfileAwareOcrTextExtractor({

@@ -165,7 +165,7 @@ test("detectAdbConnections reports unavailable candidates without failing the wh
 
 test("detectAdbConnections prefers an available MuMu candidate over an earlier BlueStacks candidate", async () => {
   const result = await detectAdbConnections({
-    settings: { connectionPreset: "auto" },
+    settings: { connectionPreset: "auto", reconnectDelayMs: 0 },
     env: {},
     candidatePaths: [
       { path: "C:/Program Files/BlueStacks_nxt/HD-Adb.exe", source: "known-path", preset: "bluestacks" },
@@ -174,6 +174,7 @@ test("detectAdbConnections prefers an available MuMu candidate over an earlier B
     fileExists: async () => true,
     runCommand: async (adbPath, args) => {
       if (args[0] === "version") return "Android Debug Bridge version 1.0.41";
+      if (args[0] === "connect") return `connected to ${args[1]}`;
       if (args[0] === "devices") return `List of devices attached\n127.0.0.1:16384 device product:MuMu model:MuMu_Player path:${adbPath}\n`;
       throw new Error("unexpected command");
     },
@@ -182,6 +183,34 @@ test("detectAdbConnections prefers an available MuMu candidate over an earlier B
   assert.equal(result.selectedAdbPath, "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe");
   assert.equal(result.adbCandidates[0].preset, "mumu");
   assert.equal(result.adbCandidates[0].selected, true);
+});
+
+test("detectAdbConnections resolves a selected MuMu adb path to a MuMu serial while preset is auto", async () => {
+  const result = await detectAdbConnections({
+    settings: { connectionPreset: "auto", adbPath: "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe" },
+    env: {},
+    candidatePaths: [
+      { path: "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe", source: "settings", preset: "auto" },
+      { path: "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe", source: "known-path", preset: "mumu" },
+    ],
+    fileExists: async () => true,
+    runCommand: async (_adbPath, args) => {
+      if (args[0] === "version") return "Android Debug Bridge version 1.0.41";
+      if (args[0] === "connect") return `connected to ${args[1]}`;
+      if (args[0] === "devices") {
+        return [
+          "List of devices attached",
+          "emulator-5554 device product:Android model:AVD",
+          "127.0.0.1:16384 device product:MuMu model:MuMu_Player",
+        ].join("\n");
+      }
+      throw new Error("unexpected command");
+    },
+  });
+
+  assert.equal(result.selectedAdbPath, "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe");
+  assert.equal(result.adbCandidates[0].preset, "mumu");
+  assert.equal(result.runtime.serial, "127.0.0.1:16384");
 });
 
 
