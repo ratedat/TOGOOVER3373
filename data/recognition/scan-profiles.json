@@ -92,6 +92,30 @@
         "operator.name.left.4",
         "operator.name.right.4"
       ],
+      "templateOcrRegions": [
+        {
+          "idPrefix": "operator.recruit.name",
+          "templatePath": "third_party/maa/resource/template/Roguelike/base/RoguelikeRecruitOcrFlag.png",
+          "searchRoi": {
+            "x": 525,
+            "y": 110,
+            "width": 640,
+            "height": 500
+          },
+          "ocrOffset": {
+            "x": 0,
+            "y": 22,
+            "width": 240,
+            "height": 30
+          },
+          "threshold": 0.86,
+          "maxMatches": 8,
+          "step": 4,
+          "sampleStride": 8,
+          "scale": 4,
+          "suppressStaticRegionIdPattern": "^operator\\.name\\."
+        }
+      ],
       "baseResolution": {
         "width": 1280,
         "height": 720

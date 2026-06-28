@@ -184,6 +184,10 @@ test("operators full scan sweeps the operator card frame horizontally both ways"
   assert.equal(profile.ocrRegionIds.length, 8);
   assert.ok(profile.ocrRegionIds.every((id) => id.startsWith("operator.name.")));
   assert.equal(profile.ocrRegionIds.includes("operator.list_text"), false);
+  assert.equal(profile.templateOcrRegions.length, 1);
+  assert.equal(profile.templateOcrRegions[0].templatePath, "third_party/maa/resource/template/Roguelike/base/RoguelikeRecruitOcrFlag.png");
+  assert.deepEqual(profile.templateOcrRegions[0].searchRoi, { x: 525, y: 110, width: 640, height: 500 });
+  assert.deepEqual(profile.templateOcrRegions[0].ocrOffset, { x: 0, y: 22, width: 240, height: 30 });
   assert.equal(profile.scrollPasses.length, 2);
   assert.deepEqual(profile.scrollPasses.map((pass) => pass.direction), ["right", "left"]);
 

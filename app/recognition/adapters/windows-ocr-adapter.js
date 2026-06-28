@@ -12,6 +12,199 @@ $ProgressPreference = "SilentlyContinue"
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 Add-Type -AssemblyName System.Runtime.WindowsRuntime
 Add-Type -AssemblyName System.Drawing
+if ($env:ARK_OCR_TEMPLATE_REGIONS_JSON -and $env:ARK_OCR_TEMPLATE_REGIONS_JSON -ne "[]") {
+$rhodesTemplateMatcherSource = @"
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.Drawing.Drawing2D;
+using System.Drawing.Imaging;
+using System.Runtime.InteropServices;
+
+public class RhodesTemplateMatch
+{
+    public int X;
+    public int Y;
+    public int Width;
+    public int Height;
+    public double Score;
+}
+
+public static class RhodesTemplateMatcher
+{
+    private static Bitmap ToArgb(Bitmap source)
+    {
+        Bitmap bitmap = new Bitmap(source.Width, source.Height, PixelFormat.Format32bppArgb);
+        using (Graphics graphics = Graphics.FromImage(bitmap))
+        {
+            graphics.DrawImage(source, 0, 0, source.Width, source.Height);
+        }
+        return bitmap;
+    }
+
+    private static Bitmap Resize(Bitmap source, int width, int height)
+    {
+        Bitmap resized = new Bitmap(width, height, PixelFormat.Format32bppArgb);
+        using (Graphics graphics = Graphics.FromImage(resized))
+        {
+            graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            graphics.DrawImage(source, new Rectangle(0, 0, width, height));
+        }
+        return resized;
+    }
+
+    private static byte[] Gray(Bitmap source)
+    {
+        using (Bitmap bitmap = ToArgb(source))
+        {
+            Rectangle rect = new Rectangle(0, 0, bitmap.Width, bitmap.Height);
+            BitmapData data = bitmap.LockBits(rect, ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+            try
+            {
+                int byteCount = Math.Abs(data.Stride) * bitmap.Height;
+                byte[] bytes = new byte[byteCount];
+                Marshal.Copy(data.Scan0, bytes, 0, byteCount);
+                byte[] gray = new byte[bitmap.Width * bitmap.Height];
+                for (int y = 0; y < bitmap.Height; y++)
+                {
+                    int row = y * data.Stride;
+                    for (int x = 0; x < bitmap.Width; x++)
+                    {
+                        int offset = row + x * 4;
+                        byte b = bytes[offset];
+                        byte g = bytes[offset + 1];
+                        byte r = bytes[offset + 2];
+                        gray[y * bitmap.Width + x] = (byte)((r * 299 + g * 587 + b * 114) / 1000);
+                    }
+                }
+                return gray;
+            }
+            finally
+            {
+                bitmap.UnlockBits(data);
+            }
+        }
+    }
+
+    public static List<RhodesTemplateMatch> Find(
+        string imagePath,
+        string templatePath,
+        int searchX,
+        int searchY,
+        int searchWidth,
+        int searchHeight,
+        double templateScaleX,
+        double templateScaleY,
+        double threshold,
+        int maxMatches,
+        int step,
+        int sampleStride)
+    {
+        List<RhodesTemplateMatch> raw = new List<RhodesTemplateMatch>();
+        if (String.IsNullOrWhiteSpace(templatePath) || !System.IO.File.Exists(templatePath)) return raw;
+        using (Bitmap image = new Bitmap(imagePath))
+        using (Bitmap templateSource = new Bitmap(templatePath))
+        {
+            int templateWidth = Math.Max(1, (int)Math.Round(templateSource.Width * Math.Max(0.1, templateScaleX)));
+            int templateHeight = Math.Max(1, (int)Math.Round(templateSource.Height * Math.Max(0.1, templateScaleY)));
+            using (Bitmap template = Resize(templateSource, templateWidth, templateHeight))
+            {
+                byte[] imageGray = Gray(image);
+                byte[] templateGray = Gray(template);
+                int stride = Math.Max(1, sampleStride);
+                List<int> sampleXs = new List<int>();
+                List<int> sampleYs = new List<int>();
+                List<double> sampleValues = new List<double>();
+                for (int y = 0; y < templateHeight; y += stride)
+                {
+                    for (int x = 0; x < templateWidth; x += stride)
+                    {
+                        sampleXs.Add(x);
+                        sampleYs.Add(y);
+                        sampleValues.Add(templateGray[y * templateWidth + x]);
+                    }
+                }
+                if (sampleValues.Count < 8) return raw;
+
+                double templateMean = 0;
+                foreach (double value in sampleValues) templateMean += value;
+                templateMean /= sampleValues.Count;
+                double templateDenom = 0;
+                foreach (double value in sampleValues)
+                {
+                    double d = value - templateMean;
+                    templateDenom += d * d;
+                }
+                if (templateDenom <= 0.0001) return raw;
+
+                int startX = Math.Max(0, searchX);
+                int startY = Math.Max(0, searchY);
+                int endX = Math.Min(image.Width - templateWidth, searchX + searchWidth - templateWidth);
+                int endY = Math.Min(image.Height - templateHeight, searchY + searchHeight - templateHeight);
+                int scanStep = Math.Max(1, step);
+                for (int y = startY; y <= endY; y += scanStep)
+                {
+                    for (int x = startX; x <= endX; x += scanStep)
+                    {
+                        double imageMean = 0;
+                        for (int i = 0; i < sampleValues.Count; i++)
+                        {
+                            imageMean += imageGray[(y + sampleYs[i]) * image.Width + (x + sampleXs[i])];
+                        }
+                        imageMean /= sampleValues.Count;
+
+                        double numerator = 0;
+                        double imageDenom = 0;
+                        for (int i = 0; i < sampleValues.Count; i++)
+                        {
+                            double tv = sampleValues[i] - templateMean;
+                            double iv = imageGray[(y + sampleYs[i]) * image.Width + (x + sampleXs[i])] - imageMean;
+                            numerator += tv * iv;
+                            imageDenom += iv * iv;
+                        }
+                        if (imageDenom <= 0.0001) continue;
+                        double score = numerator / Math.Sqrt(templateDenom * imageDenom);
+                        if (score >= threshold)
+                        {
+                            raw.Add(new RhodesTemplateMatch { X = x, Y = y, Width = templateWidth, Height = templateHeight, Score = score });
+                        }
+                    }
+                }
+            }
+        }
+
+        raw.Sort((a, b) => b.Score.CompareTo(a.Score));
+        List<RhodesTemplateMatch> kept = new List<RhodesTemplateMatch>();
+        int limit = Math.Max(1, maxMatches);
+        foreach (RhodesTemplateMatch candidate in raw)
+        {
+            bool overlaps = false;
+            foreach (RhodesTemplateMatch previous in kept)
+            {
+                if (Math.Abs(candidate.X - previous.X) < Math.Max(8, candidate.Width / 2) &&
+                    Math.Abs(candidate.Y - previous.Y) < Math.Max(8, candidate.Height / 2))
+                {
+                    overlaps = true;
+                    break;
+                }
+            }
+            if (overlaps) continue;
+            kept.Add(candidate);
+            if (kept.Count >= limit) break;
+        }
+        kept.Sort((a, b) => a.Y == b.Y ? a.X.CompareTo(b.X) : a.Y.CompareTo(b.Y));
+        return kept;
+    }
+}
+"@
+$rhodesTemplateMatcherDll = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "rhodes-template-matcher-v1.dll")
+if (Test-Path -LiteralPath $rhodesTemplateMatcherDll) {
+  Add-Type -Path $rhodesTemplateMatcherDll
+} else {
+  Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition $rhodesTemplateMatcherSource -OutputAssembly $rhodesTemplateMatcherDll -OutputType Library
+  Add-Type -Path $rhodesTemplateMatcherDll
+}
+}
 $null = [Windows.Storage.StorageFile,Windows.Storage,ContentType=WindowsRuntime]
 $null = [Windows.Storage.Streams.IRandomAccessStreamWithContentType,Windows.Storage.Streams,ContentType=WindowsRuntime]
 $null = [Windows.Graphics.Imaging.BitmapDecoder,Windows.Graphics.Imaging,ContentType=WindowsRuntime]
@@ -228,10 +421,76 @@ function New-Crop($Image, $Region, $OutputPath) {
   $crop.Dispose()
 }
 
+function Rect-Map($Rect, [bool]$AllowNegativePosition = $false) {
+  $rawX = [int][double](Get-RegionValue $Rect "x" 0)
+  $rawY = [int][double](Get-RegionValue $Rect "y" 0)
+  @{
+    x = if ($AllowNegativePosition) { $rawX } else { [Math]::Max(0, $rawX) }
+    y = if ($AllowNegativePosition) { $rawY } else { [Math]::Max(0, $rawY) }
+    width = [Math]::Max(1, [int][double](Get-RegionValue $Rect "width" 1))
+    height = [Math]::Max(1, [int][double](Get-RegionValue $Rect "height" 1))
+  }
+}
+
+function New-TemplateOcrRegions($ImagePath, $TemplateConfigs, [ref]$StaticRegions) {
+  $dynamicRegions = @()
+  foreach ($config in @($TemplateConfigs)) {
+    $templatePath = [string](Get-RegionValue $config "templatePath" "")
+    if (-not $templatePath -or -not (Test-Path -LiteralPath $templatePath)) { continue }
+    $search = Rect-Map (Get-RegionValue $config "searchRoi" $null)
+    $offset = Rect-Map (Get-RegionValue $config "ocrOffset" $null) $true
+    $threshold = [double](Get-RegionValue $config "threshold" 0.9)
+    $maxMatches = [int][double](Get-RegionValue $config "maxMatches" 8)
+    $step = [int][double](Get-RegionValue $config "step" 2)
+    $sampleStride = [int][double](Get-RegionValue $config "sampleStride" 4)
+    $templateScaleX = [double](Get-RegionValue $config "templateScaleX" 1)
+    $templateScaleY = [double](Get-RegionValue $config "templateScaleY" 1)
+    $matches = [RhodesTemplateMatcher]::Find(
+      $ImagePath,
+      $templatePath,
+      [int]$search.x,
+      [int]$search.y,
+      [int]$search.width,
+      [int]$search.height,
+      $templateScaleX,
+      $templateScaleY,
+      $threshold,
+      $maxMatches,
+      $step,
+      $sampleStride)
+    if ($matches.Count -eq 0) { continue }
+    $idPrefix = [string](Get-RegionValue $config "idPrefix" "template.region")
+    $ocrScale = [int][double](Get-RegionValue $config "scale" 3)
+    $index = 0
+    foreach ($match in $matches) {
+      $dynamicRegions += @{
+        id = "$idPrefix.$index"
+        x = [int]($match.X + $offset.x)
+        y = [int]($match.Y + $offset.y)
+        width = [int]$offset.width
+        height = [int]$offset.height
+        scale = $ocrScale
+        templateScore = [Math]::Round($match.Score, 4)
+      }
+      $index += 1
+    }
+    $suppressPattern = [string](Get-RegionValue $config "suppressStaticRegionIdPattern" "")
+    if ($suppressPattern) {
+      $StaticRegions.Value = @($StaticRegions.Value | Where-Object {
+        $regionId = [string](Get-RegionValue $_ "id" "")
+        $regionId -notmatch $suppressPattern
+      })
+    }
+  }
+  $dynamicRegions
+}
+
 $imagePath = $env:ARK_OCR_IMAGE
 $regionsJson = if ($env:ARK_OCR_REGIONS_JSON) { $env:ARK_OCR_REGIONS_JSON } else { "[]" }
+$templateRegionsJson = if ($env:ARK_OCR_TEMPLATE_REGIONS_JSON) { $env:ARK_OCR_TEMPLATE_REGIONS_JSON } else { "[]" }
 $includeFullFrame = if ($env:ARK_OCR_INCLUDE_FULL_FRAME) { $env:ARK_OCR_INCLUDE_FULL_FRAME -ne "0" } else { $true }
-$regions = ConvertFrom-Json -InputObject $regionsJson
+$regions = @((ConvertFrom-Json -InputObject $regionsJson))
+$templateRegions = @((ConvertFrom-Json -InputObject $templateRegionsJson))
 $allResults = @()
 $texts = @()
 if ($includeFullFrame) {
@@ -241,6 +500,9 @@ if ($includeFullFrame) {
 }
 $image = [System.Drawing.Bitmap]::FromFile($imagePath)
 try {
+  $regionsRef = [ref]$regions
+  $dynamicRegions = New-TemplateOcrRegions $imagePath $templateRegions $regionsRef
+  $regions = @($dynamicRegions) + @($regionsRef.Value)
   foreach ($region in $regions) {
     $tmp = [System.IO.Path]::Combine([System.IO.Path]::GetTempPath(), "rhodes-ocr-" + [Guid]::NewGuid().ToString("N") + ".png")
     New-Crop $image $region $tmp
@@ -277,7 +539,65 @@ export function shouldIncludeFullFrameOcr(context = {}) {
   return context.profile?.ocrFullFrame !== false;
 }
 
-function runPowerShellOcr({ imagePath, regions = [], includeFullFrame = true, timeoutMs = 30000 }) {
+function rectFrom(value) {
+  if (!value) return null;
+  if (Array.isArray(value)) {
+    const [x, y, width, height] = value.map(Number);
+    if (![x, y, width, height].every(Number.isFinite)) return null;
+    return { x, y, width, height };
+  }
+  const x = Number(value.x);
+  const y = Number(value.y);
+  const width = Number(value.width);
+  const height = Number(value.height);
+  if (![x, y, width, height].every(Number.isFinite)) return null;
+  return { x, y, width, height };
+}
+
+function scaleRect(rect, scaleX, scaleY) {
+  return {
+    x: Math.round(rect.x * scaleX),
+    y: Math.round(rect.y * scaleY),
+    width: Math.round(rect.width * scaleX),
+    height: Math.round(rect.height * scaleY),
+  };
+}
+
+function resolveTemplatePath(templatePath, cwd = process.cwd()) {
+  if (!templatePath) return null;
+  return path.isAbsolute(templatePath) ? templatePath : path.join(cwd, templatePath);
+}
+
+export function resolveWindowsTemplateOcrRegions(context = {}, cwd = process.cwd()) {
+  const configs = Array.isArray(context.profile?.templateOcrRegions) ? context.profile.templateOcrRegions : [];
+  if (!configs.length) return [];
+  const scaleX = Number(context.scale?.scaleX ?? context.scale?.x ?? 1) || 1;
+  const scaleY = Number(context.scale?.scaleY ?? context.scale?.y ?? 1) || 1;
+  return configs
+    .map((config) => {
+      const searchRoi = rectFrom(config.searchRoi || config.roi);
+      const ocrOffset = rectFrom(config.ocrOffset || config.rectMove);
+      const templatePath = resolveTemplatePath(config.templatePath, cwd);
+      if (!searchRoi || !ocrOffset || !templatePath) return null;
+      return {
+        idPrefix: config.idPrefix || "template.region",
+        templatePath,
+        searchRoi: scaleRect(searchRoi, scaleX, scaleY),
+        ocrOffset: scaleRect(ocrOffset, scaleX, scaleY),
+        templateScaleX: scaleX,
+        templateScaleY: scaleY,
+        threshold: Number(config.threshold ?? config.templThreshold ?? 0.9),
+        maxMatches: Math.max(1, Number(config.maxMatches ?? 8)),
+        step: Math.max(1, Number(config.step ?? 2)),
+        sampleStride: Math.max(1, Number(config.sampleStride ?? 4)),
+        scale: Math.max(1, Number(config.scale ?? 3)),
+        suppressStaticRegionIdPattern: config.suppressStaticRegionIdPattern || "",
+      };
+    })
+    .filter(Boolean);
+}
+
+function runPowerShellOcr({ imagePath, regions = [], templateOcrRegions = [], includeFullFrame = true, timeoutMs = 30000 }) {
   return new Promise((resolve, reject) => {
     const dir = fsSync.mkdtempSync(path.join(os.tmpdir(), "rhodes-ocr-script-"));
     const scriptPath = path.join(dir, "ocr.ps1");
@@ -291,6 +611,7 @@ function runPowerShellOcr({ imagePath, regions = [], includeFullFrame = true, ti
         ...process.env,
         ARK_OCR_IMAGE: imagePath,
         ARK_OCR_REGIONS_JSON: JSON.stringify(regions),
+        ARK_OCR_TEMPLATE_REGIONS_JSON: JSON.stringify(templateOcrRegions),
         ARK_OCR_INCLUDE_FULL_FRAME: includeFullFrame ? "1" : "0",
       },
     }, (error, stdout, stderr) => {
@@ -332,12 +653,13 @@ export function createWindowsOcrTextExtractor({ enabled = process.platform === "
     async extract(frame, context = {}) {
       if (!enabled || !Buffer.isBuffer(frame?.bytes)) return frame;
       const regions = Array.isArray(context.regions) ? context.regions : [];
+      const templateOcrRegions = resolveWindowsTemplateOcrRegions(context);
       const includeFullFrame = shouldIncludeFullFrameOcr(context);
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-ocr-"));
       const imagePath = path.join(dir, `${randomUUID()}.png`);
       try {
         await fs.writeFile(imagePath, frame.bytes);
-        const stdout = await runPowerShellOcr({ imagePath, regions, includeFullFrame, timeoutMs });
+        const stdout = await runPowerShellOcr({ imagePath, regions, templateOcrRegions, includeFullFrame, timeoutMs });
         const payload = normalizeWindowsOcrPayload(parseWindowsOcrStdout(stdout));
         return {
           ...frame,

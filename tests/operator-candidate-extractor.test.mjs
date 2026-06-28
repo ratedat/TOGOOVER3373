@@ -12,6 +12,7 @@ const operators = [
   { id: "ines", name: "イネス", rarity: 6, class: "先鋒", branch: "偵察兵" },
   { id: "myrtle", name: "テンニンカ", rarity: 4, class: "先鋒", branch: "旗手" },
   { id: "ray", name: "レイ", rarity: 6, class: "狙撃", branch: "狩人" },
+  { id: "bluepoison", name: "アズリウス", rarity: 5, class: "狙撃", branch: "速射手" },
   { id: "w", name: "W", rarity: 6, class: "狙撃", branch: "榴弾射手" },
   { id: "pozyomka", name: "パゼオンカ", rarity: 6, class: "狙撃", branch: "精密射手" },
   { id: "rangers", name: "レンジャー", rarity: 2, class: "狙撃", branch: "速射手" },
@@ -116,10 +117,12 @@ test("operator candidate extractor maps observed Japanese sniper recruitment OCR
       { text: "ーレンシャー", regionId: "operator.name.right.3", roi: { x: 2290, y: 870, width: 270, height: 92 }, confidence: 0.7 },
       { text: "ープリキッド", regionId: "operator.name.mid.2", roi: { x: 1905, y: 595, width: 420, height: 92 }, confidence: 0.7 },
       { text: "シェユン", regionId: "operator.name.left.4", roi: { x: 1125, y: 1145, width: 390, height: 92 }, confidence: 0.7 },
+      { text: "。 ・ ア ス リ ウ ス", regionId: "operator.recruit.name.0", roi: { x: 1050, y: 310, width: 480, height: 60 }, confidence: 0.7 },
+      { text: "。 ・ ウ イ シ ャ テ ル", regionId: "operator.recruit.name.4", roi: { x: 1880, y: 310, width: 480, height: 60 }, confidence: 0.7 },
     ],
   }, { profile: { id: "operatorsFull" }, region: { x: 700, y: 140, width: 1720, height: 1110 } });
 
-  assert.deepEqual(candidates.map((item) => item.operatorId), ["ray", "brigid", "rangers", "pozyomka", "jieyun"]);
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["bluepoison", "wisadel", "ray", "brigid", "rangers", "pozyomka", "jieyun"]);
   assert.ok(candidates.every((item) => item.source === "local-ocr-drift"));
 });
 
