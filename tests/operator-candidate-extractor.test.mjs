@@ -23,6 +23,7 @@ const operators = [
   { id: "yu", name: "ユー", rarity: 6, class: "重装", branch: "本源衛士" },
   { id: "eunectes", name: "ユーネクテス", rarity: 6, class: "重装", branch: "決闘者" },
   { id: "humus", name: "ヒューマス", rarity: 4, class: "前衛", branch: "鎌撃士" },
+  { id: "executor2", name: "聖約イグゼキュター", rarity: 6, class: "前衛", branch: "鎌撃士" },
 ];
 
 const operatorOcrMap = {
@@ -41,6 +42,7 @@ const operatorOcrMap = {
     { pattern: "(司|霆).*レイズ", maaReplacement: "司霆惊蛰", localMatches: [{ id: "leizi2", name: "司霆レイズ" }] },
     { pattern: "^ユー(?:$|[^ネ])", maaReplacement: "余", localMatches: [{ id: "yu", name: "ユー" }, { id: "eunectes", name: "ユーネクテス" }] },
     { pattern: "ヒューマス", maaReplacement: "休谟斯", localMatches: [{ id: "humus", name: "ヒューマス" }] },
+    { pattern: "(聖|約|抱).*イクゼキュタ", maaReplacement: "圣约送葬人", localMatches: [{ id: "executor2", name: "聖約イグゼキュター" }] },
   ],
   equivalenceClasses: [["ン", "ソ"], ["-", "ー", "一"], ["フ", "ブ", "プ"]],
 };
@@ -166,6 +168,16 @@ test("operator candidate extractor maps normal Leizi when Windows OCR drops the 
   assert.deepEqual(candidates.map((item) => item.operatorId), ["leizi"]);
   assert.equal(candidates[0].name, "レイズ");
   assert.equal(candidates[0].source, "local-ocr-drift");
+});
+
+test("operator candidate extractor maps Executor alter when Windows OCR reads グ as ク", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "聖 約 イ ク ゼ キ ュ タ ー", regionId: "operator.card.name.0", roi: { x: 1331, y: 351, width: 250, height: 32 }, confidence: 0.7 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 700, y: 140, width: 1720, height: 1110 } });
+
+  assert.equal(candidates[0].operatorId, "executor2");
+  assert.equal(candidates[0].name, "聖約イグゼキュター");
 });
 
 test("operator candidate extractor does not turn partial Humus OCR into Yu or Eunectes", async () => {

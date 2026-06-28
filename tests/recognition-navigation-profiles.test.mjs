@@ -17,6 +17,14 @@ const tapLabels = (profile) => (profile.openSteps || []).filter((step) => step.t
 
 const firstTapPoint = (profile) => (profile.openSteps || []).find((step) => step.type === "tap")?.point;
 
+async function pngSize(pathname) {
+  const bytes = await readFile(new URL(`../${pathname}`, import.meta.url));
+  return {
+    width: bytes.readUInt32BE(16),
+    height: bytes.readUInt32BE(20),
+  };
+}
+
 test("ADB scan profiles encode the spoken navigation entry points", async () => {
   const profiles = await profilesById();
 
@@ -80,11 +88,19 @@ test("difficulty grade ROI targets the opened squad panel, not the closed footer
   assert.deepEqual(difficultyRegion.roi, [125, 530, 110, 85]);
 });
 
-test("idea count ROI targets the bottom conception counter, not thought burden", async () => {
+test("run status profile reads conception through the icon template, not thought burden OCR", async () => {
+  const profiles = await profilesById();
   const tasks = await recognitionTasks();
-  const ideaRegion = tasks.ocrRegions.find((region) => region.id === "run.idea");
+  const profile = profiles.get("runStatusFull");
+  const ideaTemplate = profile.templateOcrRegions.find((region) => region.idPrefix === "run.idea.current");
 
-  assert.deepEqual(ideaRegion.roi, [730, 650, 58, 66]);
+  assert.ok(ideaTemplate);
+  assert.equal(ideaTemplate.templatePath, "assets/recognition/templates/run/IdeaIcon.png");
+  assert.deepEqual(ideaTemplate.ocrOffset, { x: -2, y: 35, width: 44, height: 34 });
+  assert.equal(ideaTemplate.numericFallback, true);
+  assert.equal(profile.ocrRegionIds.includes("run.idea"), false);
+  assert.equal(profile.ocrRegionIds.includes("run.idea.current"), false);
+  assert.ok(tasks.ocrRegions.find((region) => region.id === "run.idea"), "legacy fallback ROI remains documented but is not active for runStatusFull");
 });
 
 test("run status top-bar resource ROIs target narrow digit crops", async () => {
@@ -96,6 +112,23 @@ test("run status top-bar resource ROIs target narrow digit crops", async () => {
   assert.deepEqual(rois.get("run.top_ingot.wide"), [965, 13, 38, 38]);
   assert.deepEqual(rois.get("run.top_hope.wide"), [1004, 13, 38, 38]);
   assert.equal(rois.has("run.top_idea"), false);
+});
+
+test("run status profile includes template anchors for map resources", async () => {
+  const profiles = await profilesById();
+  const profile = profiles.get("runStatusFull");
+  const byPrefix = new Map(profile.templateOcrRegions.map((region) => [region.idPrefix + ":" + region.templatePath, region]));
+
+  for (const key of [
+    "run.hope.current:assets/recognition/templates/run/HopeCurrentArrow.png",
+    "run.hope.current:assets/recognition/templates/run/HopeCurrentFullArrow.png",
+    "run.hope.max:assets/recognition/templates/run/HopeMaxArrow.png",
+    "run.ingot:assets/recognition/templates/run/IngotIcon.png",
+    "run.life_points:assets/recognition/templates/run/LifeIcon.png",
+    "run.shield:assets/recognition/templates/run/ShieldIcon.png",
+  ]) {
+    assert.equal(byPrefix.get(key)?.numericFallback, true);
+  }
 });
 
 
@@ -184,10 +217,14 @@ test("operators full scan sweeps the operator card frame horizontally both ways"
   assert.equal(profile.ocrRegionIds.length, 8);
   assert.ok(profile.ocrRegionIds.every((id) => id.startsWith("operator.name.")));
   assert.equal(profile.ocrRegionIds.includes("operator.list_text"), false);
-  assert.equal(profile.templateOcrRegions.length, 1);
-  assert.equal(profile.templateOcrRegions[0].templatePath, "third_party/maa/resource/template/Roguelike/base/RoguelikeRecruitOcrFlag.png");
-  assert.deepEqual(profile.templateOcrRegions[0].searchRoi, { x: 525, y: 110, width: 640, height: 500 });
-  assert.deepEqual(profile.templateOcrRegions[0].ocrOffset, { x: 0, y: 22, width: 240, height: 30 });
+  assert.equal(profile.templateOcrRegions.length, 2);
+  const recruitTemplate = profile.templateOcrRegions.find((region) => region.idPrefix === "operator.recruit.name");
+  const cardTemplate = profile.templateOcrRegions.find((region) => region.idPrefix === "operator.card.name");
+  assert.equal(recruitTemplate.templatePath, "third_party/maa/resource/template/Roguelike/base/RoguelikeRecruitOcrFlag.png");
+  assert.deepEqual(recruitTemplate.searchRoi, { x: 525, y: 110, width: 640, height: 500 });
+  assert.deepEqual(recruitTemplate.ocrOffset, { x: 0, y: 22, width: 240, height: 30 });
+  assert.equal(cardTemplate.templatePath, "assets/recognition/templates/run/OperatorCardCodeNameFlag.png");
+  assert.deepEqual(cardTemplate.ocrOffset, { x: -7, y: -9, width: 188, height: 29 });
   assert.equal(profile.scrollPasses.length, 2);
   assert.deepEqual(profile.scrollPasses.map((pass) => pass.direction), ["right", "left"]);
 
@@ -203,6 +240,20 @@ test("operators full scan sweeps the operator card frame horizontally both ways"
     assert.ok(pass.scroll.startArea.y + pass.scroll.startArea.height <= 610, "operator swipe should avoid the bottom navigation bar");
     assert.ok(pass.scroll.endArea.y + pass.scroll.endArea.height <= 610, "operator swipe should avoid the bottom navigation bar");
   }
+});
+
+test("local run template assets keep the expected 1280x720 crop sizes", async () => {
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/OperatorCardCodeNameFlag.png"), { width: 25, height: 14 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/IdeaIcon.png"), { width: 39, height: 41 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/LifeIcon.png"), { width: 28, height: 51 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/HopeCurrentArrow.png"), { width: 9, height: 27 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/HopeCurrentFullArrow.png"), { width: 19, height: 27 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/HopeMaxArrow.png"), { width: 9, height: 27 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/IngotIcon.png"), { width: 54, height: 27 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/ShieldIcon.png"), { width: 19, height: 28 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/RelicButton.png"), { width: 89, height: 25 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/OperatorButton.png"), { width: 90, height: 26 });
+  assert.deepEqual(await pngSize("assets/recognition/templates/run/ThoughtButton.png"), { width: 117, height: 30 });
 });
 
 

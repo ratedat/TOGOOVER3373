@@ -10636,6 +10636,23 @@
       "error": null
     },
     {
+      "index": 472.1,
+      "pattern": "(聖|約|抱).*イクゼキュタ",
+      "maaReplacement": "圣约送葬人",
+      "validRegex": true,
+      "localMatches": [
+        {
+          "id": "executor2",
+          "name": "聖約イグゼキュター",
+          "rarity": 6,
+          "class": "前衛",
+          "branch": "鎌撃士",
+          "hiddenByDefault": false
+        }
+      ],
+      "error": "local observed Windows OCR drift: グ -> ク"
+    },
+    {
       "index": 473,
       "pattern": "スプリア",
       "maaReplacement": "空构",

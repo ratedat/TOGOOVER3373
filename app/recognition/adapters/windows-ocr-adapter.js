@@ -285,7 +285,10 @@ function Get-RegionValue($Region, $Name, $Default) {
 function Test-DigitPixel($Image, [int]$X, [int]$Y) {
   if ($X -lt 0 -or $Y -lt 0 -or $X -ge $Image.Width -or $Y -ge $Image.Height) { return $false }
   $c = $Image.GetPixel($X, $Y)
-  return $c.R -gt 145 -and $c.G -gt 145 -and $c.B -gt 145 -and [Math]::Abs($c.R - $c.G) -lt 70 -and [Math]::Abs($c.G - $c.B) -lt 70
+  $luma = (($c.R * 299) + ($c.G * 587) + ($c.B * 114)) / 1000.0
+  $nearNeutral = [Math]::Abs($c.R - $c.G) -lt 95 -and [Math]::Abs($c.G - $c.B) -lt 95
+  $hopeYellow = $c.R -gt 150 -and $c.G -gt 105 -and $c.B -lt 120
+  return $luma -gt 115 -and ($nearNeutral -or $hopeYellow)
 }
 
 function Classify-DigitComponent($Xs, $Ys) {
@@ -313,6 +316,38 @@ function Classify-DigitComponent($Xs, $Ys) {
     $bits += $row
   }
 
+  if ($width -ge 9 -and $height -ge 12) {
+    $topLeft = 0; $topRight = 0; $bottomLeft = 0; $bottomRight = 0
+    for ($gy = 0; $gy -lt 9; $gy++) {
+      for ($gx = 0; $gx -lt 7; $gx++) {
+        if ($counts[$gy * 7 + $gx] -le 0) { continue }
+        if ($gy -le 2 -and $gx -le 2) { $topLeft += 1 }
+        if ($gy -le 2 -and $gx -ge 4) { $topRight += 1 }
+        if ($gy -ge 5 -and $gx -le 2) { $bottomLeft += 1 }
+        if ($gy -ge 5 -and $gx -ge 4) { $bottomRight += 1 }
+      }
+    }
+    if ($topLeft -le 1 -and $topRight -gt 0 -and $bottomLeft -gt 0 -and $bottomRight -gt 0) { return "2" }
+  }
+
+  if ($width -le 8 -and $height -ge 12) {
+    $topXs = New-Object 'System.Collections.Generic.List[int]'
+    $bottomXs = New-Object 'System.Collections.Generic.List[int]'
+    for ($gy = 0; $gy -lt 9; $gy++) {
+      for ($gx = 0; $gx -lt 7; $gx++) {
+        if ($counts[$gy * 7 + $gx] -le 0) { continue }
+        if ($gy -le 2) { $topXs.Add($gx) }
+        if ($gy -ge 6) { $bottomXs.Add($gx) }
+      }
+    }
+    if ($topXs.Count -gt 0 -and $bottomXs.Count -gt 0) {
+      $topMean = ($topXs | Measure-Object -Average).Average
+      $bottomMean = ($bottomXs | Measure-Object -Average).Average
+      if ($bottomMean -lt ($topMean - 2.0)) { return "7" }
+      return "1"
+    }
+  }
+
   $templates = @{
     "0" = @("0111110","1100011","1100011","1100011","1100011","1100011","1100011","1100011","0111110")
     "1" = @("0001100","0011100","0001100","0001100","0001100","0001100","0001100","0001100","0111110")
@@ -338,7 +373,7 @@ function Classify-DigitComponent($Xs, $Ys) {
     }
     if ($score -gt $bestScore) { $bestScore = $score; $bestDigit = $digit }
   }
-  if ($bestScore -lt 20) { return $null }
+  if ($bestScore -lt 18) { return $null }
   return $bestDigit
 }
 
@@ -349,7 +384,7 @@ function Read-IdeaDigitText($Image, $Region) {
   $h = [Math]::Max(1, [int][double](Get-RegionValue $Region "height" 1))
   if ($x0 + $w -gt $Image.Width) { $w = [int]($Image.Width - $x0) }
   if ($y0 + $h -gt $Image.Height) { $h = [int]($Image.Height - $y0) }
-  $startY = [int][Math]::Floor($h * 0.35)
+  $startY = [int][Math]::Floor($h * 0.25)
   $visited = New-Object 'bool[]' ($w * $h)
   $components = @()
   for ($ly = $startY; $ly -lt $h; $ly++) {
@@ -381,7 +416,7 @@ function Read-IdeaDigitText($Image, $Region) {
           }
         }
       }
-      if ($xs.Count -lt 30) { continue }
+      if ($xs.Count -lt 12) { continue }
       $minX = ($xs | Measure-Object -Minimum).Minimum
       $maxX = ($xs | Measure-Object -Maximum).Maximum
       $minY = ($ys | Measure-Object -Minimum).Minimum
@@ -389,7 +424,7 @@ function Read-IdeaDigitText($Image, $Region) {
       $cw = $maxX - $minX + 1
       $ch = $maxY - $minY + 1
       $centerY = (($minY + $maxY) / 2.0) - $y0
-      if ($cw -lt 5 -or $ch -lt 12 -or $centerY -lt ($h * 0.45)) { continue }
+      if ($cw -lt 5 -or $ch -lt 12 -or $centerY -lt ($h * 0.30)) { continue }
       $digit = Classify-DigitComponent $xs $ys
       if ($null -ne $digit) {
         $components += @{ digit = $digit; x = $minX; y = $minY; width = $cw; height = $ch; area = $xs.Count }
@@ -470,6 +505,7 @@ function New-TemplateOcrRegions($ImagePath, $TemplateConfigs, [ref]$StaticRegion
         width = [int]$offset.width
         height = [int]$offset.height
         scale = $ocrScale
+        numericFallback = [bool](Get-RegionValue $config "numericFallback" $false)
         templateScore = [Math]::Round($match.Score, 4)
       }
       $index += 1
@@ -510,15 +546,18 @@ try {
       $regionId = Get-RegionValue $region "id" "region"
       $regionMap = @{ x = (Get-RegionValue $region "x" 0); y = (Get-RegionValue $region "y" 0); width = (Get-RegionValue $region "width" 1); height = (Get-RegionValue $region "height" 1); scale = (Get-RegionValue $region "scale" 1) }
       $regionResult = Invoke-Ocr $tmp $regionId $regionMap
-      $texts += $regionResult.text
-      $allResults += $regionResult.results
       $hasNumericText = $regionResult.text -match "[0-9０-９Oo図IiLl一丨イィ]"
-      if ($regionId -eq "run.idea" -and -not $hasNumericText) {
-        $ideaDigitText = Read-IdeaDigitText $image $regionMap
-        if ($ideaDigitText) {
-          $texts += $ideaDigitText
-          $allResults += @{ text = $ideaDigitText; regionId = $regionId; roi = $regionMap; confidence = 0.76 }
-        }
+      $numericFallback = [bool](Get-RegionValue $region "numericFallback" $false)
+      $digitText = $null
+      if ($numericFallback -or ($regionId -eq "run.idea" -and -not $hasNumericText)) {
+        $digitText = Read-IdeaDigitText $image $regionMap
+      }
+      if ($digitText) {
+        $texts += $digitText
+        $allResults += @{ text = $digitText; regionId = $regionId; roi = $regionMap; confidence = 0.76 }
+      } else {
+        $texts += $regionResult.text
+        $allResults += $regionResult.results
       }
     } finally {
       Remove-Item -LiteralPath $tmp -ErrorAction SilentlyContinue
@@ -591,6 +630,7 @@ export function resolveWindowsTemplateOcrRegions(context = {}, cwd = process.cwd
         step: Math.max(1, Number(config.step ?? 2)),
         sampleStride: Math.max(1, Number(config.sampleStride ?? 4)),
         scale: Math.max(1, Number(config.scale ?? 3)),
+        numericFallback: Boolean(config.numericFallback),
         suppressStaticRegionIdPattern: config.suppressStaticRegionIdPattern || "",
       };
     })

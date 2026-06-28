@@ -8,6 +8,183 @@
       "triggerPath": "/trigger/scan/run/status",
       "candidateKind": "runStatus",
       "ocrEngine": "windows-paddle",
+      "ocrRegionIds": [
+        "run.status_top",
+        "run.status_band",
+        "run.command_level",
+        "run.life_points",
+        "run.shield",
+        "run.top_right_status",
+        "run.resource_numbers",
+        "run.hope",
+        "run.hope.current",
+        "run.hope.max",
+        "run.ingot",
+        "run.top_ingot",
+        "run.top_hope",
+        "run.top_ingot.wide",
+        "run.top_hope.wide",
+        "run.squad_card",
+        "run.squad_name",
+        "run.difficulty_grade",
+        "run.difficulty_block"
+      ],
+      "templateOcrRegions": [
+        {
+          "idPrefix": "run.idea.current",
+          "templatePath": "assets/recognition/templates/run/IdeaIcon.png",
+          "searchRoi": {
+            "x": 820,
+            "y": 620,
+            "width": 100,
+            "height": 90
+          },
+          "ocrOffset": {
+            "x": -2,
+            "y": 35,
+            "width": 44,
+            "height": 34
+          },
+          "threshold": 0.86,
+          "maxMatches": 1,
+          "step": 2,
+          "sampleStride": 4,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.hope.current",
+          "templatePath": "assets/recognition/templates/run/HopeCurrentArrow.png",
+          "searchRoi": {
+            "x": 880,
+            "y": 8,
+            "width": 90,
+            "height": 48
+          },
+          "ocrOffset": {
+            "x": 10,
+            "y": -2,
+            "width": 36,
+            "height": 30
+          },
+          "threshold": 0.82,
+          "maxMatches": 1,
+          "step": 1,
+          "sampleStride": 2,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.hope.current",
+          "templatePath": "assets/recognition/templates/run/HopeCurrentFullArrow.png",
+          "searchRoi": {
+            "x": 880,
+            "y": 8,
+            "width": 90,
+            "height": 48
+          },
+          "ocrOffset": {
+            "x": 18,
+            "y": -2,
+            "width": 36,
+            "height": 30
+          },
+          "threshold": 0.84,
+          "maxMatches": 1,
+          "step": 1,
+          "sampleStride": 2,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.hope.max",
+          "templatePath": "assets/recognition/templates/run/HopeMaxArrow.png",
+          "searchRoi": {
+            "x": 940,
+            "y": 8,
+            "width": 95,
+            "height": 48
+          },
+          "ocrOffset": {
+            "x": 10,
+            "y": -2,
+            "width": 42,
+            "height": 30
+          },
+          "threshold": 0.82,
+          "maxMatches": 1,
+          "step": 1,
+          "sampleStride": 2,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.ingot",
+          "templatePath": "assets/recognition/templates/run/IngotIcon.png",
+          "searchRoi": {
+            "x": 1040,
+            "y": 0,
+            "width": 160,
+            "height": 60
+          },
+          "ocrOffset": {
+            "x": 120,
+            "y": -5,
+            "width": 80,
+            "height": 38
+          },
+          "threshold": 0.86,
+          "maxMatches": 1,
+          "step": 2,
+          "sampleStride": 4,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.life_points",
+          "templatePath": "assets/recognition/templates/run/LifeIcon.png",
+          "searchRoi": {
+            "x": 140,
+            "y": 0,
+            "width": 90,
+            "height": 70
+          },
+          "ocrOffset": {
+            "x": 33,
+            "y": 21,
+            "width": 34,
+            "height": 30
+          },
+          "threshold": 0.86,
+          "maxMatches": 1,
+          "step": 2,
+          "sampleStride": 4,
+          "numericFallback": true,
+          "scale": 10
+        },
+        {
+          "idPrefix": "run.shield",
+          "templatePath": "assets/recognition/templates/run/ShieldIcon.png",
+          "searchRoi": {
+            "x": 245,
+            "y": 18,
+            "width": 80,
+            "height": 50
+          },
+          "ocrOffset": {
+            "x": 16,
+            "y": 0,
+            "width": 34,
+            "height": 30
+          },
+          "threshold": 0.84,
+          "maxMatches": 1,
+          "step": 1,
+          "sampleStride": 3,
+          "numericFallback": true,
+          "scale": 10
+        }
+      ],
       "baseResolution": {
         "width": 1280,
         "height": 720
@@ -112,6 +289,28 @@
           "maxMatches": 8,
           "step": 4,
           "sampleStride": 8,
+          "scale": 4,
+          "suppressStaticRegionIdPattern": "^operator\\.name\\."
+        },
+        {
+          "idPrefix": "operator.card.name",
+          "templatePath": "assets/recognition/templates/run/OperatorCardCodeNameFlag.png",
+          "searchRoi": {
+            "x": 500,
+            "y": 120,
+            "width": 320,
+            "height": 500
+          },
+          "ocrOffset": {
+            "x": -7,
+            "y": -9,
+            "width": 188,
+            "height": 29
+          },
+          "threshold": 0.84,
+          "maxMatches": 8,
+          "step": 2,
+          "sampleStride": 2,
           "scale": 4,
           "suppressStaticRegionIdPattern": "^operator\\.name\\."
         }

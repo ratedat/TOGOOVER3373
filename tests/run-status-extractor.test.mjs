@@ -141,11 +141,11 @@ test("run status extractor does not use command exp 0/10 as command level", () =
 
 
 
-test("run status extractor reads Sarkaz idea count from the bottom conception counter", () => {
+test("run status extractor reads Sarkaz idea count from the icon-anchored current value", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
       { text: "29/32", regionId: "run.thought_burden" },
-      { text: "2", regionId: "run.idea" },
+      { text: "2", regionId: "run.idea.current.0" },
       { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
       { text: "魂 に 直 面", regionId: "run.difficulty_block" },
       { text: "18", regionId: "run.difficulty_grade" },
@@ -170,6 +170,7 @@ test("run status extractor reads IS5 top-bar resources and bottom conception cou
       { text: "8", regionId: "run.top_ingot.wide", confidence: 0.99 },
       { text: "22", regionId: "run.top_idea", confidence: 0.7 },
       { text: "20", regionId: "run.top_idea", confidence: 0.99 },
+      { text: "9", regionId: "run.idea.current.0", confidence: 0.99 },
       { text: "9", regionId: "run.idea", confidence: 0.76 },
       { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
       { text: "魂 に 直 面", regionId: "run.difficulty_block" },
@@ -185,7 +186,7 @@ test("run status extractor reads IS5 top-bar resources and bottom conception cou
   ]);
 });
 
-test("run status extractor reads current conception from bottom fraction OCR", () => {
+test("run status extractor ignores thought burden fraction OCR as conception data", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
       { text: "0/5", regionId: "run.idea", confidence: 0.7 },
@@ -197,8 +198,7 @@ test("run status extractor reads current conception from bottom fraction OCR", (
     ],
   }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
 
-  const idea = candidates.find((item) => item.field === "idea");
-  assert.equal(idea.value, 0);
+  assert.equal(candidates.some((item) => item.field === "idea"), false);
 });
 
 test("run status extractor prefers the narrow conception current ROI over compact wide OCR noise", () => {
@@ -232,6 +232,56 @@ test("run status extractor handles reversed compact OCR from the narrow concepti
     const idea = candidates.find((item) => item.field === "idea");
     assert.equal(idea.value, 1);
   }
+});
+
+test("run status extractor accepts template-suffixed resource region IDs", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "1", regionId: "run.hope.current.0", confidence: 0.99 },
+      { text: "7", regionId: "run.hope.max.0", confidence: 0.99 },
+      { text: "20", regionId: "run.ingot.0", confidence: 0.99 },
+      { text: "4", regionId: "run.life_points.0", confidence: 0.99 },
+      { text: "2", regionId: "run.shield.0", confidence: 0.99 },
+      { text: "3", regionId: "run.idea.current.0", confidence: 0.99 },
+      { text: "17<720", regionId: "run.resource_numbers", confidence: 0.91 },
+      { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "lifePoints", "shield", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 1],
+    ["maxHope", 7],
+    ["ingot", 20],
+    ["idea", 3],
+    ["lifePoints", 4],
+    ["shield", 2],
+  ]);
+});
+
+test("run status extractor corrects reversed leading zero from ingot template OCR", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "0", regionId: "run.hope.current.0", confidence: 0.99 },
+      { text: "7", regionId: "run.hope.max.0", confidence: 0.99 },
+      { text: "02", regionId: "run.ingot.0", confidence: 0.99 },
+      { text: "1", regionId: "run.idea.current.0", confidence: 0.99 },
+      { text: "5", regionId: "run.life_points.0", confidence: 0.99 },
+      { text: "2", regionId: "run.shield.0", confidence: 0.99 },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea", "lifePoints", "shield"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 0],
+    ["maxHope", 7],
+    ["ingot", 20],
+    ["idea", 1],
+    ["lifePoints", 5],
+    ["shield", 2],
+  ]);
 });
 
 test("run status extractor ignores compact wide conception OCR without a separator", () => {
@@ -271,7 +321,6 @@ test("run status extractor switches to wide top-bar resource ROIs when the compa
     ["hope", 0],
     ["maxHope", 6],
     ["ingot", 14],
-    ["idea", 2],
   ]);
 });
 
@@ -295,7 +344,6 @@ test("run status extractor does not treat top-bar originium as IS5 conception", 
       ["hope", 0],
       ["maxHope", 6],
       ["ingot", Number(topResource)],
-      ["idea", Number(bottomIdea)],
     ]);
   }
 });

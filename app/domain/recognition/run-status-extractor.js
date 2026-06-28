@@ -411,6 +411,11 @@ function findTopLayoutNumberCandidate(frame, { field, label, regionIdPattern, ma
   });
 }
 
+function isRegionId(regionId, baseId) {
+  const value = String(regionId || "");
+  return value === baseId || value.startsWith(`${baseId}.`) || value.startsWith(`${baseId}-`) || value.startsWith(`${baseId}_`);
+}
+
 function findTopResourceLayout(frame) {
   const compact = {
     ingot: findTopLayoutNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPattern: /^run\.top_ingot$/ }),
@@ -466,9 +471,24 @@ function findTopIngotCandidate(frame) {
   return findTopResourceLayout(frame).ingot;
 }
 
+function findTemplateIngotCandidate(frame) {
+  for (const item of asTextResults(frame)) {
+    const regionId = String(item.regionId || "");
+    if (!/^run\.ingot[._-]/.test(regionId)) continue;
+    const digits = digitText(item.text);
+    if (!digits) continue;
+    const value = /^0[1-9]$/.test(digits) ? Number(`${digits[1]}0`) : digitValue(item.text);
+    if (!Number.isFinite(value) || value < 0 || value > 9999) continue;
+    return candidateFromNumber({ field: "ingot", label: "源石錐", value, confidence: 0.75 });
+  }
+  return null;
+}
+
 function findIngotCandidate(frame) {
   const direct = findBestRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPattern: /^run\.ingot$/, min: 0, max: 9999, confidence: 0.86, prefer: "first" });
   if (direct) return direct;
+  const templateIngot = findTemplateIngotCandidate(frame);
+  if (templateIngot) return templateIngot;
   const topIngot = findTopIngotCandidate(frame);
   if (topIngot) return topIngot;
   return findRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "ingot", min: 0, max: 9999, prefer: "first" });
@@ -508,7 +528,7 @@ function ideaCurrentValueFromText(text, { allowCompact = false } = {}) {
 function findIdeaCandidate(frame, { campaignId } = {}) {
   if (campaignId !== "is5_sarkaz") return null;
   const currentCandidates = asTextResults(frame)
-    .filter((item) => /^run\.idea\.current$/.test(String(item.regionId || "")))
+    .filter((item) => isRegionId(item.regionId, "run.idea.current"))
     .map((item) => {
       const value = ideaCurrentValueFromText(item.text, { allowCompact: true });
       if (!Number.isFinite(value) || value < 0 || value > 999) return null;
@@ -524,18 +544,7 @@ function findIdeaCandidate(frame, { campaignId } = {}) {
       confidence: Math.min(0.98, Math.max(0.86, currentCandidates[0].confidence)),
     });
   }
-
-  const candidates = asTextResults(frame)
-    .filter((item) => /^run\.idea$/.test(String(item.regionId || "")))
-    .map((item) => {
-      const value = ideaCurrentValueFromText(item.text);
-      if (!Number.isFinite(value) || value < 0 || value > 999) return null;
-      return { value, confidence: Number(item.confidence ?? 0.7) };
-    })
-    .filter(Boolean)
-    .toSorted((a, b) => b.confidence - a.confidence);
-  const best = candidates[0];
-  return best ? candidateFromNumber({ field: "idea", label: "構想", value: best.value, confidence: Math.min(0.98, Math.max(0.76, best.confidence)) }) : null;
+  return null;
 }
 
 function findLifePointsCandidate(frame) {
@@ -582,9 +591,13 @@ export function extractRunStatusCandidates(frame, { campaignId, squads = [], dif
     || findCommandLevelFromStatusRoi(frame)
     || findCommandLevelCandidate(compactText, frame);
   const resourceCandidates = findResourceNumberCandidates(frame);
-  const runResourceCandidates = resourceCandidates.length === 3
-    ? resourceCandidates
-    : [...findHopeCandidates(frame), findIngotCandidate(frame)].filter(Boolean);
+  const directResourceCandidates = [...findHopeCandidates(frame), findIngotCandidate(frame)].filter(Boolean);
+  const directResourceFields = new Set(directResourceCandidates.map((item) => item.field));
+  const runResourceCandidates = ["hope", "maxHope", "ingot"].every((field) => directResourceFields.has(field))
+    ? directResourceCandidates
+    : resourceCandidates.length === 3
+      ? resourceCandidates
+      : directResourceCandidates;
   const candidates = [
     findSquadCandidate(numericText, { campaignId, squads }),
     findSquadRandomEffectCandidate(compactText, { campaignId, squads }),
