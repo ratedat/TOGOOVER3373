@@ -250,6 +250,7 @@ function localNameFallbackHitsForRow(row, db, operatorOcrMap) {
 }
 
 const operatorOcrDriftAliases = [
+  { operatorId: "leizi", pattern: /^レイス$/i, matchedPattern: "レイス" },
   { operatorId: "leizi2", pattern: /^司霆レイス$/i, matchedPattern: "司霆レイス" },
   { operatorId: "leizi2", pattern: /^pmey$/i, matchedPattern: "PMEY" },
 ];

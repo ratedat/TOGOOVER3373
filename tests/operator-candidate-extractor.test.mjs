@@ -12,6 +12,7 @@ const operators = [
   { id: "ines", name: "イネス", rarity: 6, class: "先鋒", branch: "偵察兵" },
   { id: "myrtle", name: "テンニンカ", rarity: 4, class: "先鋒", branch: "旗手" },
   { id: "ray", name: "レイ", rarity: 6, class: "狙撃", branch: "狩人" },
+  { id: "leizi", name: "レイズ", rarity: 5, class: "術師", branch: "連鎖術師" },
   { id: "leizi2", name: "司霆レイズ", rarity: 6, class: "前衛", branch: "解放者" },
   { id: "yu", name: "ユー", rarity: 6, class: "重装", branch: "本源衛士" },
   { id: "eunectes", name: "ユーネクテス", rarity: 6, class: "重装", branch: "決闘者" },
@@ -27,11 +28,12 @@ const operatorOcrMap = {
     { pattern: "ルーメン", maaReplacement: "流明", localMatches: [{ id: "lumen", name: "ルーメン" }] },
     { pattern: "イネ(ス|ズ).*", maaReplacement: "伊内丝", localMatches: [{ id: "ines", name: "イネス" }] },
     { pattern: "テンニンカ", maaReplacement: "桃金娘", localMatches: [{ id: "myrtle", name: "テンニンカ" }] },
+    { pattern: "^レイズ", maaReplacement: "惊蛰", localMatches: [{ id: "leizi", name: "レイズ" }] },
     { pattern: "(司|霆).*レイズ", maaReplacement: "司霆惊蛰", localMatches: [{ id: "leizi2", name: "司霆レイズ" }] },
     { pattern: "^ユー(?:$|[^ネ])", maaReplacement: "余", localMatches: [{ id: "yu", name: "ユー" }, { id: "eunectes", name: "ユーネクテス" }] },
     { pattern: "ヒューマス", maaReplacement: "休谟斯", localMatches: [{ id: "humus", name: "ヒューマス" }] },
   ],
-  equivalenceClasses: [["ン", "ソ"], ["-", "ー", "一"], ["フ", "ブ", "プ"], ["ス", "ズ"]],
+  equivalenceClasses: [["ン", "ソ"], ["-", "ー", "一"], ["フ", "ブ", "プ"]],
 };
 
 test("operator recognition text normalization removes OCR punctuation and MAA equivalence drift", () => {
@@ -115,6 +117,17 @@ test("operator candidate extractor maps Leizi alter when Windows OCR drops the d
 
   assert.equal(candidates[0].operatorId, "leizi2");
   assert.equal(candidates[0].name, "司霆レイズ");
+});
+
+test("operator candidate extractor maps normal Leizi when Windows OCR drops the dakuten", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "ー レ イ ス", regionId: "operator.name.left.1", roi: { x: 1333, y: 346, width: 260, height: 49 }, confidence: 0.7 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 700, y: 140, width: 1720, height: 1110 } });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["leizi"]);
+  assert.equal(candidates[0].name, "レイズ");
+  assert.equal(candidates[0].source, "local-ocr-drift");
 });
 
 test("operator candidate extractor does not turn partial Humus OCR into Yu or Eunectes", async () => {
