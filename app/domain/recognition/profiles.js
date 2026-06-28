@@ -1,4 +1,4 @@
-export const scanProfileIds = new Set(["runStatusFull", "operatorsFull", "relicsFull", "is4RevelationFull", "is5ThoughtFull", "is6CoinsFull"]);
+export const scanProfileIds = new Set(["runStatusFull", "operatorsFull", "relicsFull", "is4RevelationFull", "is5ThoughtFull", "is5AgeFull", "is6CoinsFull"]);
 
 function requireProfileId(value) {
   const id = String(value || "").trim();

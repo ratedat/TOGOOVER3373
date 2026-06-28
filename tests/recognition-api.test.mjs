@@ -10,9 +10,15 @@ async function closeServer(server) {
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 }
 
+async function tempRecognitionLogDir() {
+  return fs.mkdtemp(path.join(os.tmpdir(), "rhodes-recognition-log-"));
+}
+
 test("recognition scan API accepts POST profile requests without using the default ADB runner", async () => {
+  const recognitionLogDir = await tempRecognitionLogDir();
   const { server, port } = await startServer({
     port: 0,
+    recognitionLogDir,
     recognitionRunner: async ({ profile, source }) => ({
       scanId: "api-scan",
       profileId: profile.id,
@@ -41,8 +47,10 @@ test("recognition scan API accepts POST profile requests without using the defau
 });
 
 test("external trigger routes map to full scan profiles and return aborted scans as 409", async () => {
+  const recognitionLogDir = await tempRecognitionLogDir();
   const { server, port } = await startServer({
     port: 0,
+    recognitionLogDir,
     recognitionRunner: async ({ profile }) => ({
       scanId: "api-scan",
       profileId: profile.id,
@@ -55,11 +63,11 @@ test("external trigger routes map to full scan profiles and return aborted scans
     }),
   });
   try {
-    const response = await fetch(`http://127.0.0.1:${port}/trigger/scan/operators/full`);
+    const response = await fetch(`http://127.0.0.1:${port}/trigger/scan/sarkaz/age`);
     const payload = await response.json();
 
     assert.equal(response.status, 409);
-    assert.equal(payload.result.profileId, "operatorsFull");
+    assert.equal(payload.result.profileId, "is5AgeFull");
     assert.equal(payload.result.reason, "unknown_screen");
   } finally {
     await closeServer(server);
@@ -68,7 +76,8 @@ test("external trigger routes map to full scan profiles and return aborted scans
 test("default recognition runner reports missing adb as service unavailable", async () => {
   const previousAdbPath = process.env.ARKNIGHTS_ADB_PATH;
   process.env.ARKNIGHTS_ADB_PATH = "definitely-missing-adb-for-test";
-  const { server, port } = await startServer({ port: 0 });
+  const recognitionLogDir = await tempRecognitionLogDir();
+  const { server, port } = await startServer({ port: 0, recognitionLogDir });
   try {
     const response = await fetch(`http://127.0.0.1:${port}/api/recognition/scan`, {
       method: "POST",
@@ -171,4 +180,69 @@ test("saveAdbScreenshotFrame writes PNG bytes to the local state screenshot dire
   assert.equal(screenshot.capturedAt, "2026-06-27T00:00:00.000Z");
   assert.equal(screenshot.path.endsWith(path.join("adb-screenshots", "adb-test-2026-06-27T00-00-00-000Z.png")), true);
   assert.deepEqual([...await fs.readFile(screenshot.path)], [0x89, 0x50, 0x4e, 0x47]);
+});
+
+
+test("recognition scan status API exposes active progress and persists completion logs", async () => {
+  const recognitionLogDir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-recognition-log-"));
+  let releaseRunner;
+  let startedRunner;
+  const runnerRelease = new Promise((resolve) => { releaseRunner = resolve; });
+  const runnerStarted = new Promise((resolve) => { startedRunner = resolve; });
+  const { server, port } = await startServer({
+    port: 0,
+    recognitionLogDir,
+    recognitionRunner: async ({ profile, source, onLog }) => {
+      onLog({ event: "capture", at: "2026-06-27T00:00:00.000Z", stage: "known-screen" });
+      startedRunner();
+      await runnerRelease;
+      onLog({ event: "recognize", at: "2026-06-27T00:00:01.000Z", iteration: 0, count: 1 });
+      return {
+        scanId: "api-live-scan",
+        profileId: profile.id,
+        source,
+        status: "completed",
+        suggestions: [],
+        candidates: [{ kind: "relic", relicId: "is5_relic_001", name: "テスト秘宝" }],
+        log: [],
+      };
+    },
+  });
+  try {
+    const scanPromise = fetch(`http://127.0.0.1:${port}/api/recognition/scan`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profile: "relicsFull", source: "adb" }),
+    });
+
+    await runnerStarted;
+    const activeResponse = await fetch(`http://127.0.0.1:${port}/api/recognition/scan/status`);
+    const activePayload = await activeResponse.json();
+
+    assert.equal(activeResponse.status, 200);
+    assert.equal(activePayload.active.status, "running");
+    assert.equal(activePayload.active.profileId, "relicsFull");
+    assert.equal(activePayload.active.log.some((entry) => entry.event === "capture" && entry.stage === "known-screen"), true);
+
+    releaseRunner();
+    const scanResponse = await scanPromise;
+    const scanPayload = await scanResponse.json();
+    assert.equal(scanResponse.status, 200);
+    assert.equal(scanPayload.result.logPath.startsWith(recognitionLogDir), true);
+
+    const statusResponse = await fetch(`http://127.0.0.1:${port}/api/recognition/scan/status`);
+    const statusPayload = await statusResponse.json();
+    assert.equal(statusPayload.active, null);
+    assert.equal(statusPayload.lastScan.status, "completed");
+    assert.equal(statusPayload.lastScan.counts.candidates, 1);
+    assert.equal(statusPayload.lastScan.logPath, scanPayload.result.logPath);
+
+    const saved = JSON.parse(await fs.readFile(scanPayload.result.logPath, "utf8"));
+    assert.equal(saved.profileId, "relicsFull");
+    assert.equal(saved.counts.log, 2);
+    assert.equal(saved.log.some((entry) => entry.event === "recognize" && entry.count === 1), true);
+  } finally {
+    if (typeof releaseRunner === "function") releaseRunner();
+    await closeServer(server);
+  }
 });

@@ -1768,6 +1768,138 @@ a:hover { text-decoration: underline; }
   font-size: 12px;
   line-height: 1.4;
 }
+
+.recognition-status-card {
+  display: grid;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid rgba(91,181,176,0.28);
+  border-radius: 8px;
+  background: rgba(7, 21, 20, 0.78);
+}
+.recognition-status-card.idle {
+  border-color: rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.035);
+}
+.recognition-status-card.active {
+  border-color: rgba(91,181,176,0.58);
+  box-shadow: inset 0 0 0 1px rgba(91,181,176,0.12);
+}
+.recognition-status-card.complete {
+  border-color: rgba(215,168,71,0.36);
+}
+.recognition-status-card > div > span,
+.recognition-status-head span,
+.recognition-status-grid span,
+.recognition-log-path span {
+  color: var(--muted);
+  font-size: 11px;
+}
+.recognition-status-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: start;
+}
+.recognition-status-head > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.recognition-status-head strong {
+  color: #f8fff8;
+  font-size: 13px;
+}
+.recognition-status-head em {
+  flex: 0 0 auto;
+  padding: 2px 8px;
+  border: 1px solid rgba(91,181,176,0.36);
+  border-radius: 999px;
+  color: #91fff2;
+  font-size: 11px;
+  font-style: normal;
+}
+.recognition-status-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 6px;
+}
+.recognition-status-grid > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  padding: 7px 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 7px;
+  background: rgba(255,255,255,0.035);
+}
+.recognition-status-grid strong {
+  overflow: hidden;
+  color: #fff7e2;
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recognition-log-list {
+  display: grid;
+  gap: 5px;
+  max-height: 168px;
+  overflow: auto;
+  padding-right: 2px;
+}
+.recognition-log-row {
+  display: grid;
+  grid-template-columns: 64px 74px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 7px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.22);
+}
+.recognition-log-row span {
+  color: var(--muted);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.recognition-log-row strong {
+  color: #e7fff9;
+  font-size: 12px;
+}
+.recognition-log-row em {
+  overflow: hidden;
+  color: #d9d0bd;
+  font-size: 11px;
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recognition-log-path {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.recognition-log-path code {
+  overflow: hidden;
+  padding: 6px 8px;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px;
+  background: rgba(0,0,0,0.24);
+  color: #f0e2bd;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.recognition-status-error {
+  padding: 7px 8px;
+  border: 1px solid rgba(255,83,83,0.42);
+  border-radius: 6px;
+  background: rgba(255,83,83,0.12);
+  color: #ffd5d5;
+  font-size: 12px;
+}
+
 .control-v2-sidecar-screen .recognition-scan-actions {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));

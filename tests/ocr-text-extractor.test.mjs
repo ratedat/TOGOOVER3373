@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { createDefaultOcrTextExtractor, createMergedTextExtractor, mergeOcrFrames } from "../app/recognition/adapters/ocr-text-extractor.js";
+import { createDefaultOcrTextExtractor, createMergedTextExtractor, createProfileAwareTextExtractor, mergeOcrFrames } from "../app/recognition/adapters/ocr-text-extractor.js";
 
 test("mergeOcrFrames keeps OCR results from multiple engines and dedupes exact duplicates", () => {
   const frame = mergeOcrFrames({ bytes: Buffer.from("x") }, [
@@ -34,6 +34,12 @@ test("createMergedTextExtractor returns all successful OCR outputs when one engi
   assert.equal(frame.text, "4/4");
 });
 
+test("default OCR selector exposes windows-paddle hybrid for run status scans", () => {
+  const extractor = createDefaultOcrTextExtractor({ engine: "windows-paddle" });
+
+  assert.equal(typeof extractor.extract, "function");
+});
+
 test("default OCR selector exposes hybrid as an explicit engine", () => {
   const extractor = createDefaultOcrTextExtractor({ engine: "hybrid" });
 
@@ -53,4 +59,32 @@ test("mergeOcrFrames drops explicitly low-confidence OCR results", () => {
   assert.equal(frame.ocrResults.some((item) => item.text === "2"), false);
   assert.equal(frame.ocrResults.some((item) => item.text === "18"), true);
   assert.equal(frame.ocrResults.some((item) => item.text === "手動候補"), true);
+});
+
+
+test("profile-aware OCR routing can force relic scans to a different extractor", async () => {
+  const calls = [];
+  const extractor = createProfileAwareTextExtractor({
+    defaultExtractor: {
+      async extract(frame) {
+        calls.push("default");
+        return { ...frame, text: "default" };
+      },
+    },
+    profileExtractors: {
+      relicsFull: {
+        async extract(frame) {
+          calls.push("relicsFull");
+          return { ...frame, text: "windows" };
+        },
+      },
+    },
+  });
+
+  const relicFrame = await extractor.extract({ bytes: Buffer.from("x") }, { profile: { id: "relicsFull" } });
+  const runFrame = await extractor.extract({ bytes: Buffer.from("x") }, { profile: { id: "runStatusFull" } });
+
+  assert.equal(relicFrame.text, "windows");
+  assert.equal(runFrame.text, "default");
+  assert.deepEqual(calls, ["relicsFull", "default"]);
 });

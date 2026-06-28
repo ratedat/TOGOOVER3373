@@ -1,4 +1,5 @@
 import http from "node:http";
+import { randomUUID } from "node:crypto";
 import fs from "node:fs/promises";
 import { createReadStream } from "node:fs";
 import path from "node:path";
@@ -11,11 +12,16 @@ import { normalizeAdbSettings } from "./domain/adb-settings.js";
 import { preserveLocalConfigOnReset } from "./domain/local-config.js";
 import { createMaaStyleRecognizer } from "./domain/recognition/maa-style-recognizer.js";
 import { extractRunStatusCandidates } from "./domain/recognition/run-status-extractor.js";
+import { createRelicCandidateExtractor } from "./domain/recognition/relic-candidate-extractor.js";
+import { createOperatorCandidateExtractor } from "./domain/recognition/operator-candidate-extractor.js";
+import { createThoughtCandidateExtractor } from "./domain/recognition/thought-candidate-extractor.js";
+import { createAgeCandidateExtractor } from "./domain/recognition/age-candidate-extractor.js";
 import { findScanProfile, findScanProfileByTriggerPath, normalizeScanProfiles, profileIdFromScanBody } from "./domain/recognition/profiles.js";
 import { runScanProfile } from "./domain/recognition/scan-runner.js";
+import { applyRecognitionScanCompletionToState } from "./domain/recognition/auto-apply.js";
 import { appendRecognitionSuggestionsToState } from "./domain/recognition/suggestions.js";
 import { createAdbAdapter, detectAdbConnections } from "./recognition/adapters/adb-adapter.js";
-import { createDefaultOcrTextExtractor } from "./recognition/adapters/ocr-text-extractor.js";
+import { createProfileAwareOcrTextExtractor } from "./recognition/adapters/ocr-text-extractor.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
@@ -24,9 +30,11 @@ const APP = path.join(ROOT, "app");
 const STATE_DIR = process.env.ARKNIGHTS_STATE_DIR ? path.resolve(process.env.ARKNIGHTS_STATE_DIR) : DATA;
 const CURRENT_STATE = path.join(STATE_DIR, "current-state.json");
 const ADB_WORK_DIR = path.join(STATE_DIR, "adb-work");
+const RECOGNITION_LOG_DIR = path.join(STATE_DIR, "recognition-logs");
 const EXAMPLE_STATE = path.join(DATA, "overlay-state.example.json");
 const SCAN_PROFILES = path.join(DATA, "recognition", "scan-profiles.json");
 const MAA_TASKS = path.join(DATA, "recognition", "maa-tasks.json");
+const MAA_OPERATOR_OCR_MAP = path.join(DATA, "recognition", "maa-operator-name-ocr.json");
 
 const argvPort = (() => {
   const index = process.argv.indexOf("--port");
@@ -188,9 +196,14 @@ function httpError(status, message, details = {}) {
   return Object.assign(new Error(message), { status, details });
 }
 
-async function defaultRecognitionRunner({ profile, source = "adb", signal } = {}) {
+async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog } = {}) {
   if (source !== "adb") throw httpError(400, `unsupported recognition source: ${source}`);
-  const [tasks, state, master] = await Promise.all([recognitionTasks(), ensureState(), masterData()]);
+  const [tasks, state, master, operatorOcrMap] = await Promise.all([
+    recognitionTasks(),
+    ensureState(),
+    masterData(),
+    readJson(MAA_OPERATOR_OCR_MAP).catch(() => ({ rules: [], equivalenceClasses: [] })),
+  ]);
   const runStatusExtractor = (frame, context) => context.profile?.id === "runStatusFull"
     ? extractRunStatusCandidates(frame, {
       campaignId: state.run?.campaignId,
@@ -198,22 +211,133 @@ async function defaultRecognitionRunner({ profile, source = "adb", signal } = {}
       difficultyGrades: master.difficultyGrades,
     })
     : [];
+  const relicExtractor = createRelicCandidateExtractor({
+    relics: master.relics,
+    campaignId: state.run?.campaignId,
+  });
+  const operatorExtractor = createOperatorCandidateExtractor({
+    operators: master.operators,
+    operatorOcrMap,
+  });
+  const thoughtExtractor = createThoughtCandidateExtractor({
+    selectableEffects: master.selectableEffects,
+    campaignId: state.run?.campaignId,
+  });
+  const ageExtractor = createAgeCandidateExtractor({
+    selectableEffects: master.selectableEffects,
+    campaignId: state.run?.campaignId,
+    difficulty: state.run?.difficulty,
+    difficultyGrades: master.difficultyGrades,
+  });
   return runScanProfile({
     profile,
     adapter: createAdbAdapter({ settings: state.adb, workDir: ADB_WORK_DIR }),
     recognizer: createMaaStyleRecognizer({
       tasks,
-      textExtractor: createDefaultOcrTextExtractor(),
-      candidateExtractors: [runStatusExtractor],
+      textExtractor: createProfileAwareOcrTextExtractor({
+        profileEngines: {
+          runStatusFull: "windows-paddle",
+          relicsFull: "windows",
+          operatorsFull: "windows",
+          is5ThoughtFull: "windows",
+          is5AgeFull: "windows",
+        },
+      }),
+      candidateExtractors: [runStatusExtractor, relicExtractor, operatorExtractor, thoughtExtractor, ageExtractor],
     }),
     source,
     signal,
+    onLog,
   });
 }
 
 function responseStatusForScanResult(result) {
   if (result?.status === "aborted") return 409;
   return 200;
+}
+
+const SCAN_STATUS_LOG_LIMIT = 80;
+
+function scanLogTail(log = [], limit = SCAN_STATUS_LOG_LIMIT) {
+  return Array.isArray(log) ? log.slice(-limit) : [];
+}
+
+function sanitizeFilePart(value, fallback = "scan") {
+  const cleaned = String(value || fallback).replace(/[^a-zA-Z0-9._-]/g, "_").slice(0, 80);
+  return cleaned || fallback;
+}
+
+function publicScanStatus(status) {
+  if (!status) return null;
+  return { ...status, log: scanLogTail(status.log) };
+}
+
+function recognitionErrorSummary(error) {
+  if (!error) return null;
+  return {
+    message: error instanceof Error ? error.message : String(error),
+    status: Number(error?.status) || null,
+    ...(error?.details ? { details: error.details } : {}),
+  };
+}
+
+function buildRecognitionScanLogRecord({ requestId, profile, source, startedAt, completedAt, result = null, log = [], error = null } = {}) {
+  const candidates = Array.isArray(result?.candidates) ? result.candidates : [];
+  const suggestions = Array.isArray(result?.suggestions) ? result.suggestions : [];
+  const autoApplied = Array.isArray(result?.autoApplied) ? result.autoApplied : [];
+  const failedStatus = error?.status === 499 ? "cancelled" : "failed";
+  const status = error ? failedStatus : (result?.status || "completed");
+  return {
+    schemaVersion: 1,
+    requestId,
+    scanId: result?.scanId || requestId,
+    profileId: profile?.id || null,
+    profileLabel: profile?.label || profile?.id || null,
+    source,
+    status,
+    reason: result?.reason || null,
+    startedAt,
+    completedAt,
+    counts: {
+      candidates: candidates.length,
+      suggestions: suggestions.length,
+      autoApplied: autoApplied.length,
+      log: Array.isArray(log) ? log.length : 0,
+    },
+    candidates,
+    suggestions,
+    autoApplied,
+    log: Array.isArray(log) ? log : [],
+    error: recognitionErrorSummary(error),
+  };
+}
+
+export async function saveRecognitionScanLog(record, { logDir = RECOGNITION_LOG_DIR, now = new Date() } = {}) {
+  await fs.mkdir(logDir, { recursive: true });
+  const timestamp = timestampForFile(record?.startedAt || now);
+  const profile = sanitizeFilePart(record?.profileId, "profile");
+  const scanId = sanitizeFilePart(record?.scanId || record?.requestId, "scan");
+  const file = path.join(logDir, `recognition-${timestamp}-${profile}-${scanId}.json`);
+  await fs.writeFile(file, `${JSON.stringify(record, null, 2)}\n`, "utf8");
+  return file;
+}
+
+function summarizeRecognitionScanLog(record, logPath) {
+  return {
+    requestId: record.requestId,
+    scanId: record.scanId,
+    profileId: record.profileId,
+    profileLabel: record.profileLabel,
+    source: record.source,
+    status: record.status,
+    reason: record.reason,
+    startedAt: record.startedAt,
+    completedAt: record.completedAt,
+    counts: record.counts,
+    logPath,
+    log: scanLogTail(record.log),
+    error: record.error,
+  };
 }
 
 function adbSettingsFromRequest(body, state) {
@@ -346,24 +470,78 @@ function legacyControlRedirectLocation(url) {
   return `/control-v2${query ? `?${query}` : ""}`;
 }
 
-export function createAppServer({ recognitionRunner = defaultRecognitionRunner, adbDetector = detectAdbConnections, adbTester = defaultAdbTester, adbPathPicker = null } = {}) {
+export function createAppServer({ recognitionRunner = defaultRecognitionRunner, adbDetector = detectAdbConnections, adbTester = defaultAdbTester, adbPathPicker = null, recognitionLogDir = RECOGNITION_LOG_DIR } = {}) {
   let activeScanController = null;
+  let activeScanStatus = null;
+  let lastScanSummary = null;
+
+  async function persistRecognitionScan({ requestId, profile, source, startedAt, completedAt, result = null, log = [], error = null }) {
+    const record = buildRecognitionScanLogRecord({ requestId, profile, source, startedAt, completedAt, result, log, error });
+    const logPath = await saveRecognitionScanLog(record, { logDir: recognitionLogDir });
+    lastScanSummary = summarizeRecognitionScanLog(record, logPath);
+    return { record, logPath };
+  }
+
+  function appendActiveScanLog(entry) {
+    if (!activeScanStatus || !entry) return;
+    const normalized = { ...entry };
+    activeScanStatus.log.push(normalized);
+    activeScanStatus.updatedAt = normalized.at || new Date().toISOString();
+    activeScanStatus.stage = normalized.event || activeScanStatus.stage;
+  }
 
   async function runRecognitionRequest({ profile, source = "adb" }) {
     if (activeScanController) throw httpError(409, "recognition scan already running");
     const controller = new AbortController();
+    const requestId = randomUUID();
+    const startedAt = new Date().toISOString();
     activeScanController = controller;
+    activeScanStatus = {
+      requestId,
+      scanId: null,
+      profileId: profile.id,
+      profileLabel: profile.label || profile.id,
+      source,
+      status: "running",
+      stage: "starting",
+      startedAt,
+      updatedAt: startedAt,
+      log: [],
+    };
     try {
-      const result = await recognitionRunner({ profile, source, signal: controller.signal });
+      const result = await recognitionRunner({ profile, source, signal: controller.signal, onLog: appendActiveScanLog });
+      let nextResult = result;
       const state = await ensureState();
-      if (result?.status === "completed" && Array.isArray(result.suggestions) && result.suggestions.length) {
-        const nextState = normalizeState(appendRecognitionSuggestionsToState(state, result.suggestions));
-        await writeJsonAtomic(CURRENT_STATE, nextState);
-        return { result, state: nextState };
+      let nextState = state;
+      if (result?.status === "completed" && Array.isArray(result.suggestions)) {
+        const applied = applyRecognitionScanCompletionToState(state, { profileId: profile.id, suggestions: result.suggestions });
+        const shouldPersist = result.suggestions.length || profile.id === "is5AgeFull";
+        if (shouldPersist) {
+          nextState = normalizeState(appendRecognitionSuggestionsToState(applied.state, applied.remainingSuggestions));
+          await writeJsonAtomic(CURRENT_STATE, nextState);
+        }
+        nextResult = {
+          ...result,
+          suggestions: applied.remainingSuggestions,
+          autoApplied: applied.autoApplied,
+        };
       }
-      return { result, state };
+      const completedAt = new Date().toISOString();
+      const log = activeScanStatus.log.length ? activeScanStatus.log : (Array.isArray(nextResult?.log) ? nextResult.log : []);
+      const { logPath } = await persistRecognitionScan({ requestId, profile, source, startedAt, completedAt, result: nextResult, log });
+      return { result: { ...nextResult, logPath }, state: nextState };
+    } catch (error) {
+      const completedAt = new Date().toISOString();
+      const log = activeScanStatus?.log || [];
+      try {
+        await persistRecognitionScan({ requestId, profile, source, startedAt, completedAt, log, error });
+      } catch (logError) {
+        console.error("Failed to save recognition scan log: " + (logError instanceof Error ? logError.message : String(logError)));
+      }
+      throw error;
     } finally {
       activeScanController = null;
+      activeScanStatus = null;
     }
   }
 
@@ -416,6 +594,10 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner, 
       return sendJson(res, 200, await adbTester({ settings, capture: Boolean(body.capture) }));
     }
 
+    if (req.method === "GET" && url.pathname === "/api/recognition/scan/status") {
+      return sendJson(res, 200, { active: publicScanStatus(activeScanStatus), lastScan: lastScanSummary });
+    }
+
     if (req.method === "POST" && url.pathname === "/api/recognition/scan") {
       const bodyText = await readBody(req);
       const body = bodyText ? JSON.parse(bodyText) : {};
@@ -427,6 +609,8 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner, 
 
     if (req.method === "POST" && url.pathname === "/api/recognition/scan/cancel") {
       if (activeScanController) {
+        appendActiveScanLog({ event: "cancel_requested", at: new Date().toISOString() });
+        if (activeScanStatus) activeScanStatus.status = "cancelling";
         activeScanController.abort();
         return sendJson(res, 202, { cancelled: true });
       }
@@ -466,8 +650,8 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner, 
   });
 }
 
-export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner, adbDetector, adbTester, adbPathPicker } = {}) {
-  const server = createAppServer({ recognitionRunner, adbDetector, adbTester, adbPathPicker });
+export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner, adbDetector, adbTester, adbPathPicker, recognitionLogDir } = {}) {
+  const server = createAppServer({ recognitionRunner, adbDetector, adbTester, adbPathPicker, recognitionLogDir });
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, () => {

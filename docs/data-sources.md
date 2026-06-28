@@ -18,7 +18,9 @@ Long strategy text and comments are not copied. Relic and operator images are mi
 - data/operator-implementation-history.json - Japan implementation dates and implementation order from the operator implementation history page
 - data/operator-images.json - operator image sync audit manifest, including source URLs, local paths, and failed downloads
 - assets/operators/wikiru/img - mirrored operator image files referenced by data/operators.json
-
+- data/recognition/maa-operator-name-ocr.json - MAA YoStarJP CharsNameOcrReplace operator-name OCR rules, local operator matches, OCR equivalence classes, and public recruitment operator names
+- third_party/maa/resource/global/YoStarJP/resource/tasks/tasks.json - vendored MAA YoStarJP task overrides used as the source for CharsNameOcrReplace
+- third_party/maa/resource/global/YoStarJP/resource/recruitment.json - vendored MAA YoStarJP public recruitment operator list
 ## Reviewable Update Runner
 
 Prefer `tools/update-data.ps1` for routine updates. It snapshots `data/` before and after the selected sync steps, then runs `tools/compare-data-update.mjs` to generate `summary.md`, `changes.csv`, and `changes.json` in `review/update-runs/<run-id>/`.

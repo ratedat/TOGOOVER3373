@@ -1,6 +1,6 @@
 import * as controlActions from "./control-actions.js";
 import { clampCoinCount, normalizeCoinFace } from "./domain/special-values.js";
-import { adbDetectUrl, adbSelectPathUrl, adbTestUrl, apiJson, recognitionScanCancelUrl, recognitionScanUrl, resetStateUrl } from "./lib/api.js";
+import { adbDetectUrl, adbSelectPathUrl, adbTestUrl, apiJson, recognitionScanCancelUrl, recognitionScanStatusUrl, recognitionScanUrl, resetStateUrl } from "./lib/api.js";
 import { normalizeControlV2Screen } from "./domain/control-v2-screens.js";
 
 function parseImportDraft(ui) {
@@ -8,6 +8,33 @@ function parseImportDraft(ui) {
   const parsed = JSON.parse(ui.importDraft);
   if (!parsed || typeof parsed !== "object") throw new Error("状態JSONではありません");
   return parsed;
+}
+
+async function getRecognitionScanStatus() {
+  return apiJson(recognitionScanStatusUrl);
+}
+
+async function refreshRecognitionScanStatus(context, { render = true } = {}) {
+  try {
+    context.ui.recognitionScanStatus = await getRecognitionScanStatus();
+    context.ui.recognitionScanStatusError = "";
+    if (render) context.renderControl();
+  } catch (error) {
+    context.ui.recognitionScanStatusError = error.message;
+    if (render) context.renderControl();
+  }
+}
+
+function stopRecognitionStatusPolling(context) {
+  if (context.ui.recognitionScanStatusTimer) clearInterval(context.ui.recognitionScanStatusTimer);
+  context.ui.recognitionScanStatusTimer = null;
+}
+
+function startRecognitionStatusPolling(context) {
+  stopRecognitionStatusPolling(context);
+  context.ui.recognitionScanStatusTimer = setInterval(() => {
+    refreshRecognitionScanStatus(context).catch(() => {});
+  }, 700);
 }
 
 async function postRecognitionScan(profileId) {
@@ -24,6 +51,13 @@ async function postRecognitionScan(profileId) {
     throw error;
   }
   return payload;
+}
+
+function recognitionProfileListFromButton(button) {
+  return String(button.dataset.profiles || button.dataset.profile || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 async function postAdbDetect(settings) {
   return apiJson(adbDetectUrl, {
@@ -296,25 +330,46 @@ export function registerControlEvents(app, context) {
       return;
     }
     if (action === "trigger-recognition-scan") {
-      const profileId = button.dataset.profile;
-      if (!profileId) return;
+      const profileIds = recognitionProfileListFromButton(button);
+      if (!profileIds.length) return;
+      const startedAt = new Date().toISOString();
       button.disabled = true;
-      context.setNotice("ADBスキャンを開始しました。完了後に候補だけ追加します。");
+      context.ui.recognitionScanStatus = {
+        active: { profileId: profileIds.join(","), profileLabel: button.textContent?.trim() || profileIds.join(","), source: "adb", status: "starting", stage: "request", startedAt, updatedAt: startedAt, log: [] },
+        lastScan: context.ui.recognitionScanStatus?.lastScan || null,
+      };
+      context.renderControl();
+      startRecognitionStatusPolling(context);
+      context.setNotice(profileIds.length > 1 ? `ADB連続スキャンを開始しました: ${profileIds.length}件` : "ADBスキャンを開始しました。コンパネに進行状況を表示します。");
       try {
-        const payload = await postRecognitionScan(profileId);
-        if (payload.state) replaceControlState(context, payload.state);
+        let totalCount = 0;
+        let totalAutoCount = 0;
+        const logPaths = [];
+        for (const profileId of profileIds) {
+          const payload = await postRecognitionScan(profileId);
+          if (payload.state) replaceControlState(context, payload.state);
+          totalCount += payload.result?.suggestions?.length || 0;
+          totalAutoCount += payload.result?.autoApplied?.length || 0;
+          if (payload.result?.logPath) logPaths.push(payload.result.logPath);
+        }
+        await refreshRecognitionScanStatus(context, { render: false });
         context.renderControl();
-        const count = payload.result?.suggestions?.length || 0;
-        context.setNotice(`ADBスキャン完了: 候補${count}件をレビュー待ちに追加しました。`);
+        const logPath = logPaths.length ? ` / Log: ${logPaths.at(-1)}` : "";
+        context.setNotice(`ADBスキャン完了: 候補${totalCount}件 / 自動反映${totalAutoCount}件${logPath}`);
       } catch (error) {
+        await refreshRecognitionScanStatus(context, { render: false });
+        context.renderControl();
         context.setNotice(`ADBスキャン中止/失敗: ${error.message}`);
       } finally {
+        stopRecognitionStatusPolling(context);
         button.disabled = false;
       }
       return;
     }
     if (action === "cancel-recognition-scan") {
       await fetch(recognitionScanCancelUrl, { method: "POST" });
+      await refreshRecognitionScanStatus(context, { render: false });
+      context.renderControl();
       context.setNotice("ADBスキャン停止を要求しました。");
       return;
     }

@@ -3,7 +3,7 @@ import fsSync from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { app, BrowserWindow, Menu, dialog, shell } from "electron";
+import { app, BrowserWindow, Menu, dialog, shell, ipcMain } from "electron";
 import {
   appUrl,
   DEFAULT_PORT,
@@ -30,12 +30,15 @@ import {
   targetFromStoredSelection,
 } from "../runtime/storage-config.mjs";
 import { isInternalAppUrl } from "../runtime/window-open.mjs";
+import { shouldQuitOnAllWindowsClosed } from "../runtime/electron-lifecycle.mjs";
+import { isPortInUseError, nextPortCandidate } from "../runtime/server-startup.mjs";
 
 let port = resolveStartupPort({ args: process.argv, env: process.env });
 const initialView = normalizeView(readArg(process.argv, "--view", "control-v2"));
 const smokeTest = hasFlag(process.argv, "--smoke-test");
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const APP_ROOT = path.resolve(__dirname, "../..");
+const PORT_PICKER_PRELOAD = path.join(__dirname, "port-picker-preload.cjs");
 const storageContext = {
   appRoot: APP_ROOT,
   execPath: process.execPath,
@@ -54,6 +57,7 @@ try {
 let serverController = null;
 let mainWindow = null;
 let isQuitting = false;
+let startupInProgress = true;
 
 function readJsonFileSync(file) {
   try {
@@ -415,7 +419,11 @@ function portPickerHtml(defaultPort) {
         input.select();
         return;
       }
-      location.href = 'arknights-port://select?port=' + value;
+      if (window.rhodesPortPicker) {
+        window.rhodesPortPicker.select(value);
+      } else {
+        location.href = 'arknights-port://select?port=' + value;
+      }
     });
     reset.addEventListener('click', () => {
       input.value = String(defaultPort);
@@ -424,7 +432,11 @@ function portPickerHtml(defaultPort) {
       refreshPreview();
     });
     cancel.addEventListener('click', () => {
-      location.href = 'arknights-port://cancel';
+      if (window.rhodesPortPicker) {
+        window.rhodesPortPicker.cancel();
+      } else {
+        location.href = 'arknights-port://cancel';
+      }
     });
     input.addEventListener('input', refreshPreview);
     refreshPreview();
@@ -450,15 +462,28 @@ function showPortPicker(defaultPort) {
         contextIsolation: true,
         nodeIntegration: false,
         sandbox: true,
+        preload: PORT_PICKER_PRELOAD,
       },
     });
     let settled = false;
     const finish = (value) => {
       if (settled) return;
       settled = true;
+      ipcMain.off("rhodes-port-picker-select", handleIpcSelect);
+      ipcMain.off("rhodes-port-picker-cancel", handleIpcCancel);
       resolve(value);
       if (!picker.isDestroyed()) picker.close();
     };
+    const handleIpcSelect = (event, value) => {
+      if (event.sender !== picker.webContents) return;
+      finish(normalizePort(value));
+    };
+    const handleIpcCancel = (event) => {
+      if (event.sender !== picker.webContents) return;
+      finish(null);
+    };
+    ipcMain.on("rhodes-port-picker-select", handleIpcSelect);
+    ipcMain.on("rhodes-port-picker-cancel", handleIpcCancel);
     const handlePickerUrl = (targetUrl) => {
       if (!targetUrl.startsWith("arknights-port://")) return false;
       const parsed = new URL(targetUrl);
@@ -570,7 +595,47 @@ async function pickAdbPath() {
   return { canceled: result.canceled, path: result.filePaths?.[0] || "" };
 }
 
+async function showPortInUseDialog(conflictingPort) {
+  const result = await dialog.showMessageBox({
+    type: "warning",
+    title: "サーバー起動失敗",
+    message: `ポート ${conflictingPort} は既に使用中です`,
+    detail: "別のRHODES OBS COMMANDER3373、開発用サーバー、または他のアプリが同じポートを使っています。別ポートを選ぶか、使用中のアプリを終了してください。",
+    buttons: ["別ポートを選ぶ", "終了"],
+    defaultId: 0,
+    cancelId: 1,
+    noLink: true,
+  });
+  return result.response === 0;
+}
+
+async function startServerWithPortRetry(startServer, selectedPort) {
+  let candidatePort = selectedPort;
+  while (candidatePort != null) {
+    port = candidatePort;
+    try {
+      const controller = await startServer({ port: candidatePort, adbPathPicker: pickAdbPath });
+      port = controller.port;
+      return controller;
+    } catch (error) {
+      if (!isPortInUseError(error) || smokeTest) throw error;
+      console.warn(error instanceof Error ? error.message : String(error));
+      const retry = await showPortInUseDialog(candidatePort);
+      if (!retry) return null;
+      candidatePort = await showPortPicker(nextPortCandidate(candidatePort));
+      if (candidatePort != null) {
+        try {
+          await saveSelectedPort(candidatePort);
+        } catch (saveError) {
+          console.warn(saveError instanceof Error ? saveError.message : String(saveError));
+        }
+      }
+    }
+  }
+  return null;
+}
 async function startDesktopApp() {
+  startupInProgress = true;
   const selectedStorageTarget = await chooseStorageTarget();
   if (!selectedStorageTarget) {
     app.quit();
@@ -582,10 +647,12 @@ async function startDesktopApp() {
     app.quit();
     return;
   }
-  port = startupPort;
   const { startServer } = await import("../server.mjs");
-  serverController = await startServer({ port, adbPathPicker: pickAdbPath });
-  port = serverController.port;
+  serverController = await startServerWithPortRetry(startServer, startupPort);
+  if (!serverController) {
+    app.quit();
+    return;
+  }
   const targetUrl = appUrl(serverController.port, initialView);
   await waitForReady(targetUrl);
   console.log(`Desktop: ${targetUrl}`);
@@ -595,6 +662,7 @@ async function startDesktopApp() {
     return;
   }
   createWindow(targetUrl);
+  startupInProgress = false;
 }
 
 if (!app.requestSingleInstanceLock(launchRequestData({ port, view: initialView }))) {
@@ -603,7 +671,9 @@ if (!app.requestSingleInstanceLock(launchRequestData({ port, view: initialView }
   app.on("second-instance", handleSecondInstance);
 
   app.whenReady().then(startDesktopApp).catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
+    const message = error instanceof Error ? error.message : String(error);
+    console.error(message);
+    dialog.showErrorBox("RHODES OBS COMMANDER3373 起動失敗", message);
     app.quit();
   });
 
@@ -617,6 +687,6 @@ if (!app.requestSingleInstanceLock(launchRequestData({ port, view: initialView }
   });
 
   app.on("window-all-closed", () => {
-    if (process.platform !== "darwin") app.quit();
+    if (shouldQuitOnAllWindowsClosed({ platform: process.platform, startupInProgress })) app.quit();
   });
 }

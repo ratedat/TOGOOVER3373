@@ -6,6 +6,23 @@ import { extractRunStatusCandidates } from "../app/domain/recognition/run-status
 const squads = [
   { id: "is5_sarkaz_squad_03", campaignId: "is5_sarkaz", name: "位置測定分隊" },
   { id: "is5_sarkaz_squad_04", campaignId: "is5_sarkaz", name: "指揮分隊" },
+  {
+    id: "is5_sarkaz_squad_16",
+    campaignId: "is5_sarkaz",
+    name: "奇想天外分隊",
+    randomEffectOptions: [
+      {
+        id: "is5_sarkaz_mimic_02",
+        label: "組み合わせ02",
+        effect: "★4以上の【術師】を招集時に消費する希望-2、昇進時に消費する希望-1、【術師】を初めて招集する際、昇進済の状態で招集できる。初めから「生還者の契約」を所持",
+      },
+      {
+        id: "is5_sarkaz_mimic_03",
+        label: "組み合わせ03",
+        effect: "★4以上の【特殊】を招集時に消費する希望-2、昇進時に消費する希望-1、【特殊】を初めて招集する際、昇進済の状態で招集できる。初めから「生還者の契約」を所持",
+      },
+    ],
+  },
 ];
 
 const difficultyGrades = {
@@ -44,11 +61,47 @@ test("run status extractor ignores unrelated numbers before the difficulty name"
   assert.equal(candidates.find((item) => item.field === "difficulty").value, 18);
 });
 
+test("run status extractor maps 奇想天外分隊 description to a random squad effect option", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "奇 想 天 外 分 隊", regionId: "run.squad_name" },
+      { text: "★4以上の【術師】を招集時に消費する希望-2、昇進時に消費する希望-1、【術師】を初めて招集する際、昇進済の状態で招集できる。初めから「生還者の契約」を所持", regionId: "run.squad_card" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["squadId", "squadRandomEffectOptionId"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["squadId", "is5_sarkaz_squad_16"],
+    ["squadRandomEffectOptionId", "is5_sarkaz_mimic_02"],
+  ]);
+});
+
+test("run status extractor does not infer random squad effect for non-奇想天外 squads", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "指 揮 分 隊", regionId: "run.squad_name" },
+      { text: "★4以上の【術師】を招集時に消費する希望-2、昇進時に消費する希望-1、【術師】を初めて招集する際、昇進済の状態で招集できる。初めから「生還者の契約」を所持", regionId: "run.squad_card" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.equal(candidates.some((item) => item.field === "squadRandomEffectOptionId"), false);
+});
+
 
 test("run status extractor prefers dedicated difficulty grade ROI over decorative OCR noise", () => {
   const candidates = extractRunStatusCandidates({
     text: "魂 に 直 面 CDIFFICULTY\"I 5 位 置 測 定 分 隊",
     ocrResults: [{ text: "18", regionId: "run.difficulty_grade" }],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.equal(candidates.find((item) => item.field === "difficulty").value, 18);
+});
+
+test("run status extractor prefers labeled difficulty text over stray grade ROI digits", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "魂 に 直 面 18", regionId: "run.difficulty_block" },
+      { text: "2", regionId: "run.difficulty_grade" },
+    ],
   }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
 
   assert.equal(candidates.find((item) => item.field === "difficulty").value, 18);
@@ -88,10 +141,11 @@ test("run status extractor does not use command exp 0/10 as command level", () =
 
 
 
-test("run status extractor reads Sarkaz idea count from the thought-side region", () => {
+test("run status extractor reads Sarkaz idea count from the bottom conception counter", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
-      { text: "12/5", regionId: "run.idea" },
+      { text: "29/32", regionId: "run.thought_burden" },
+      { text: "2", regionId: "run.idea" },
       { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
       { text: "魂 に 直 面", regionId: "run.difficulty_block" },
       { text: "18", regionId: "run.difficulty_grade" },
@@ -100,7 +154,7 @@ test("run status extractor reads Sarkaz idea count from the thought-side region"
 
   const idea = candidates.find((item) => item.field === "idea");
   assert.equal(idea.label, "構想");
-  assert.equal(idea.value, 12);
+  assert.equal(idea.value, 2);
 });
 
 test("run status extractor reads hope and originium ingots from dedicated resource regions", () => {
@@ -117,6 +171,171 @@ test("run status extractor reads hope and originium ingots from dedicated resour
   assert.deepEqual(candidates.filter((item) => ["hope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
     ["hope", 6],
     ["ingot", 20],
+  ]);
+});
+
+test("run status extractor splits hope current and max values from the same OCR region", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "3 < 11", regionId: "run.hope" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 3],
+    ["maxHope", 11],
+  ]);
+});
+test("run status extractor splits compact hope OCR when the separator is dropped", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "311", regionId: "run.hope" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 3],
+    ["maxHope", 11],
+  ]);
+});
+
+test("run status extractor combines separated hope current and max OCR regions", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "6", regionId: "run.hope.current" },
+      { text: "6", regionId: "run.hope.max" },
+      { text: "20", regionId: "run.ingot" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 6],
+    ["maxHope", 6],
+    ["ingot", 20],
+  ]);
+});
+
+test("run status extractor reads hope current, hope max, and ingot from the resource-number crop", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "29", regionId: "run.hope" },
+      { text: "29", regionId: "run.hope.max" },
+      { text: "1+1 -29 14", regionId: "run.resource_numbers" },
+      { text: "専 門 家 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 1],
+    ["maxHope", 29],
+    ["ingot", 14],
+  ]);
+});
+
+test("run status extractor splits compact resource-number crop OCR", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "12914", regionId: "run.resource_numbers" },
+      { text: "専 門 家 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 1],
+    ["maxHope", 29],
+    ["ingot", 14],
+  ]);
+});
+
+test("run status extractor recovers hope current from top-right status when the small ROI misses it", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "29", regionId: "run.hope" },
+      { text: "29", regionId: "run.hope.max" },
+      { text: "1+1 -29 14", regionId: "run.top_right_status" },
+      { text: "14", regionId: "run.ingot" },
+      { text: "専 門 家 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 1],
+    ["maxHope", 29],
+    ["ingot", 14],
+  ]);
+});
+
+test("run status extractor prefers valid split hope ROIs when whole hope reads duplicated max", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "29 < 29", regionId: "run.hope" },
+      { text: "1", regionId: "run.hope.current" },
+      { text: "29", regionId: "run.hope.max" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 1],
+    ["maxHope", 29],
+  ]);
+});
+
+test("run status extractor prefers the full hope pair over noisy split hope ROIs", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "<10<10", regionId: "run.hope" },
+      { text: "1", regionId: "run.hope.current" },
+      { text: "101", regionId: "run.hope.max" },
+      { text: "1", regionId: "run.ingot" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 10],
+    ["maxHope", 10],
+    ["ingot", 1],
+  ]);
+});
+
+test("run status extractor ignores partial two-digit whole hope OCR before a full pair", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "12", regionId: "run.hope" },
+      { text: "10<10", regionId: "run.hope" },
+      { text: "1", regionId: "run.hope.current" },
+      { text: "101", regionId: "run.hope.max" },
+      { text: "1", regionId: "run.ingot" },
+      { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 10],
+    ["maxHope", 10],
+    ["ingot", 1],
   ]);
 });
 
@@ -155,6 +374,28 @@ test("run status extractor uses the current life value before slash from status 
     ["lifePoints", 6],
     ["shield", 2],
   ]);
+});
+
+test("run status extractor does not join difficulty name with unrelated status values", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "2 / 5", regionId: "run.life_points" },
+      { text: "イ 8 下", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.equal(candidates.find((item) => item.field === "difficulty").value, 18);
+});
+
+test("run status extractor normalizes katakana-one OCR in difficulty numbers", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "イ 8 下", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.equal(candidates.find((item) => item.field === "difficulty").value, 18);
 });
 
 test("run status extractor uses dedicated difficulty grade ROI even when difficulty name OCR is missing", () => {

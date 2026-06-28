@@ -71,6 +71,12 @@ export function createFallbackTextExtractor(extractors = []) {
 export function createDefaultOcrTextExtractor({ engine = process.env.RHODES_OCR_ENGINE || "auto" } = {}) {
   const normalized = String(engine || "auto").toLowerCase();
   if (normalized === "windows") return createWindowsOcrTextExtractor();
+  if (["windows-paddle", "paddle-windows"].includes(normalized)) {
+    return createMergedTextExtractor([
+      createWindowsOcrTextExtractor(),
+      createPaddleOcrTextExtractor({ required: false }),
+    ], { engine: "hybrid-windows-paddle" });
+  }
   if (normalized === "paddle") return createPaddleOcrTextExtractor({ required: true });
   if (["maa-onnx", "maa", "onnx"].includes(normalized)) return createMaaOnnxOcrTextExtractor({ required: true });
   if (["hybrid", "maa-hybrid", "onnx-hybrid"].includes(normalized)) {
@@ -86,4 +92,31 @@ export function createDefaultOcrTextExtractor({ engine = process.env.RHODES_OCR_
     createPaddleOcrTextExtractor({ required: false }),
     createWindowsOcrTextExtractor(),
   ]);
+}
+
+export function createProfileAwareTextExtractor({ defaultExtractor, profileExtractors = {} } = {}) {
+  return {
+    async extract(frame, context = {}) {
+      const profileId = context.profile?.id;
+      const extractor = profileExtractors[profileId] || defaultExtractor;
+      if (!extractor?.extract) return frame;
+      return extractor.extract(frame, context);
+    },
+  };
+}
+
+export function createProfileAwareOcrTextExtractor({ defaultEngine = process.env.RHODES_OCR_ENGINE || "auto", profileEngines = {} } = {}) {
+  const byEngine = new Map();
+  const extractorFor = (engine) => {
+    const key = String(engine || "auto").toLowerCase();
+    if (!byEngine.has(key)) byEngine.set(key, createDefaultOcrTextExtractor({ engine: key }));
+    return byEngine.get(key);
+  };
+  const profileExtractors = Object.fromEntries(
+    Object.entries(profileEngines || {}).map(([profileId, engine]) => [profileId, extractorFor(engine)]),
+  );
+  return createProfileAwareTextExtractor({
+    defaultExtractor: extractorFor(defaultEngine),
+    profileExtractors,
+  });
 }

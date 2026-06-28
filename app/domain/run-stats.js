@@ -1,5 +1,6 @@
 export const RUN_STAT_FIELDS = Object.freeze([
   { id: "hope", label: "希望", min: 0, max: 999 },
+  { id: "maxHope", label: "希望上限", min: 0, max: 999 },
   { id: "ingot", label: "源石錐", min: 0, max: 9999 },
   { id: "lifePoints", label: "耐久値", min: 0, max: 999 },
   { id: "shield", label: "シールド", min: 0, max: 999 },

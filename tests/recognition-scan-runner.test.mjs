@@ -94,6 +94,164 @@ test("coins profile keeps horizontal/right scroll semantics in operation log", a
   assert.deepEqual(swipe.end, { x: 500, y: 1080 });
 });
 
+
+test("scan runner can sweep a scrollable overlay down and then back up", async () => {
+  const adapterLog = [];
+  const result = await runScanProfile({
+    profile: baseProfile({
+      id: "relicsFull",
+      scrollPasses: [
+        {
+          axis: "vertical",
+          direction: "down",
+          scroll: { start: { x: 24, y: 610 }, end: { x: 24, y: 150 }, durationMs: 620 },
+          maxScrolls: 1,
+        },
+        {
+          axis: "vertical",
+          direction: "up",
+          scroll: { start: { x: 24, y: 150 }, end: { x: 24, y: 610 }, durationMs: 620 },
+          maxScrolls: 1,
+        },
+      ],
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "top", candidates: [{ kind: "relic", relicId: "r-top", name: "上", confidence: 0.8 }] },
+      { fingerprint: "bottom", candidates: [{ kind: "relic", relicId: "r-bottom", name: "下", confidence: 0.8 }] },
+      { fingerprint: "bottom", candidates: [{ kind: "relic", relicId: "r-bottom", name: "下", confidence: 0.8 }] },
+      { fingerprint: "top", candidates: [{ kind: "relic", relicId: "r-top", name: "上", confidence: 0.8 }] },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-two-pass",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(result.suggestions.length, 2);
+  assert.deepEqual(adapterLog.filter((entry) => entry[0] === "swipe").map((entry) => entry[1].start), [
+    { x: 48, y: 1220 },
+    { x: 48, y: 300 },
+  ]);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.direction === "down" && entry.passIndex === 0), true);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.direction === "up" && entry.passIndex === 1), true);
+});
+
+test("relic scan skips scroll when the opened panel fits within three rows", async () => {
+  const adapterLog = [];
+  const result = await runScanProfile({
+    profile: baseProfile({
+      id: "relicsFull",
+      candidateKind: "relic",
+      scrollGuard: {
+        type: "initialCandidateCountAtMost",
+        candidateKind: "relic",
+        maxCandidates: 9,
+        reason: "relic_panel_not_scrollable",
+        skipRemainingPasses: true,
+      },
+      scrollPasses: [
+        {
+          axis: "vertical",
+          direction: "down",
+          scroll: { start: { x: 24, y: 610 }, end: { x: 24, y: 150 }, durationMs: 620 },
+          maxScrolls: 1,
+        },
+        {
+          axis: "vertical",
+          direction: "up",
+          scroll: { start: { x: 24, y: 150 }, end: { x: 24, y: 610 }, durationMs: 620 },
+          maxScrolls: 1,
+        },
+      ],
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      {
+        fingerprint: "short-panel",
+        candidates: [
+          { kind: "relic", relicId: "r1", name: "秘宝1", confidence: 0.8 },
+          { kind: "relic", relicId: "r2", name: "秘宝2", confidence: 0.8 },
+          { kind: "relic", relicId: "r3", name: "秘宝3", confidence: 0.8 },
+        ],
+      },
+      { fingerprint: "would-only-appear-after-bad-scroll", candidates: [] },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-short-relic-panel",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(result.suggestions.length, 3);
+  assert.equal(adapterLog.some((entry) => entry[0] === "swipe"), false);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.status === "skipped" && entry.reason === "relic_panel_not_scrollable"), true);
+});
+test("relic scan still scrolls when initial candidates exceed three rows", async () => {
+  const adapterLog = [];
+  const initialCandidates = Array.from({ length: 10 }, (_, index) => ({
+    kind: "relic",
+    relicId: `r${index + 1}`,
+    name: `秘宝${index + 1}`,
+    confidence: 0.8,
+  }));
+  const result = await runScanProfile({
+    profile: baseProfile({
+      id: "relicsFull",
+      candidateKind: "relic",
+      scrollGuard: {
+        type: "initialCandidateCountAtMost",
+        candidateKind: "relic",
+        maxCandidates: 9,
+        reason: "relic_panel_not_scrollable",
+        skipRemainingPasses: true,
+      },
+      scrollPasses: [
+        {
+          axis: "vertical",
+          direction: "down",
+          scroll: { start: { x: 24, y: 610 }, end: { x: 24, y: 150 }, durationMs: 620 },
+          maxScrolls: 1,
+        },
+      ],
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "tall-panel-top", candidates: initialCandidates },
+      { fingerprint: "tall-panel-bottom", candidates: [{ kind: "relic", relicId: "r11", name: "秘宝11", confidence: 0.8 }] },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-tall-relic-panel",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(adapterLog.some((entry) => entry[0] === "swipe"), true);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.status === "skipped"), false);
+});
+test("scan runner stops a pass when recognized candidate sets stop changing", async () => {
+  const adapterLog = [];
+  const result = await runScanProfile({
+    profile: baseProfile({
+      maxScrolls: 5,
+      endFingerprintStableCount: 2,
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "animated-1", candidates: [{ kind: "relic", relicId: "r1", name: "秘宝A", confidence: 0.8 }] },
+      { fingerprint: "animated-2", candidates: [{ kind: "relic", relicId: "r1", name: "秘宝A", confidence: 0.8 }] },
+      { fingerprint: "animated-3", candidates: [{ kind: "relic", relicId: "r1", name: "秘宝A", confidence: 0.8 }] },
+      { fingerprint: "would-not-be-read", candidates: [] },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-candidate-stable",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(adapterLog.filter((entry) => entry[0] === "swipe").length, 2);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.status === "end" && entry.reason === "candidate_stable"), true);
+});
 test("scan runner aborts before open when the current screen is unknown", async () => {
   const adapterLog = [];
   const result = await runScanProfile({
@@ -137,4 +295,110 @@ test("scan runner randomizes tap areas and scroll swipes at execution time", asy
   const swipe = adapterLog.find((entry) => entry[0] === "swipe")[1];
   assert.notDeepEqual(swipe.start, { x: 2000, y: 1200 });
   assert.notDeepEqual(swipe.end, { x: 2000, y: 400 });
+});
+
+
+test("scan runner emits live log entries through onLog", async () => {
+  const liveLog = [];
+  const result = await runScanProfile({
+    profile: baseProfile({ maxScrolls: 0, restoreSteps: [] }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "page-1", candidates: [{ kind: "runStatus", field: "difficulty", value: 18, confidence: 0.8 }] },
+    ]),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-live-log",
+    random: () => 0.5,
+    onLog: (entry) => liveLog.push(entry),
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(liveLog.length, result.log.length);
+  assert.equal(liveLog.some((entry) => entry.event === "capture" && entry.stage === "scan"), true);
+  assert.equal(liveLog.some((entry) => entry.event === "recognize" && entry.count === 1), true);
+});
+
+
+test("scan runner skips open and restore when the target panel is already open", async () => {
+  const adapterLog = [];
+  const recognizer = {
+    async classify() {
+      return { known: true, screenId: "run-squad-info-panel", confidence: 0.9 };
+    },
+    async fingerprint(frame) {
+      return frame.fingerprint || "target-page";
+    },
+    async recognize() {
+      return [{ kind: "runStatus", field: "squadId", value: "is5_sarkaz_squad_03", confidence: 0.86 }];
+    },
+  };
+
+  const result = await runScanProfile({
+    profile: baseProfile({
+      id: "runStatusFull",
+      targetScreenIds: ["run-squad-info-panel"],
+      inferredScreenId: "run-squad-info-panel",
+      maxScrolls: 0,
+    }),
+    adapter: createAdapter([
+      { bytes: Buffer.from("known") },
+      { bytes: Buffer.from("scan"), fingerprint: "target-page" },
+    ], adapterLog),
+    recognizer,
+    scanId: "scan-target-open",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.deepEqual(adapterLog.map((entry) => entry[0]), ["resolution", "capture", "capture"]);
+  assert.equal(result.log.some((entry) => entry.event === "open" && entry.status === "skipped" && entry.reason === "already_at_target"), true);
+  assert.equal(result.suggestions[0].candidate.field, "squadId");
+});
+
+test("scan runner can force return passes to mirror the previous pass scroll count", async () => {
+  const adapterLog = [];
+  const sameCandidate = [{ kind: "operator", operatorId: "blaze", name: "ブレイズ", confidence: 0.8 }];
+  const result = await runScanProfile({
+    profile: baseProfile({
+      id: "operatorsFull",
+      scrollPasses: [
+        {
+          axis: "horizontal",
+          direction: "right",
+          scroll: { start: { x: 1100, y: 360 }, end: { x: 420, y: 360 }, durationMs: 500 },
+          maxScrolls: 3,
+          endFingerprintStableCount: 1,
+          candidateStableEndCount: 1,
+        },
+        {
+          axis: "horizontal",
+          direction: "left",
+          scroll: { start: { x: 420, y: 360 }, end: { x: 1100, y: 360 }, durationMs: 500 },
+          maxScrolls: 3,
+          endFingerprintStableCount: 1,
+          candidateStableEndCount: 1,
+          mirrorPreviousPassScrolls: true,
+        },
+      ],
+    }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home" },
+      { fingerprint: "right-0", candidates: [{ kind: "operator", operatorId: "op0", confidence: 0.8 }] },
+      { fingerprint: "right-1", candidates: [{ kind: "operator", operatorId: "op1", confidence: 0.8 }] },
+      { fingerprint: "right-2", candidates: [{ kind: "operator", operatorId: "op2", confidence: 0.8 }] },
+      { fingerprint: "right-3", candidates: [{ kind: "operator", operatorId: "op3", confidence: 0.8 }] },
+      { fingerprint: "left-0", candidates: sameCandidate },
+      { fingerprint: "left-1", candidates: sameCandidate },
+      { fingerprint: "left-2", candidates: sameCandidate },
+      { fingerprint: "left-3", candidates: sameCandidate },
+    ], adapterLog),
+    recognizer: createMetadataRecognizer(),
+    scanId: "scan-mirror-return",
+    random: () => 0.5,
+  });
+
+  assert.equal(result.status, "completed");
+  assert.equal(adapterLog.filter((entry) => entry[0] === "swipe").length, 6);
+  assert.equal(adapterLog.filter((entry) => entry[0] === "swipe" && entry[1].start.x < entry[1].end.x).length, 3);
+  assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.direction === "left" && entry.status === "end" && entry.iteration === 3), true);
 });

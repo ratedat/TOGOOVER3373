@@ -12,12 +12,141 @@
       "recognition": {
         "type": "OCR",
         "expected": [
-          "指揮",
-          "秘宝"
+          "分隊"
+        ],
+        "match": "any",
+        "normalize": [
+          "remove_spaces"
+        ],
+        "roi": [
+          0,
+          392,
+          540,
+          270
+        ],
+        "scale": 3
+      }
+    },
+    {
+      "id": "run.operator_list",
+      "screenId": "operator-list",
+      "label": "オペレーター一覧",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "recognition": {
+        "type": "OCR",
+        "expected": [
+          "スキル",
+          "職分"
         ],
         "match": "all",
         "normalize": [
           "remove_spaces"
+        ],
+        "roi": [
+          0,
+          130,
+          360,
+          260
+        ],
+        "scale": 3
+      }
+    },
+    {
+      "id": "run.sarkaz_age_detail",
+      "screenId": "sarkaz-age-detail",
+      "label": "サルカズ 時代詳細",
+      "profileIds": [
+        "is5AgeFull"
+      ],
+      "recognition": {
+        "type": "OCR",
+        "roi": [
+          360,
+          0,
+          560,
+          280
+        ],
+        "scale": 3,
+        "expected": [
+          "形成期",
+          "拡張期",
+          "全盛期"
+        ],
+        "match": "any",
+        "normalize": [
+          "remove_spaces"
+        ]
+      }
+    },
+    {
+      "id": "run.map_footer",
+      "screenId": "run-home",
+      "label": "マップ下部フッター",
+      "profileIds": [
+        "runStatusFull",
+        "operatorsFull",
+        "relicsFull",
+        "is4RevelationFull",
+        "is5ThoughtFull",
+        "is5AgeFull",
+        "is6CoinsFull"
+      ],
+      "recognition": {
+        "type": "OCR",
+        "roi": [
+          0,
+          620,
+          1280,
+          100
+        ],
+        "scale": 3,
+        "expected": [
+          "秘宝",
+          "思案",
+          "隊員"
+        ],
+        "match": "any",
+        "normalize": [
+          "remove_spaces"
+        ],
+        "ocrReplace": [
+          [
+            "5宝",
+            "秘宝"
+          ]
+        ]
+      }
+    },
+    {
+      "id": "run.map_footer.relic",
+      "screenId": "run-home",
+      "label": "マップ下部フッター 秘宝ボタン",
+      "profileIds": [
+        "relicsFull"
+      ],
+      "recognition": {
+        "type": "OCR",
+        "roi": [
+          134,
+          648,
+          84,
+          60
+        ],
+        "scale": 3,
+        "expected": [
+          "秘宝"
+        ],
+        "match": "any",
+        "normalize": [
+          "remove_spaces"
+        ],
+        "ocrReplace": [
+          [
+            "5宝",
+            "秘宝"
+          ]
         ]
       }
     }
@@ -134,6 +263,19 @@
       "scale": 5
     },
     {
+      "id": "run.resource_numbers",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        900,
+        10,
+        380,
+        52
+      ],
+      "scale": 8
+    },
+    {
       "id": "run.hope",
       "profileIds": [
         "runStatusFull"
@@ -143,6 +285,32 @@
         10,
         170,
         52
+      ],
+      "scale": 8
+    },
+    {
+      "id": "run.hope.current",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        941,
+        17,
+        32,
+        35
+      ],
+      "scale": 8
+    },
+    {
+      "id": "run.hope.max",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        965,
+        17,
+        64,
+        35
       ],
       "scale": 8
     },
@@ -165,10 +333,10 @@
         "runStatusFull"
       ],
       "roi": [
-        700,
-        648,
-        128,
-        60
+        848,
+        650,
+        58,
+        66
       ],
       "scale": 8
     },
@@ -209,7 +377,8 @@
         110,
         85
       ],
-      "scale": 6
+      "scale": 6,
+      "note": "Opened squad panel difficulty grade. Do not use the closed map footer badge."
     },
     {
       "id": "run.difficulty_block",
@@ -223,6 +392,149 @@
         190
       ],
       "scale": 2
+    },
+    {
+      "id": "relic.list_text",
+      "profileIds": [
+        "relicsFull"
+      ],
+      "roi": [
+        90,
+        84,
+        1100,
+        540
+      ],
+      "scale": 2
+    },
+    {
+      "id": "operator.list_text",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        350,
+        70,
+        880,
+        555
+      ],
+      "scale": 3
+    },
+    {
+      "id": "operator.name.left.1",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        600,
+        145,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.right.1",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        1035,
+        145,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.left.2",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        600,
+        285,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.right.2",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        1035,
+        285,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.left.3",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        600,
+        425,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.right.3",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        1035,
+        425,
+        230,
+        62
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.left.4",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        600,
+        560,
+        230,
+        78
+      ],
+      "scale": 4
+    },
+    {
+      "id": "operator.name.right.4",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "roi": [
+        1035,
+        560,
+        230,
+        78
+      ],
+      "scale": 4
+    },
+    {
+      "id": "is5.age_detail_text",
+      "profileIds": [
+        "is5AgeFull"
+      ],
+      "roi": [
+        360,
+        0,
+        560,
+        280
+      ],
+      "scale": 3
     }
   ]
 }

@@ -46,15 +46,33 @@
       "scrollDirection": "none",
       "restoreSteps": [
         {
-          "type": "back",
-          "label": "分隊情報を閉じる"
+          "type": "tap",
+          "point": {
+            "x": 54,
+            "y": 677
+          },
+          "label": "左下の分隊情報を閉じる",
+          "area": {
+            "x": 12,
+            "y": 634,
+            "width": 84,
+            "height": 86
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 160,
+          "label": "閉じる待ち"
         }
       ],
       "maxScrolls": 0,
       "endFingerprintStableCount": 1,
       "captureDelayMs": 180,
       "inferredScreenId": "run-squad-info-panel",
-      "navigationNote": "分隊は左下をクリックすると等級と同時に表示される。構想は思案の右側に表示される数値を別ROIで読む。"
+      "navigationNote": "分隊は左下をクリックすると等級と同時に表示される。構想は下部中央の家型アイコン下に表示される数値を別ROIで読む。",
+      "targetScreenIds": [
+        "run-squad-info-panel"
+      ]
     },
     {
       "id": "operatorsFull",
@@ -92,34 +110,110 @@
         }
       ],
       "scanRegion": {
-        "x": 90,
-        "y": 84,
-        "width": 1100,
-        "height": 540
+        "x": 350,
+        "y": 70,
+        "width": 880,
+        "height": 555
       },
-      "scrollAxis": "vertical",
-      "scrollDirection": "down",
-      "scroll": {
-        "start": {
-          "x": 1080,
-          "y": 610
-        },
-        "end": {
-          "x": 1080,
-          "y": 180
-        },
-        "durationMs": 450
-      },
+      "scrollAxis": "horizontal",
+      "scrollDirection": "two-way",
       "restoreSteps": [
         {
-          "type": "back",
-          "label": "元画面へ戻る"
+          "type": "tap",
+          "point": {
+            "x": 948,
+            "y": 678
+          },
+          "label": "隊員を閉じる",
+          "area": {
+            "x": 904,
+            "y": 645,
+            "width": 88,
+            "height": 66
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 160,
+          "label": "閉じる待ち"
         }
       ],
-      "maxScrolls": 18,
-      "endFingerprintStableCount": 2,
-      "captureDelayMs": 160,
-      "navigationNote": "隊員表示をクリックして招集済みオペレーター一覧を開く。"
+      "maxScrolls": 6,
+      "endFingerprintStableCount": 1,
+      "captureDelayMs": 120,
+      "navigationNote": "隊員表示をクリックして招集済みオペレーター一覧を開く。一覧はオペレーターカード枠の内側を使って右端方向、続けて左端方向へ読み切る。左方向の戻しはカード中央付近から右へ引き、左ペインではなく横リスト本体を掴む。右方向で実際に動かした回数を最低限ミラーし、候補安定だけで早期停止しない。",
+      "scrollPasses": [
+        {
+          "axis": "horizontal",
+          "direction": "right",
+          "label": "オペレーター枠 右端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 1110,
+              "y": 360
+            },
+            "end": {
+              "x": 420,
+              "y": 360
+            },
+            "startArea": {
+              "x": 1040,
+              "y": 170,
+              "width": 130,
+              "height": 360
+            },
+            "endArea": {
+              "x": 390,
+              "y": 170,
+              "width": 140,
+              "height": 360
+            },
+            "durationMs": 520
+          },
+          "maxScrolls": 6,
+          "endFingerprintStableCount": 1,
+          "captureDelayMs": 120,
+          "candidateStableEndCount": 1
+        },
+        {
+          "axis": "horizontal",
+          "direction": "left",
+          "label": "オペレーター枠 左端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 760,
+              "y": 360
+            },
+            "end": {
+              "x": 1110,
+              "y": 360
+            },
+            "startArea": {
+              "x": 660,
+              "y": 170,
+              "width": 190,
+              "height": 360
+            },
+            "endArea": {
+              "x": 1040,
+              "y": 170,
+              "width": 130,
+              "height": 360
+            },
+            "durationMs": 560
+          },
+          "maxScrolls": 6,
+          "endFingerprintStableCount": 1,
+          "captureDelayMs": 120,
+          "candidateStableEndCount": 1,
+          "mirrorPreviousPassScrolls": true
+        }
+      ],
+      "inferredScreenId": "operator-list",
+      "targetScreenIds": [
+        "operator-list"
+      ],
+      "candidateStableEndCount": 1
     },
     {
       "id": "relicsFull",
@@ -138,15 +232,15 @@
         {
           "type": "tap",
           "point": {
-            "x": 176,
-            "y": 678
+            "x": 184,
+            "y": 655
           },
           "label": "右側の秘宝を開く",
           "area": {
-            "x": 134,
-            "y": 648,
-            "width": 84,
-            "height": 60
+            "x": 170,
+            "y": 646,
+            "width": 45,
+            "height": 26
           }
         },
         {
@@ -162,28 +256,103 @@
         "height": 540
       },
       "scrollAxis": "vertical",
-      "scrollDirection": "down",
-      "scroll": {
-        "start": {
-          "x": 1080,
-          "y": 610
-        },
-        "end": {
-          "x": 1080,
-          "y": 180
-        },
-        "durationMs": 450
-      },
+      "scrollDirection": "two-way",
       "restoreSteps": [
         {
-          "type": "back",
-          "label": "元画面へ戻る"
+          "type": "tap",
+          "point": {
+            "x": 184,
+            "y": 655
+          },
+          "label": "右側の秘宝を閉じる",
+          "area": {
+            "x": 170,
+            "y": 646,
+            "width": 45,
+            "height": 26
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 160,
+          "label": "閉じる待ち"
         }
       ],
       "maxScrolls": 20,
       "endFingerprintStableCount": 2,
       "captureDelayMs": 160,
-      "navigationNote": "右側の秘宝表示をクリックして秘宝一覧を開く。"
+      "navigationNote": "秘宝はマップ下部の秘宝ボタン右寄りをタップして開閉する。左側の数値/アイコン寄りは反応しないことがあるため避ける。秘宝一覧はスクロール位置を保持するため、開いた現在位置から左側の安全レール内を使って下端方向、続けて上端方向へ読み切る。",
+      "scrollPasses": [
+        {
+          "axis": "vertical",
+          "direction": "down",
+          "label": "左レール下端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 24,
+              "y": 610
+            },
+            "end": {
+              "x": 24,
+              "y": 150
+            },
+            "startArea": {
+              "x": 12,
+              "y": 550,
+              "width": 28,
+              "height": 70
+            },
+            "endArea": {
+              "x": 12,
+              "y": 78,
+              "width": 28,
+              "height": 90
+            },
+            "durationMs": 650
+          },
+          "maxScrolls": 20,
+          "endFingerprintStableCount": 2,
+          "captureDelayMs": 160
+        },
+        {
+          "axis": "vertical",
+          "direction": "up",
+          "label": "左レール上端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 24,
+              "y": 150
+            },
+            "end": {
+              "x": 24,
+              "y": 610
+            },
+            "startArea": {
+              "x": 12,
+              "y": 78,
+              "width": 28,
+              "height": 90
+            },
+            "endArea": {
+              "x": 12,
+              "y": 550,
+              "width": 28,
+              "height": 70
+            },
+            "durationMs": 650
+          },
+          "maxScrolls": 20,
+          "endFingerprintStableCount": 2,
+          "captureDelayMs": 160
+        }
+      ],
+      "scrollGuard": {
+        "type": "initialCandidateCountAtMost",
+        "candidateKind": "relic",
+        "maxCandidates": 9,
+        "reason": "relic_panel_not_scrollable",
+        "skipRemainingPasses": true
+      }
     },
     {
       "id": "is4RevelationFull",
@@ -207,27 +376,75 @@
         "height": 540
       },
       "scrollAxis": "vertical",
-      "scrollDirection": "down",
-      "scroll": {
-        "start": {
-          "x": 1080,
-          "y": 610
-        },
-        "end": {
-          "x": 1080,
-          "y": 180
-        },
-        "durationMs": 450
-      },
-      "restoreSteps": [
-        {
-          "type": "back",
-          "label": "元画面へ戻る"
-        }
-      ],
+      "scrollDirection": "two-way",
+      "restoreSteps": [],
       "maxScrolls": 16,
       "endFingerprintStableCount": 2,
-      "captureDelayMs": 160
+      "captureDelayMs": 160,
+      "scrollPasses": [
+        {
+          "axis": "vertical",
+          "direction": "down",
+          "label": "左レール下端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 24,
+              "y": 610
+            },
+            "end": {
+              "x": 24,
+              "y": 150
+            },
+            "startArea": {
+              "x": 12,
+              "y": 550,
+              "width": 28,
+              "height": 70
+            },
+            "endArea": {
+              "x": 12,
+              "y": 78,
+              "width": 28,
+              "height": 90
+            },
+            "durationMs": 650
+          },
+          "maxScrolls": 16,
+          "endFingerprintStableCount": 2,
+          "captureDelayMs": 160
+        },
+        {
+          "axis": "vertical",
+          "direction": "up",
+          "label": "左レール上端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 24,
+              "y": 150
+            },
+            "end": {
+              "x": 24,
+              "y": 610
+            },
+            "startArea": {
+              "x": 12,
+              "y": 78,
+              "width": 28,
+              "height": 90
+            },
+            "endArea": {
+              "x": 12,
+              "y": 550,
+              "width": 28,
+              "height": 70
+            },
+            "durationMs": 650
+          },
+          "maxScrolls": 16,
+          "endFingerprintStableCount": 2,
+          "captureDelayMs": 160
+        }
+      ]
     },
     {
       "id": "is5ThoughtFull",
@@ -271,28 +488,173 @@
         "height": 540
       },
       "scrollAxis": "vertical",
-      "scrollDirection": "down",
-      "scroll": {
-        "start": {
-          "x": 1080,
-          "y": 610
-        },
-        "end": {
-          "x": 1080,
-          "y": 180
-        },
-        "durationMs": 450
-      },
+      "scrollDirection": "two-way",
       "restoreSteps": [
         {
-          "type": "back",
-          "label": "元画面へ戻る"
+          "type": "tap",
+          "point": {
+            "x": 704,
+            "y": 679
+          },
+          "label": "思案を閉じる",
+          "area": {
+            "x": 582,
+            "y": 649,
+            "width": 245,
+            "height": 59
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 160,
+          "label": "閉じる待ち"
         }
       ],
-      "maxScrolls": 16,
-      "endFingerprintStableCount": 2,
-      "captureDelayMs": 160,
-      "navigationNote": "思案表示をクリックして思案一覧を開く。構想の個数は思案の右に表示される。"
+      "maxScrolls": 8,
+      "endFingerprintStableCount": 1,
+      "captureDelayMs": 120,
+      "navigationNote": "思案表示をクリックして思案一覧を開く。構想の個数は下部中央の家型アイコン下に表示される。一覧は左端レールではなく中央のリスト本体を掴み、下端方向、続けて上端方向へ読み切る。上方向の戻しは下方向で実際に動かした回数を最低限ミラーする。",
+      "scrollPasses": [
+        {
+          "axis": "vertical",
+          "direction": "down",
+          "label": "左レール下端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 640,
+              "y": 610
+            },
+            "end": {
+              "x": 640,
+              "y": 150
+            },
+            "startArea": {
+              "x": 520,
+              "y": 550,
+              "width": 240,
+              "height": 70
+            },
+            "endArea": {
+              "x": 520,
+              "y": 78,
+              "width": 240,
+              "height": 90
+            },
+            "durationMs": 560
+          },
+          "maxScrolls": 8,
+          "endFingerprintStableCount": 1,
+          "captureDelayMs": 120,
+          "candidateStableEndCount": 1
+        },
+        {
+          "axis": "vertical",
+          "direction": "up",
+          "label": "左レール上端方向スキャン",
+          "scroll": {
+            "start": {
+              "x": 640,
+              "y": 150
+            },
+            "end": {
+              "x": 640,
+              "y": 610
+            },
+            "startArea": {
+              "x": 520,
+              "y": 78,
+              "width": 240,
+              "height": 90
+            },
+            "endArea": {
+              "x": 520,
+              "y": 550,
+              "width": 240,
+              "height": 70
+            },
+            "durationMs": 560
+          },
+          "maxScrolls": 8,
+          "endFingerprintStableCount": 1,
+          "captureDelayMs": 120,
+          "candidateStableEndCount": 1,
+          "mirrorPreviousPassScrolls": true
+        }
+      ],
+      "candidateStableEndCount": 1
+    },
+    {
+      "id": "is5AgeFull",
+      "label": "時代スキャン",
+      "triggerPath": "/trigger/scan/sarkaz/age",
+      "campaignId": "is5_sarkaz",
+      "candidateKind": "age",
+      "baseResolution": {
+        "width": 1280,
+        "height": 720
+      },
+      "knownScreenIds": [
+        "run-home",
+        "sarkaz-age-detail"
+      ],
+      "openSteps": [
+        {
+          "type": "tap",
+          "point": {
+            "x": 660,
+            "y": 52
+          },
+          "label": "時代を開く",
+          "area": {
+            "x": 585,
+            "y": 8,
+            "width": 155,
+            "height": 84
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 220,
+          "label": "表示待ち"
+        }
+      ],
+      "targetScreenIds": [
+        "sarkaz-age-detail"
+      ],
+      "inferredScreenId": "sarkaz-age-detail",
+      "scanRegion": {
+        "x": 360,
+        "y": 0,
+        "width": 560,
+        "height": 280
+      },
+      "scrollAxis": "none",
+      "scrollDirection": "none",
+      "restoreSteps": [
+        {
+          "type": "tap",
+          "point": {
+            "x": 660,
+            "y": 52
+          },
+          "label": "時代を閉じる",
+          "area": {
+            "x": 585,
+            "y": 8,
+            "width": 155,
+            "height": 84
+          }
+        },
+        {
+          "type": "wait",
+          "durationMs": 160,
+          "label": "閉じる待ち"
+        }
+      ],
+      "maxScrolls": 0,
+      "endFingerprintStableCount": 1,
+      "captureDelayMs": 120,
+      "navigationNote": "サルカズのマップ上部中央にある時代表示をタップし、詳細が開いた場合だけ時代名と段階をOCRする。時代がない場合はタップしても反応しないため候補なしで終了する。"
     },
     {
       "id": "is6CoinsFull",
@@ -328,12 +690,7 @@
         },
         "durationMs": 450
       },
-      "restoreSteps": [
-        {
-          "type": "back",
-          "label": "元画面へ戻る"
-        }
-      ],
+      "restoreSteps": [],
       "maxScrolls": 14,
       "endFingerprintStableCount": 2,
       "captureDelayMs": 160

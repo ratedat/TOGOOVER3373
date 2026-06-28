@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import fs from "node:fs/promises";
 
 import { runScanProfile } from "../app/domain/recognition/scan-runner.js";
 import { createMaaStyleRecognizer } from "../app/domain/recognition/maa-style-recognizer.js";
@@ -184,4 +185,71 @@ test("MAA-style recognizer can classify fixed-ROI screens from extracted candida
   assert.equal(result.known, true);
   assert.equal(result.screenId, "run-squad-info-panel");
   assert.equal(result.engine, "candidate-extractor");
+});
+
+
+test("recognition task data exposes separated hope current and max OCR regions", async () => {
+  const rawTasks = JSON.parse(await fs.readFile(new URL("../data/recognition/maa-tasks.json", import.meta.url), "utf8"));
+  const regions = rawTasks.ocrRegions.filter((region) => region.profileIds?.includes("runStatusFull"));
+
+  assert.ok(regions.some((region) => region.id === "run.resource_numbers"));
+  assert.ok(regions.some((region) => region.id === "run.hope"));
+  assert.ok(regions.some((region) => region.id === "run.hope.current"));
+  assert.ok(regions.some((region) => region.id === "run.hope.max"));
+});
+
+test("recognition task data exposes a dedicated relic footer OCR region", async () => {
+  const rawTasks = JSON.parse(await fs.readFile(new URL("../data/recognition/maa-tasks.json", import.meta.url), "utf8"));
+  let regions = [];
+  const recognizer = createMaaStyleRecognizer({
+    tasks: rawTasks,
+    textExtractor: {
+      async extract(frame, context = {}) {
+        regions = context.regions || [];
+        return {
+          ...frame,
+          ocrResults: [{
+            text: "5宝",
+            regionId: "run.map_footer.relic",
+            roi: { x: 268, y: 1296, width: 168, height: 120 },
+            confidence: 0.44,
+          }],
+        };
+      },
+    },
+  });
+
+  const result = await recognizer.classify(
+    { bytes: Buffer.from("fake screenshot") },
+    { profile: { id: "relicsFull" }, scale: { scaleX: 2, scaleY: 2 } },
+  );
+
+  assert.ok(regions.some((region) => region.id === "run.map_footer.relic"));
+  assert.equal(result.known, true);
+  assert.equal(result.screenId, "run-home");
+});
+
+test("MAA-style recognizer classifies the map footer as run-home for scan entry points", async () => {
+  const recognizer = createMaaStyleRecognizer({
+    tasks: {
+      screens: [{
+        id: "run.map_footer",
+        screenId: "run-home",
+        profileIds: ["relicsFull"],
+        recognition: {
+          expected: ["秘宝", "思案", "隊員"],
+          match: "any",
+          normalize: ["remove_spaces"],
+          ocrReplace: [["5宝", "秘宝"]],
+        },
+      }],
+    },
+  });
+
+  const result = await recognizer.classify({
+    ocrResults: [{ text: "5宝", confidence: 0.88 }],
+  }, { profile: { id: "relicsFull" } });
+
+  assert.equal(result.known, true);
+  assert.equal(result.screenId, "run-home");
 });

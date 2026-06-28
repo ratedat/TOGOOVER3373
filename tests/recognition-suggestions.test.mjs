@@ -8,12 +8,13 @@ import {
   recognitionCandidateKey,
 } from "../app/domain/recognition/suggestions.js";
 
-test("run status, operator, relic, revelation, thought, and coin candidates use stable dedupe keys", () => {
+test("run status, operator, relic, revelation, thought, age, and coin candidates use stable dedupe keys", () => {
   assert.equal(recognitionCandidateKey({ kind: "runStatus", field: "hope", value: 8 }), "runStatus:hope:8");
   assert.equal(recognitionCandidateKey({ kind: "operator", operatorId: "char_002_amiya" }), "operator:char_002_amiya");
   assert.equal(recognitionCandidateKey({ kind: "relic", relicId: "r1" }), "relic:r1");
   assert.equal(recognitionCandidateKey({ kind: "revelation", campaignId: "is4_sami", fieldId: "revelationBoard", slotKind: "rhetoric", effectId: "x" }), "revelation:is4_sami:revelationBoard:rhetoric:x:_");
   assert.equal(recognitionCandidateKey({ kind: "thought", campaignId: "is5_sarkaz", thoughtId: "t1", stateId: "s1" }), "thought:is5_sarkaz:t1:s1:_");
+  assert.equal(recognitionCandidateKey({ kind: "age", campaignId: "is5_sarkaz", ageId: "a1" }), "age:is5_sarkaz:a1");
   assert.equal(recognitionCandidateKey({ kind: "coin", campaignId: "is6_sui", coinId: "c1", statusId: "rust", face: "front", count: 2 }), "coin:is6_sui:c1:rust:front:2");
 });
 

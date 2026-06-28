@@ -25,7 +25,8 @@
     "ocr:probe": "node tools/probe-ocr-runtime.mjs",
     "ocr:probe:strict": "node tools/probe-ocr-runtime.mjs --strict",
     "ocr:sync-maa": "node tools/sync-maa-ocr-assets.mjs",
-    "ocr:sync-maa:models": "node tools/sync-maa-ocr-assets.mjs --models"
+    "ocr:sync-maa:models": "node tools/sync-maa-ocr-assets.mjs --models",
+    "ocr:sync-maa-operator": "node tools/sync-maa-operator-ocr-map.mjs"
   },
   "devDependencies": {
     "electron": "^42.5.0",
