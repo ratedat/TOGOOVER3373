@@ -180,6 +180,10 @@ test("operators full scan sweeps the operator card frame horizontally both ways"
 
   assert.equal(profile.scrollAxis, "horizontal");
   assert.equal(profile.scrollDirection, "two-way");
+  assert.equal(profile.ocrFullFrame, false);
+  assert.equal(profile.ocrRegionIds.length, 8);
+  assert.ok(profile.ocrRegionIds.every((id) => id.startsWith("operator.name.")));
+  assert.equal(profile.ocrRegionIds.includes("operator.list_text"), false);
   assert.equal(profile.scrollPasses.length, 2);
   assert.deepEqual(profile.scrollPasses.map((pass) => pass.direction), ["right", "left"]);
 

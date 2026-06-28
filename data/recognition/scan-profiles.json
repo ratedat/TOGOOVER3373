@@ -81,6 +81,17 @@
       "triggerPath": "/trigger/scan/operators/full",
       "candidateKind": "operator",
       "ocrEngine": "windows",
+      "ocrFullFrame": false,
+      "ocrRegionIds": [
+        "operator.name.left.1",
+        "operator.name.right.1",
+        "operator.name.left.2",
+        "operator.name.right.2",
+        "operator.name.left.3",
+        "operator.name.right.3",
+        "operator.name.left.4",
+        "operator.name.right.4"
+      ],
       "baseResolution": {
         "width": 1280,
         "height": 720

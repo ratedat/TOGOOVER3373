@@ -150,6 +150,31 @@ test("MAA-style recognizer can enrich byte frames through a text extractor and d
   assert.deepEqual(candidates.map((item) => [item.field, item.value]), [["difficulty", 18]]);
 });
 
+test("MAA-style recognizer can restrict OCR regions per scan profile", async () => {
+  let regions = [];
+  const recognizer = createMaaStyleRecognizer({
+    tasks: {
+      ocrRegions: [
+        { id: "operator.list_text", profileIds: ["operatorsFull"], roi: [350, 70, 880, 555], scale: 3 },
+        { id: "operator.name.left.1", profileIds: ["operatorsFull"], roi: [600, 145, 230, 62], scale: 4 },
+      ],
+    },
+    textExtractor: {
+      async extract(frame, context = {}) {
+        regions = context.regions || [];
+        return { ...frame, ocrResults: [] };
+      },
+    },
+  });
+
+  await recognizer.classify(
+    { bytes: Buffer.from("fake screenshot") },
+    { profile: { id: "operatorsFull", ocrRegionIds: ["operator.name.left.1"] }, scale: { scaleX: 2, scaleY: 2 } },
+  );
+
+  assert.deepEqual(regions.map((region) => region.id), ["operator.name.left.1"]);
+});
+
 
 test("MAA-style recognizer applies MAA ocrReplace rules before matching OCR text", async () => {
   const recognizer = createMaaStyleRecognizer({

@@ -36,6 +36,11 @@ function taskAppliesToProfile(task, profile) {
   return profileIds.includes(profile?.id);
 }
 
+function profileOcrRegionIds(profile = {}) {
+  const ids = asArray(profile.ocrRegionIds).filter((id) => typeof id === "string" && id);
+  return ids.length ? new Set(ids) : null;
+}
+
 function frameTextResults(frame) {
   const results = [];
   if (typeof frame?.ocrText === "string") results.push({ text: frame.ocrText, confidence: frame.confidence ?? 0.5 });
@@ -132,6 +137,7 @@ export function normalizeMaaStyleTasks(raw = {}) {
 
 function recognitionRegions(tasks, context = {}) {
   const regions = [];
+  const allowedProfileRegionIds = profileOcrRegionIds(context.profile);
   const addRegion = (id, roi, scale = 3) => {
     const rect = rectFrom(roi);
     if (!rect) return;
@@ -142,6 +148,7 @@ function recognitionRegions(tasks, context = {}) {
   };
   for (const region of tasks.ocrRegions || []) {
     if (!taskAppliesToProfile(region, context.profile)) continue;
+    if (allowedProfileRegionIds && !allowedProfileRegionIds.has(region.id)) continue;
     addRegion(region.id, region.roi, region.scale || 3);
   }
   for (const task of [...(tasks.screens || []), ...(tasks.candidates || [])]) {

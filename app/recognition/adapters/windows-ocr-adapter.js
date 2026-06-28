@@ -230,12 +230,15 @@ function New-Crop($Image, $Region, $OutputPath) {
 
 $imagePath = $env:ARK_OCR_IMAGE
 $regionsJson = if ($env:ARK_OCR_REGIONS_JSON) { $env:ARK_OCR_REGIONS_JSON } else { "[]" }
+$includeFullFrame = if ($env:ARK_OCR_INCLUDE_FULL_FRAME) { $env:ARK_OCR_INCLUDE_FULL_FRAME -ne "0" } else { $true }
 $regions = ConvertFrom-Json -InputObject $regionsJson
 $allResults = @()
 $texts = @()
-$full = Invoke-Ocr $imagePath "full" $null
-$texts += $full.text
-$allResults += $full.results
+if ($includeFullFrame) {
+  $full = Invoke-Ocr $imagePath "full" $null
+  $texts += $full.text
+  $allResults += $full.results
+}
 $image = [System.Drawing.Bitmap]::FromFile($imagePath)
 try {
   foreach ($region in $regions) {
@@ -270,7 +273,11 @@ function encodedPowerShell(script) {
   return Buffer.from(script, "utf16le").toString("base64");
 }
 
-function runPowerShellOcr({ imagePath, regions = [], timeoutMs = 30000 }) {
+export function shouldIncludeFullFrameOcr(context = {}) {
+  return context.profile?.ocrFullFrame !== false;
+}
+
+function runPowerShellOcr({ imagePath, regions = [], includeFullFrame = true, timeoutMs = 30000 }) {
   return new Promise((resolve, reject) => {
     const dir = fsSync.mkdtempSync(path.join(os.tmpdir(), "rhodes-ocr-script-"));
     const scriptPath = path.join(dir, "ocr.ps1");
@@ -284,6 +291,7 @@ function runPowerShellOcr({ imagePath, regions = [], timeoutMs = 30000 }) {
         ...process.env,
         ARK_OCR_IMAGE: imagePath,
         ARK_OCR_REGIONS_JSON: JSON.stringify(regions),
+        ARK_OCR_INCLUDE_FULL_FRAME: includeFullFrame ? "1" : "0",
       },
     }, (error, stdout, stderr) => {
       fsSync.rmSync(dir, { recursive: true, force: true });
@@ -321,13 +329,15 @@ export function parseWindowsOcrStdout(stdout) {
 
 export function createWindowsOcrTextExtractor({ enabled = process.platform === "win32", timeoutMs = 30000 } = {}) {
   return {
-    async extract(frame, { regions = [] } = {}) {
+    async extract(frame, context = {}) {
       if (!enabled || !Buffer.isBuffer(frame?.bytes)) return frame;
+      const regions = Array.isArray(context.regions) ? context.regions : [];
+      const includeFullFrame = shouldIncludeFullFrameOcr(context);
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-ocr-"));
       const imagePath = path.join(dir, `${randomUUID()}.png`);
       try {
         await fs.writeFile(imagePath, frame.bytes);
-        const stdout = await runPowerShellOcr({ imagePath, regions, timeoutMs });
+        const stdout = await runPowerShellOcr({ imagePath, regions, includeFullFrame, timeoutMs });
         const payload = normalizeWindowsOcrPayload(parseWindowsOcrStdout(stdout));
         return {
           ...frame,

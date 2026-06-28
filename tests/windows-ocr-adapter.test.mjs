@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { normalizeWindowsOcrPayload, parseWindowsOcrStdout } from "../app/recognition/adapters/windows-ocr-adapter.js";
+import { normalizeWindowsOcrPayload, parseWindowsOcrStdout, shouldIncludeFullFrameOcr } from "../app/recognition/adapters/windows-ocr-adapter.js";
 
 test("Windows OCR payload normalization keeps line text, region IDs, and ROIs", () => {
   const payload = normalizeWindowsOcrPayload({
@@ -37,4 +37,9 @@ test("Windows OCR stdout parser decodes UTF-8 Japanese JSON from the final base6
   const encoded = Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
 
   assert.deepEqual(parseWindowsOcrStdout(`diagnostic noise\n${encoded}\n`), payload);
+});
+
+test("Windows OCR can skip full-frame recognition for ROI-only profiles", () => {
+  assert.equal(shouldIncludeFullFrameOcr({ profile: { id: "operatorsFull", ocrFullFrame: false } }), false);
+  assert.equal(shouldIncludeFullFrameOcr({ profile: { id: "runStatusFull" } }), true);
 });
