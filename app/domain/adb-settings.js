@@ -105,6 +105,11 @@ export function normalizeAdbPathKey(value) {
   return cleanText(value).replace(/[\\/]+\.[\\/]+/g, "\\").replace(/\\/g, "/").toLowerCase();
 }
 
+export function filterVisibleAdbCandidates(candidates = []) {
+  return (Array.isArray(candidates) ? candidates : [])
+    .filter((item) => item?.available || item?.selected);
+}
+
 export function normalizeAdbSettings(input = {}) {
   const source = input && typeof input === "object" ? input : {};
   const connectionPreset = validPresets.has(source.connectionPreset) ? source.connectionPreset : defaultAdbSettings.connectionPreset;

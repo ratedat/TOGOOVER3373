@@ -7,6 +7,7 @@ import {
   buildAdbSerialCandidates,
   buildBlueStacksConfigPathCandidates,
   buildAdbCandidatePaths,
+  filterVisibleAdbCandidates,
   normalizeAdbSettings,
   parseAdbDevices,
   parseBlueStacksConfigAdbPorts,
@@ -14,6 +15,18 @@ import {
   normalizeAdbPathKey,
 } from "../app/domain/adb-settings.js";
 import { updateAdbSetting } from "../app/control-actions.js";
+
+test("filterVisibleAdbCandidates hides missing auto-detect path probes", () => {
+  const candidates = filterVisibleAdbCandidates([
+    { path: "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe", available: true, selected: true },
+    { path: "C:/Program Files (x86)/MuMu Player 12/shell/adb.exe", available: false },
+    { path: "adb", available: false },
+  ]);
+
+  assert.deepEqual(candidates.map((item) => item.path), [
+    "M:/Program Files/Netease/MuMu Player 12/shell/adb.exe",
+  ]);
+});
 
 test("normalizeAdbSettings keeps GUI connection settings conservative", () => {
   const settings = normalizeAdbSettings({

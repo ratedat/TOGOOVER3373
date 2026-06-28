@@ -32,7 +32,7 @@ import { resolveAppView } from "./lib/view-route.js";
 import { cancelOverlayAutoScroll, setupOverlayAutoScroll } from "./overlay/autoscroll.js";
 import { RUN_STAT_FIELDS, formatRunStatValue, normalizeRunStats, runStatDisplayItems } from "./domain/run-stats.js";
 import { getRecognitionScanActions } from "./domain/recognition/scan-actions.js";
-import { adbConnectionPresetDetails, adbConnectionPresetOptions, normalizeAdbSettings } from "./domain/adb-settings.js";
+import { adbConnectionPresetDetails, adbConnectionPresetOptions, filterVisibleAdbCandidates, normalizeAdbSettings } from "./domain/adb-settings.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
@@ -966,7 +966,8 @@ function renderAdbSettingPanel() {
   const testResult = ui.adbTestResult;
   const hypervisorStatus = ui.hypervisorStatus;
   const preset = adbConnectionPresetDetails[adb.connectionPreset] || adbConnectionPresetDetails.custom;
-  const availableCount = detection?.adbCandidates?.filter((item) => item.available).length || 0;
+  const visibleAdbCandidates = filterVisibleAdbCandidates(detection?.adbCandidates);
+  const availableCount = visibleAdbCandidates.length;
   const deviceCount = detection?.devices?.length || 0;
   return `
     <div class="control-v2-subsection adb-settings-panel">
@@ -1001,14 +1002,14 @@ function renderAdbSettingPanel() {
 function renderAdbProbeResult(detection, testResult, hypervisorStatus = null) {
   const blocks = [];
   if (detection) {
-    const candidates = detection.adbCandidates || [];
+    const candidates = filterVisibleAdbCandidates(detection.adbCandidates);
     const devices = detection.devices || [];
     blocks.push(`<div class="adb-probe-block"><strong>検出結果</strong><span>${html(detection.selectedAdbPath || "ADB未選択")}</span></div>`);
     if (detection.connect?.address) {
       blocks.push(`<div class="adb-probe-block ${detection.connect.error ? "error" : "success"}"><strong>ADB connect</strong><span>${html(detection.connect.address)}${detection.connect.recovered ? " / ADB再起動後に再接続" : ""}${detection.connect.error ? ` / ${html(detection.connect.error)}` : ""}</span></div>`);
     }
     blocks.push(`<div class="adb-candidate-list">
-      ${candidates.slice(0, 8).map((item) => `<div class="adb-candidate-row ${item.available ? "available" : "missing"} ${item.selected ? "selected" : ""}"><span>${item.selected ? "選択" : (item.available ? "OK" : "--")}</span><code>${html(item.path)}</code>${item.available ? `<button type="button" data-action="adb-use-candidate" data-adb-path="${html(item.path)}">使用</button>` : ""}</div>`).join("") || `<div class="empty-state">ADB候補は見つかりません。</div>`}
+      ${candidates.slice(0, 8).map((item) => `<div class="adb-candidate-row ${item.available ? "available" : "missing"} ${item.selected ? "selected" : ""}"><span>${item.selected ? "選択" : "OK"}</span><code>${html(item.path)}</code>${item.available ? `<button type="button" data-action="adb-use-candidate" data-adb-path="${html(item.path)}">使用</button>` : ""}</div>`).join("") || `<div class="empty-state">使用可能なADB候補は見つかりません。</div>`}
     </div>`);
     blocks.push(`<div class="adb-device-list">
       ${devices.map((item) => `<div class="adb-candidate-row ${item.state === "device" ? "available" : "missing"}"><span>${html(item.state)}</span><code>${html(item.serial)}</code><em>${html(item.detail || "")}</em><button type="button" data-action="adb-use-device" data-adb-serial="${html(item.serial)}">使用</button></div>`).join("") || `<div class="empty-state">接続中の端末はありません。</div>`}
@@ -1811,6 +1812,5 @@ async function boot() {
 }
 
 boot();
-
 
 
