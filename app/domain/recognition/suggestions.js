@@ -8,7 +8,10 @@ export function recognitionCandidateKey(candidate = {}) {
   if (kind === "operator") return compactParts([kind, candidate.operatorId || candidate.name || candidate.rawText]);
   if (kind === "relic") return compactParts([kind, candidate.relicId || candidate.name || candidate.rawText]);
   if (kind === "revelation") return compactParts([kind, candidate.campaignId, candidate.fieldId, candidate.slotKind, candidate.effectId || candidate.name, candidate.stateId]);
-  if (kind === "thought") return compactParts([kind, candidate.campaignId, candidate.thoughtId || candidate.name, candidate.stateId, candidate.conditionId]);
+  if (kind === "thought") {
+    const base = [kind, candidate.campaignId, candidate.thoughtId || candidate.name, candidate.stateId, candidate.conditionId];
+    return candidate.instanceId ? compactParts([...base, candidate.instanceId]) : compactParts(base);
+  }
   if (kind === "age") return compactParts([kind, candidate.campaignId, candidate.ageId || candidate.name]);
   if (kind === "coin") return compactParts([kind, candidate.campaignId, candidate.coinId || candidate.name, candidate.statusId, candidate.face, candidate.count]);
   return compactParts([kind, candidate.id || candidate.name || candidate.rawText || JSON.stringify(candidate)]);

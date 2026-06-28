@@ -14,6 +14,7 @@ test("run status, operator, relic, revelation, thought, age, and coin candidates
   assert.equal(recognitionCandidateKey({ kind: "relic", relicId: "r1" }), "relic:r1");
   assert.equal(recognitionCandidateKey({ kind: "revelation", campaignId: "is4_sami", fieldId: "revelationBoard", slotKind: "rhetoric", effectId: "x" }), "revelation:is4_sami:revelationBoard:rhetoric:x:_");
   assert.equal(recognitionCandidateKey({ kind: "thought", campaignId: "is5_sarkaz", thoughtId: "t1", stateId: "s1" }), "thought:is5_sarkaz:t1:s1:_");
+  assert.equal(recognitionCandidateKey({ kind: "thought", campaignId: "is5_sarkaz", thoughtId: "t1", instanceId: "roi:100,200" }), "thought:is5_sarkaz:t1:_:_:roi:100,200");
   assert.equal(recognitionCandidateKey({ kind: "age", campaignId: "is5_sarkaz", ageId: "a1" }), "age:is5_sarkaz:a1");
   assert.equal(recognitionCandidateKey({ kind: "coin", campaignId: "is6_sui", coinId: "c1", statusId: "rust", face: "front", count: 2 }), "coin:is6_sui:c1:rust:front:2");
 });
@@ -52,4 +53,14 @@ test("recognition suggestions append to pendingSuggestions without mutating acti
   assert.equal(next.pendingSuggestions.length, 4);
   assert.deepEqual(next.relics, []);
   assert.deepEqual(next.run.special.is6_sui.coins, []);
+});
+
+test("thought suggestions keep duplicate instances from separate OCR rows", () => {
+  const suggestions = buildRecognitionSuggestions([
+    { kind: "thought", campaignId: "is5_sarkaz", thoughtId: "t1", name: "枯れ木と若枝", instanceId: "roi:100,200" },
+    { kind: "thought", campaignId: "is5_sarkaz", thoughtId: "t1", name: "枯れ木と若枝", instanceId: "roi:800,200" },
+  ], { profile: { id: "is5ThoughtFull" }, scanId: "scan1" });
+
+  assert.equal(suggestions.length, 2);
+  assert.notEqual(suggestions[0].recognitionKey, suggestions[1].recognitionKey);
 });

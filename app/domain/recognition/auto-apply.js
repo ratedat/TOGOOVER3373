@@ -163,7 +163,6 @@ function syncOperatorFullScanCandidates(state, suggestions = []) {
 function syncIs5ThoughtFullScanCandidates(state, suggestions = []) {
   const thoughtSuggestions = [];
   const thoughtIds = [];
-  const seen = new Set();
   for (const suggestion of suggestions || []) {
     const candidate = candidateFromSuggestion(suggestion);
     if (!canAutoApplySuggestion(state, suggestion, candidate)) continue;
@@ -171,10 +170,7 @@ function syncIs5ThoughtFullScanCandidates(state, suggestions = []) {
     const thoughtId = thoughtIdFromCandidate(candidate);
     if (!thoughtId) continue;
     thoughtSuggestions.push(suggestion);
-    if (!seen.has(thoughtId)) {
-      seen.add(thoughtId);
-      thoughtIds.push(thoughtId);
-    }
+    thoughtIds.push(thoughtId);
   }
   if (!thoughtSuggestions.length) return { applied: [], keys: new Set() };
 

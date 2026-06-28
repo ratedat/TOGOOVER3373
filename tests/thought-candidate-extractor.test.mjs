@@ -39,6 +39,20 @@ test("thought candidate extractor matches inspiration and legacy thoughts from O
   assert.equal(candidates[1].thoughtRank, "✦4");
 });
 
+test("thought candidate extractor preserves duplicate visible thought rows", async () => {
+  const extractor = createThoughtCandidateExtractor({ selectableEffects: thoughts, campaignId: "is5_sarkaz" });
+  const candidates = await extractor({
+    ocrResults: [
+      { text: "築 壁", regionId: "full", roi: { x: 260, y: 160, width: 120, height: 34 }, confidence: 0.7 },
+      { text: "築 壁", regionId: "full", roi: { x: 760, y: 160, width: 120, height: 34 }, confidence: 0.7 },
+      { text: "築 壁", regionId: "full", roi: { x: 260, y: 300, width: 120, height: 34 }, confidence: 0.7 },
+    ],
+  }, { profile: { id: "is5ThoughtFull" }, region: { x: 180, y: 120, width: 2200, height: 1080 } });
+
+  assert.deepEqual(candidates.map((item) => item.thoughtId), ["insp_01", "insp_01", "insp_01"]);
+  assert.deepEqual(candidates.map((item) => item.instanceId), ["roi:260,160", "roi:760,160", "roi:260,300"]);
+});
+
 test("thought candidate extractor ignores other profiles and OCR outside the scan region", async () => {
   const extractor = createThoughtCandidateExtractor({ selectableEffects: thoughts, campaignId: "is5_sarkaz" });
   const wrongProfile = await extractor({ ocrResults: [{ text: "築壁", roi: { x: 260, y: 160, width: 120, height: 34 } }] }, { profile: { id: "relicsFull" } });

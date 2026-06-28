@@ -127,7 +127,7 @@ export function createThoughtCandidateExtractor({ selectableEffects = [], campai
     if (!rows.length) return [];
 
     const activeDb = db.filter((thought) => !activeCampaignId || thought.campaignId === activeCampaignId);
-    const byThought = new Map();
+    const candidates = [];
     for (const row of rows) {
       for (const thought of activeDb) {
         const hit = rowMatchesThought(thought, row);
@@ -147,13 +147,13 @@ export function createThoughtCandidateExtractor({ selectableEffects = [], campai
           confidence: hit.confidence,
           needsReview: true,
           roi: hit.roi,
+          instanceId: hit.roi ? `roi:${Math.round(hit.roi.x || 0)},${Math.round(hit.roi.y || 0)}` : null,
           source: hit.source,
         };
-        const previous = byThought.get(candidate.thoughtId);
-        if (!previous || Number(candidate.confidence || 0) > Number(previous.confidence || 0)) byThought.set(candidate.thoughtId, candidate);
+        candidates.push(candidate);
       }
     }
-    return [...byThought.values()].sort((a, b) => {
+    return candidates.sort((a, b) => {
       const ar = rectFrom(a.roi);
       const br = rectFrom(b.roi);
       if (ar && br) return (ar.y - br.y) || (ar.x - br.x);
