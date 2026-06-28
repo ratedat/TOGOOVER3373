@@ -288,7 +288,8 @@ function Test-DigitPixel($Image, [int]$X, [int]$Y) {
   $luma = (($c.R * 299) + ($c.G * 587) + ($c.B * 114)) / 1000.0
   $nearNeutral = [Math]::Abs($c.R - $c.G) -lt 95 -and [Math]::Abs($c.G - $c.B) -lt 95
   $hopeYellow = $c.R -gt 150 -and $c.G -gt 105 -and $c.B -lt 120
-  return $luma -gt 115 -and ($nearNeutral -or $hopeYellow)
+  $lifeBlue = $c.B -gt 150 -and $c.G -gt 95 -and $c.R -lt 90
+  return ($luma -gt 115 -and ($nearNeutral -or $hopeYellow)) -or $lifeBlue
 }
 
 function Classify-DigitComponent($Xs, $Ys) {
@@ -317,6 +318,26 @@ function Classify-DigitComponent($Xs, $Ys) {
   }
 
   if ($width -ge 9 -and $height -ge 12) {
+    $middleFullRows = 0
+    $bottomRightRows = 0
+    $bottomLeftRows = 0
+    for ($gy = 0; $gy -lt 9; $gy++) {
+      $rowCount = 0
+      for ($gx = 0; $gx -lt 7; $gx++) {
+        if ($counts[$gy * 7 + $gx] -gt 0) { $rowCount += 1 }
+      }
+      if ($gy -ge 4 -and $gy -le 6 -and $rowCount -ge 6) { $middleFullRows += 1 }
+      if ($gy -ge 7) {
+        for ($gx = 0; $gx -le 2; $gx++) {
+          if ($counts[$gy * 7 + $gx] -gt 0) { $bottomLeftRows += 1; break }
+        }
+        for ($gx = 4; $gx -le 6; $gx++) {
+          if ($counts[$gy * 7 + $gx] -gt 0) { $bottomRightRows += 1; break }
+        }
+      }
+    }
+    if ($middleFullRows -ge 1 -and $bottomRightRows -ge 2 -and $bottomLeftRows -eq 0) { return "4" }
+
     $topLeft = 0; $topRight = 0; $bottomLeft = 0; $bottomRight = 0
     for ($gy = 0; $gy -lt 9; $gy++) {
       for ($gx = 0; $gx -lt 7; $gx++) {
@@ -384,7 +405,10 @@ function Read-IdeaDigitText($Image, $Region) {
   $h = [Math]::Max(1, [int][double](Get-RegionValue $Region "height" 1))
   if ($x0 + $w -gt $Image.Width) { $w = [int]($Image.Width - $x0) }
   if ($y0 + $h -gt $Image.Height) { $h = [int]($Image.Height - $y0) }
-  $startY = [int][Math]::Floor($h * 0.25)
+  $startRatio = [double](Get-RegionValue $Region "numericStartYRatio" 0.25)
+  if ($startRatio -lt 0) { $startRatio = 0 }
+  if ($startRatio -gt 0.9) { $startRatio = 0.9 }
+  $startY = [int][Math]::Floor($h * $startRatio)
   $visited = New-Object 'bool[]' ($w * $h)
   $components = @()
   for ($ly = $startY; $ly -lt $h; $ly++) {
@@ -424,7 +448,8 @@ function Read-IdeaDigitText($Image, $Region) {
       $cw = $maxX - $minX + 1
       $ch = $maxY - $minY + 1
       $centerY = (($minY + $maxY) / 2.0) - $y0
-      if ($cw -lt 5 -or $ch -lt 12 -or $centerY -lt ($h * 0.30)) { continue }
+      $minCenterRatio = $(if ($startRatio -le 0) { 0.0 } else { 0.30 })
+      if ($cw -lt 5 -or $ch -lt 12 -or $centerY -lt ($h * $minCenterRatio)) { continue }
       $digit = Classify-DigitComponent $xs $ys
       if ($null -ne $digit) {
         $components += @{ digit = $digit; x = $minX; y = $minY; width = $cw; height = $ch; area = $xs.Count }
@@ -506,6 +531,7 @@ function New-TemplateOcrRegions($ImagePath, $TemplateConfigs, [ref]$StaticRegion
         height = [int]$offset.height
         scale = $ocrScale
         numericFallback = [bool](Get-RegionValue $config "numericFallback" $false)
+        numericStartYRatio = [double](Get-RegionValue $config "numericStartYRatio" 0.25)
         templateScore = [Math]::Round($match.Score, 4)
       }
       $index += 1
@@ -631,6 +657,7 @@ export function resolveWindowsTemplateOcrRegions(context = {}, cwd = process.cwd
         sampleStride: Math.max(1, Number(config.sampleStride ?? 4)),
         scale: Math.max(1, Number(config.scale ?? 3)),
         numericFallback: Boolean(config.numericFallback),
+        numericStartYRatio: Number(config.numericStartYRatio ?? 0.25),
         suppressStaticRegionIdPattern: config.suppressStaticRegionIdPattern || "",
       };
     })

@@ -307,7 +307,7 @@ function hopePairFromText(text) {
 function isValidHopePair(pair) {
   if (!Array.isArray(pair) || pair.length < 2) return false;
   const [current, max] = pair;
-  return Number.isFinite(current) && Number.isFinite(max) && current >= 0 && max >= current;
+  return Number.isFinite(current) && Number.isFinite(max) && current >= 0 && max >= current && max <= 50;
 }
 
 function hopeCandidatesFromPair(pair) {
@@ -439,6 +439,14 @@ function findTopHopeCandidate(frame) {
   return findTopResourceLayout(frame).hope;
 }
 
+function findTopHopePairCandidates(frame) {
+  const current = findTopLayoutNumberCandidate(frame, { field: "hope", label: "希望", regionIdPattern: /^run\.top_hope$/, max: 50 });
+  const max = findTopLayoutNumberCandidate(frame, { field: "maxHope", label: "希望上限", regionIdPattern: /^run\.top_hope\.wide$/, max: 50 })
+    || findTopLayoutNumberCandidate(frame, { field: "maxHope", label: "希望上限", regionIdPattern: /^run\.top_ingot\.wide$/, max: 50 });
+  if (!current || !max || !isValidHopePair([current.value, max.value])) return [];
+  return hopeCandidatesFromPair([current.value, max.value]);
+}
+
 function findHopeCandidates(frame) {
   const entries = asTextResults(frame).filter((item) => String(item.regionId || "").includes("hope"));
   if (!entries.length) return [];
@@ -461,6 +469,9 @@ function findHopeCandidates(frame) {
 
   const combinedWholePair = hopePairFromText(wholeEntries.map((entry) => entry.text).join(" "));
   if (isValidHopePair(combinedWholePair)) return hopeCandidatesFromPair(combinedWholePair);
+
+  const topPair = findTopHopePairCandidates(frame);
+  if (topPair.length === 2) return topPair;
 
   if (topHope) return [topHope];
 
@@ -547,7 +558,22 @@ function findIdeaCandidate(frame, { campaignId } = {}) {
   return null;
 }
 
+function findLifeFractionCandidate(frame) {
+  for (const item of asTextResults(frame).filter((entry) => isRegionId(entry.regionId, "run.life_points"))) {
+    const match = normalizeRecognitionText(item.text, ["remove_spaces"]).match(/([0-9０-９Oo図]+)\/([0-9０-９Oo図]+)/);
+    if (!match) continue;
+    const current = digitValue(match[1]);
+    const max = digitValue(match[2]);
+    if (!Number.isFinite(current) || !Number.isFinite(max)) continue;
+    if (current === 0 && max === 10) continue;
+    return candidateFromNumber({ field: "lifePoints", label: "耐久値", value: current, confidence: 0.73 });
+  }
+  return null;
+}
+
 function findLifePointsCandidate(frame) {
+  const fraction = findLifeFractionCandidate(frame);
+  if (fraction) return fraction;
   const direct = findRegionNumberCandidate(frame, { field: "lifePoints", label: "耐久値", regionIdPart: "life_points", min: 0, prefer: "first" });
   if (direct) return direct;
   for (const item of asTextResults(frame).filter((entry) => String(entry.regionId || "").includes("status_band"))) {

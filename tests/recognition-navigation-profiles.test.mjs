@@ -129,6 +129,9 @@ test("run status profile includes template anchors for map resources", async () 
   ]) {
     assert.equal(byPrefix.get(key)?.numericFallback, true);
   }
+  assert.deepEqual(byPrefix.get("run.hope.current:assets/recognition/templates/run/HopeCurrentFullArrow.png")?.ocrOffset, { x: 120, y: 4, width: 25, height: 30 });
+  assert.deepEqual(byPrefix.get("run.hope.max:assets/recognition/templates/run/HopeMaxArrow.png")?.ocrOffset, { x: 37, y: 3, width: 25, height: 30 });
+  assert.deepEqual(byPrefix.get("run.life_points:assets/recognition/templates/run/LifeIcon.png")?.ocrOffset, { x: 31, y: 25, width: 18, height: 35 });
 });
 
 

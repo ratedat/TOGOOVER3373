@@ -54,6 +54,7 @@ test("Windows OCR resolves MAA-style template OCR regions with screen scale", ()
         ocrOffset: { x: 13, y: 26, width: 120, height: 23 },
         threshold: 0.88,
         numericFallback: true,
+        numericStartYRatio: 0,
         suppressStaticRegionIdPattern: "^operator\\.name\\.",
       }],
     },
@@ -68,5 +69,6 @@ test("Windows OCR resolves MAA-style template OCR regions with screen scale", ()
   assert.equal(regions[0].templateScaleY, 2);
   assert.equal(regions[0].threshold, 0.88);
   assert.equal(regions[0].numericFallback, true);
+  assert.equal(regions[0].numericStartYRatio, 0);
   assert.equal(regions[0].suppressStaticRegionIdPattern, "^operator\\.name\\.");
 });

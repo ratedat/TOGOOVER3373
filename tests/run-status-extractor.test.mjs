@@ -284,6 +284,31 @@ test("run status extractor corrects reversed leading zero from ingot template OC
   ]);
 });
 
+test("run status extractor rejects malformed hope pair and uses narrow top-bar values", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "177", regionId: "run.hope", confidence: 0.95 },
+      { text: "1", regionId: "run.hope.current", confidence: 0.99 },
+      { text: "77", regionId: "run.hope.max", confidence: 0.99 },
+      { text: "7", regionId: "run.top_hope", confidence: 0.99 },
+      { text: "7", regionId: "run.top_hope.wide", confidence: 0.99 },
+      { text: "20", regionId: "run.ingot", confidence: 0.99 },
+      { text: "4/4", regionId: "run.life_points", confidence: 0.99 },
+      { text: "02", regionId: "run.shield", confidence: 0.99 },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "lifePoints", "shield"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 7],
+    ["maxHope", 7],
+    ["ingot", 20],
+    ["lifePoints", 4],
+    ["shield", 2],
+  ]);
+});
+
 test("run status extractor ignores compact wide conception OCR without a separator", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
@@ -551,7 +576,8 @@ test("run status extractor reads life and shield values from dedicated OCR regio
 test("run status extractor uses the current life value before slash from status ROI", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
-      { text: "6 / 10", regionId: "run.life_points" },
+      { text: "21", regionId: "run.life_points.0" },
+      { text: "1 / 4", regionId: "run.life_points" },
       { text: "2", regionId: "run.shield" },
       { text: "1", regionId: "run.command_level" },
       { text: "位 置 測 定 分 隊", regionId: "run.squad_card" },
@@ -562,7 +588,7 @@ test("run status extractor uses the current life value before slash from status 
 
   assert.deepEqual(candidates.filter((item) => ["lifePoints", "shield", "commandLevel"].includes(item.field)).map((item) => [item.field, item.value]), [
     ["commandLevel", 1],
-    ["lifePoints", 6],
+    ["lifePoints", 1],
     ["shield", 2],
   ]);
 });
