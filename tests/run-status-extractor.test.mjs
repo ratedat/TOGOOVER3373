@@ -201,7 +201,23 @@ test("run status extractor reads current conception from bottom fraction OCR", (
   assert.equal(idea.value, 0);
 });
 
-test("run status extractor reads compact conception fractions as the current value", () => {
+test("run status extractor prefers the narrow conception current ROI over compact wide OCR noise", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "1", regionId: "run.idea.current", confidence: 0.99 },
+      { text: "35", regionId: "run.idea", confidence: 0.99 },
+      { text: "思 考 負 荷", regionId: "run.idea", confidence: 0.7 },
+      { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  const idea = candidates.find((item) => item.field === "idea");
+  assert.equal(idea.value, 1);
+});
+
+test("run status extractor ignores compact wide conception OCR without a separator", () => {
   const candidates = extractRunStatusCandidates({
     ocrResults: [
       { text: "35", regionId: "run.idea", confidence: 0.99 },
@@ -212,8 +228,7 @@ test("run status extractor reads compact conception fractions as the current val
     ],
   }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
 
-  const idea = candidates.find((item) => item.field === "idea");
-  assert.equal(idea.value, 3);
+  assert.equal(candidates.some((item) => item.field === "idea"), false);
 });
 
 test("run status extractor switches to wide top-bar resource ROIs when the compact ingot crop is blank", () => {

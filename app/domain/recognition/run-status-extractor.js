@@ -474,7 +474,7 @@ function findIngotCandidate(frame) {
   return findRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "ingot", min: 0, max: 9999, prefer: "first" });
 }
 
-function ideaCurrentValueFromText(text) {
+function ideaCurrentValueFromText(text, { allowCompact = false } = {}) {
   const compact = normalizeRecognitionText(text, ["remove_spaces"]);
   const fraction = compact.match(/([0-9０-９Oo図IiLl一丨イィ]{1,3})[\/／<＜]([0-9０-９Oo図IiLl一丨イィ]{1,3})/);
   if (fraction) {
@@ -484,6 +484,7 @@ function ideaCurrentValueFromText(text) {
   }
 
   const digits = digitText(text);
+  if (!allowCompact && digits.length > 1) return null;
   if (digits.length === 2) {
     const current = Number(digits[0]);
     const max = Number(digits[1]);
@@ -505,6 +506,17 @@ function ideaCurrentValueFromText(text) {
 
 function findIdeaCandidate(frame, { campaignId } = {}) {
   if (campaignId !== "is5_sarkaz") return null;
+  const current = findBestRegionNumberCandidate(frame, {
+    field: "idea",
+    label: "構想",
+    regionIdPattern: /^run\.idea\.current$/,
+    min: 0,
+    max: 999,
+    confidence: 0.86,
+    prefer: "first",
+  });
+  if (current) return current;
+
   const candidates = asTextResults(frame)
     .filter((item) => /^run\.idea$/.test(String(item.regionId || "")))
     .map((item) => {

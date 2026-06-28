@@ -393,6 +393,19 @@
       "scale": 8
     },
     {
+      "id": "run.idea.current",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        748,
+        652,
+        28,
+        36
+      ],
+      "scale": 10
+    },
+    {
       "id": "run.squad_card",
       "profileIds": [
         "runStatusFull"
