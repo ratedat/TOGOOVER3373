@@ -354,6 +354,32 @@
       "scale": 10
     },
     {
+      "id": "run.top_ingot.wide",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        965,
+        13,
+        38,
+        38
+      ],
+      "scale": 10
+    },
+    {
+      "id": "run.top_hope.wide",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "roi": [
+        1004,
+        13,
+        38,
+        38
+      ],
+      "scale": 10
+    },
+    {
       "id": "run.top_idea",
       "profileIds": [
         "runStatusFull"

@@ -162,6 +162,7 @@ test("run status extractor reads IS5 top-bar resources and prefers higher-confid
     ocrResults: [
       { text: "0", regionId: "run.top_ingot", confidence: 0.99 },
       { text: "7", regionId: "run.top_hope", confidence: 0.99 },
+      { text: "7", regionId: "run.top_ingot.wide", confidence: 0.99 },
       { text: "22", regionId: "run.top_idea", confidence: 0.7 },
       { text: "20", regionId: "run.top_idea", confidence: 0.99 },
       { text: "9", regionId: "run.idea", confidence: 0.76 },
@@ -175,6 +176,33 @@ test("run status extractor reads IS5 top-bar resources and prefers higher-confid
     ["hope", 7],
     ["ingot", 0],
     ["idea", 20],
+  ]);
+});
+
+test("run status extractor switches to wide top-bar resource ROIs when the compact ingot crop is blank", () => {
+  const candidates = extractRunStatusCandidates({
+    ocrResults: [
+      { text: "6", regionId: "run.top_hope", confidence: 0.99 },
+      { text: "6", regionId: "run.top_ingot.wide", confidence: 0.99 },
+      { text: "6", regionId: "run.top_hope.wide", confidence: 0.99 },
+      { text: "14", regionId: "run.top_idea", confidence: 0.99 },
+      { text: "6<614", regionId: "run.resource_numbers", confidence: 0.91 },
+      { text: "6<6", regionId: "run.hope", confidence: 0.95 },
+      { text: "1", regionId: "run.hope.current", confidence: 0.7 },
+      { text: "66", regionId: "run.hope.max", confidence: 0.99 },
+      { text: "14", regionId: "run.ingot", confidence: 0.99 },
+      { text: "2", regionId: "run.idea", confidence: 0.76 },
+      { text: "破 棘 成 金 分 隊", regionId: "run.squad_card" },
+      { text: "魂 に 直 面", regionId: "run.difficulty_block" },
+      { text: "18", regionId: "run.difficulty_grade" },
+    ],
+  }, { campaignId: "is5_sarkaz", squads, difficultyGrades });
+
+  assert.deepEqual(candidates.filter((item) => ["hope", "maxHope", "ingot", "idea"].includes(item.field)).map((item) => [item.field, item.value]), [
+    ["hope", 6],
+    ["maxHope", 6],
+    ["ingot", 6],
+    ["idea", 14],
   ]);
 });
 

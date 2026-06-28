@@ -74,6 +74,8 @@ test("run status top-bar resource ROIs target narrow digit crops", async () => {
 
   assert.deepEqual(rois.get("run.top_ingot"), [916, 14, 31, 36]);
   assert.deepEqual(rois.get("run.top_hope"), [960, 13, 38, 38]);
+  assert.deepEqual(rois.get("run.top_ingot.wide"), [965, 13, 38, 38]);
+  assert.deepEqual(rois.get("run.top_hope.wide"), [1004, 13, 38, 38]);
   assert.deepEqual(rois.get("run.top_idea"), [1208, 13, 52, 38]);
 });
 

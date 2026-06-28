@@ -243,9 +243,12 @@ function findRegionNumberCandidate(frame, { field, label, regionIdPart, min = 0,
   };
 }
 
-function findBestRegionNumberCandidate(frame, { field, label, regionIdPart, min = 0, max = 999, confidence = 0.7, prefer = "last", allowRoman = false }) {
+function findBestRegionNumberCandidate(frame, { field, label, regionIdPart, regionIdPattern = null, min = 0, max = 999, confidence = 0.7, prefer = "last", allowRoman = false }) {
   const candidates = asTextResults(frame)
-    .filter((item) => String(item.regionId || "").includes(regionIdPart))
+    .filter((item) => {
+      const regionId = String(item.regionId || "");
+      return regionIdPattern ? regionIdPattern.test(regionId) : regionId.includes(regionIdPart);
+    })
     .map((item) => {
       const values = numericValuesFromText(item.text, { allowRoman }).filter((value) => value >= min && value <= max);
       if (!values.length) return null;
@@ -396,8 +399,39 @@ function hopePairFromTopRightStatus(frame) {
   return null;
 }
 
+function findTopLayoutNumberCandidate(frame, { field, label, regionIdPattern, max = 9999 }) {
+  return findBestRegionNumberCandidate(frame, {
+    field,
+    label,
+    regionIdPattern,
+    min: 0,
+    max,
+    confidence: 0.86,
+    prefer: "first",
+  });
+}
+
+function findTopResourceLayout(frame) {
+  const compact = {
+    ingot: findTopLayoutNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPattern: /^run\.top_ingot$/ }),
+    hope: findTopLayoutNumberCandidate(frame, { field: "hope", label: "希望", regionIdPattern: /^run\.top_hope$/, max: 999 }),
+  };
+  if (compact.ingot && compact.hope) return compact;
+
+  const wide = {
+    ingot: findTopLayoutNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPattern: /^run\.top_ingot\.wide$/ }),
+    hope: findTopLayoutNumberCandidate(frame, { field: "hope", label: "希望", regionIdPattern: /^run\.top_hope\.wide$/, max: 999 }),
+  };
+  if (wide.ingot && wide.hope) return wide;
+
+  return {
+    ingot: compact.ingot || wide.ingot,
+    hope: compact.hope || wide.hope,
+  };
+}
+
 function findTopHopeCandidate(frame) {
-  return findBestRegionNumberCandidate(frame, { field: "hope", label: "希望", regionIdPart: "top_hope", min: 0, max: 999, confidence: 0.86, prefer: "first" });
+  return findTopResourceLayout(frame).hope;
 }
 
 function findHopeCandidates(frame) {
@@ -409,10 +443,8 @@ function findHopeCandidates(frame) {
   const currentEntry = entries.find((item) => /hope[._-]current/.test(String(item.regionId || "")));
   const maxEntry = entries.find((item) => /hope[._-]max/.test(String(item.regionId || "")));
   const current = firstNumericValueInRange(currentEntry, { min: 0, max: 99 });
-  const max = firstNumericValueInRange(maxEntry, { min: 0, max: 99 });
+  const max = firstNumericValueInRange(maxEntry, { min: 0, max: 50 });
   if (isValidHopePair([current, max])) return hopeCandidatesFromPair([current, max]);
-
-  if (topHope) return [topHope];
 
   const topRightPair = hopePairFromTopRightStatus(frame);
   if (isValidHopePair(topRightPair)) return hopeCandidatesFromPair(topRightPair);
@@ -425,11 +457,13 @@ function findHopeCandidates(frame) {
   const combinedWholePair = hopePairFromText(wholeEntries.map((entry) => entry.text).join(" "));
   if (isValidHopePair(combinedWholePair)) return hopeCandidatesFromPair(combinedWholePair);
 
+  if (topHope) return [topHope];
+
   return [findRegionNumberCandidate(frame, { field: "hope", label: "希望", regionIdPart: "hope", min: 0, max: 999, prefer: "first" })].filter(Boolean);
 }
 
 function findTopIngotCandidate(frame) {
-  return findBestRegionNumberCandidate(frame, { field: "ingot", label: "源石錐", regionIdPart: "top_ingot", min: 0, max: 9999, confidence: 0.86, prefer: "first" });
+  return findTopResourceLayout(frame).ingot;
 }
 
 function findIngotCandidate(frame) {
