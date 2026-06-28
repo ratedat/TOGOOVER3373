@@ -36,6 +36,8 @@ export function resolveDebugLoggingConfig({ env = process.env, packageMetadata =
     enabled,
     logDir,
     logFile: path.join(logDir, `main-${safeTimestamp(now)}.log`),
+    recognitionLogDir: path.join(logDir, "Recognition Scans"),
+    adbScreenshotDir: path.join(logDir, "ADB Screenshots"),
   };
 }
 

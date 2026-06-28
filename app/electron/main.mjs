@@ -51,14 +51,15 @@ const storageContext = {
   documentsPath: path.join(os.homedir(), "Documents"),
   isPackaged: app.isPackaged,
 };
+const debugLoggingConfig = resolveDebugLoggingConfig({
+  env: process.env,
+  packageMetadata,
+  appRoot: APP_ROOT,
+  execPath: process.execPath,
+  isPackaged: app.isPackaged,
+});
 const debugLogger = installDebugFileLogging({
-  config: resolveDebugLoggingConfig({
-    env: process.env,
-    packageMetadata,
-    appRoot: APP_ROOT,
-    execPath: process.execPath,
-    isPackaged: app.isPackaged,
-  }),
+  config: debugLoggingConfig,
 });
 
 let storageSelectionSaved = false;
@@ -630,7 +631,14 @@ async function startServerWithPortRetry(startServer, selectedPort) {
   while (candidatePort != null) {
     port = candidatePort;
     try {
-      const controller = await startServer({ port: candidatePort, adbPathPicker: pickAdbPath });
+      const controller = await startServer({
+        port: candidatePort,
+        adbPathPicker: pickAdbPath,
+        ...(debugLoggingConfig.enabled ? {
+          recognitionLogDir: debugLoggingConfig.recognitionLogDir,
+          adbCaptureDir: debugLoggingConfig.adbScreenshotDir,
+        } : {}),
+      });
       port = controller.port;
       return controller;
     } catch (error) {

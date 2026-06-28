@@ -197,7 +197,7 @@ function httpError(status, message, details = {}) {
   return Object.assign(new Error(message), { status, details });
 }
 
-async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog } = {}) {
+async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog, onCaptureFrame = null } = {}) {
   if (source !== "adb") throw httpError(400, `unsupported recognition source: ${source}`);
   const [tasks, state, master, operatorOcrMap] = await Promise.all([
     recognitionTasks(),
@@ -249,6 +249,7 @@ async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog
     source,
     signal,
     onLog,
+    onCaptureFrame,
   });
 }
 
@@ -354,6 +355,28 @@ export async function saveAdbScreenshotFrame(frame, { stateDir = STATE_DIR, now 
   const dir = path.join(stateDir, "adb-screenshots");
   await fs.mkdir(dir, { recursive: true });
   const file = path.join(dir, `adb-test-${timestampForFile(now)}.png`);
+  await fs.writeFile(file, frame.bytes);
+  return {
+    bytes: frame.bytes.length || 0,
+    capturedAt: frame.capturedAt || new Date(now).toISOString(),
+    path: file,
+  };
+}
+
+export async function saveRecognitionAdbCaptureFrame(frame, { baseDir, scanId, profile, source = "adb", stage = "capture", iteration = null, passIndex = null, scanStartedAt = null, now = new Date() } = {}) {
+  if (!baseDir) return null;
+  if (source !== "adb") return null;
+  if (!frame?.bytes) throw new Error("screenshot frame has no bytes");
+  const timestamp = timestampForFile(scanStartedAt || frame.capturedAt || now);
+  const profileId = sanitizeFilePart(profile?.id || frame.profileId, "profile");
+  const safeScanId = sanitizeFilePart(scanId, "scan");
+  const safeStage = sanitizeFilePart(stage, "capture");
+  const scanDir = path.join(baseDir, `${timestamp}-${profileId}-${safeScanId}`);
+  await fs.mkdir(scanDir, { recursive: true });
+  const parts = [safeStage];
+  if (Number.isFinite(Number(passIndex))) parts.push(`p${Number(passIndex)}`);
+  if (Number.isFinite(Number(iteration))) parts.push(`i${Number(iteration)}`);
+  const file = path.join(scanDir, `${parts.join("-")}.png`);
   await fs.writeFile(file, frame.bytes);
   return {
     bytes: frame.bytes.length || 0,
@@ -471,7 +494,7 @@ function legacyControlRedirectLocation(url) {
   return `/control-v2${query ? `?${query}` : ""}`;
 }
 
-export function createAppServer({ recognitionRunner = defaultRecognitionRunner, adbDetector = detectAdbConnections, adbTester = defaultAdbTester, adbPathPicker = null, hypervisorDetector = detectWindowsHypervisor, recognitionLogDir = RECOGNITION_LOG_DIR } = {}) {
+export function createAppServer({ recognitionRunner = defaultRecognitionRunner, adbDetector = detectAdbConnections, adbTester = defaultAdbTester, adbPathPicker = null, hypervisorDetector = detectWindowsHypervisor, recognitionLogDir = RECOGNITION_LOG_DIR, adbCaptureDir = null } = {}) {
   let activeScanController = null;
   let activeScanStatus = null;
   let lastScanSummary = null;
@@ -510,7 +533,16 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner, 
       log: [],
     };
     try {
-      const result = await recognitionRunner({ profile, source, signal: controller.signal, onLog: appendActiveScanLog });
+      const result = await recognitionRunner({
+        profile,
+        source,
+        signal: controller.signal,
+        onLog: appendActiveScanLog,
+        requestId,
+        onCaptureFrame: adbCaptureDir
+          ? (frame, meta) => saveRecognitionAdbCaptureFrame(frame, { baseDir: adbCaptureDir, ...meta })
+          : null,
+      });
       let nextResult = result;
       const state = await ensureState();
       let nextState = state;
@@ -655,8 +687,8 @@ export function createAppServer({ recognitionRunner = defaultRecognitionRunner, 
   });
 }
 
-export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner, adbDetector, adbTester, adbPathPicker, hypervisorDetector, recognitionLogDir } = {}) {
-  const server = createAppServer({ recognitionRunner, adbDetector, adbTester, adbPathPicker, hypervisorDetector, recognitionLogDir });
+export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner, adbDetector, adbTester, adbPathPicker, hypervisorDetector, recognitionLogDir, adbCaptureDir } = {}) {
+  const server = createAppServer({ recognitionRunner, adbDetector, adbTester, adbPathPicker, hypervisorDetector, recognitionLogDir, adbCaptureDir });
   return new Promise((resolve, reject) => {
     server.once("error", reject);
     server.listen(port, host, () => {

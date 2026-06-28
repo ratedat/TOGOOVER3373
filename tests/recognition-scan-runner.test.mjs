@@ -318,6 +318,39 @@ test("scan runner emits live log entries through onLog", async () => {
   assert.equal(liveLog.some((entry) => entry.event === "recognize" && entry.count === 1), true);
 });
 
+test("scan runner can persist captured frames through a debug hook", async () => {
+  const savedFrames = [];
+  const liveLog = [];
+  const result = await runScanProfile({
+    profile: baseProfile({ id: "relicsFull", maxScrolls: 0, restoreSteps: [] }),
+    adapter: createAdapter([
+      { knownScreenId: "run-home", bytes: Buffer.from("known"), capturedAt: "2026-06-28T00:00:00.000Z" },
+      { fingerprint: "page-1", candidates: [], bytes: Buffer.from("scan"), capturedAt: "2026-06-28T00:00:01.000Z" },
+    ]),
+    recognizer: createMetadataRecognizer(),
+    scanId: "debug-scan",
+    now: () => new Date("2026-06-28T00:00:00.000Z"),
+    random: () => 0.5,
+    onLog: (entry) => liveLog.push(entry),
+    onCaptureFrame: async (frame, meta) => {
+      savedFrames.push({ frame, meta });
+      return { path: `D:/Debug/${meta.scanId}/${meta.stage}.png`, bytes: frame.bytes.length, capturedAt: frame.capturedAt };
+    },
+  });
+
+  assert.equal(result.status, "completed");
+  assert.deepEqual(savedFrames.map((item) => [item.meta.scanId, item.meta.profile.id, item.meta.stage]), [
+    ["debug-scan", "relicsFull", "known-screen"],
+    ["debug-scan", "relicsFull", "scan"],
+  ]);
+  assert.deepEqual(savedFrames.map((item) => item.meta.scanStartedAt), [
+    "2026-06-28T00:00:00.000Z",
+    "2026-06-28T00:00:00.000Z",
+  ]);
+  assert.equal(result.log.some((entry) => entry.event === "screenshot" && entry.path.endsWith("known-screen.png")), true);
+  assert.equal(liveLog.some((entry) => entry.event === "screenshot" && entry.path.endsWith("scan.png")), true);
+});
+
 
 test("scan runner skips open and restore when the target panel is already open", async () => {
   const adapterLog = [];

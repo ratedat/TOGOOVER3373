@@ -15,6 +15,32 @@ function logEvent(log, event, details = {}, onLog = null) {
   return entry;
 }
 
+async function recordCapturedFrame({ frame, scanId, profile, source, meta, log, onLog, onCaptureFrame }) {
+  if (typeof onCaptureFrame !== "function") return null;
+  try {
+    const saved = await onCaptureFrame(frame, { scanId, profile, source, ...meta });
+    if (!saved) return null;
+    logEvent(log, "screenshot", {
+      stage: meta?.stage || null,
+      iteration: meta?.iteration ?? null,
+      passIndex: meta?.passIndex ?? null,
+      path: saved.path || null,
+      bytes: saved.bytes ?? null,
+      capturedAt: saved.capturedAt || frame?.capturedAt || null,
+    }, onLog);
+    return saved;
+  } catch (error) {
+    logEvent(log, "screenshot", {
+      stage: meta?.stage || null,
+      iteration: meta?.iteration ?? null,
+      passIndex: meta?.passIndex ?? null,
+      status: "failed",
+      error: error instanceof Error ? error.message : String(error),
+    }, onLog);
+    return null;
+  }
+}
+
 function arrayFrom(value) {
   if (value == null) return [];
   return Array.isArray(value) ? value : [value];
@@ -124,7 +150,7 @@ function scanPassesForProfile(profile, scale) {
   });
 }
 
-export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal, random = Math.random, onLog = null } = {}) {
+export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal, random = Math.random, onLog = null, onCaptureFrame = null } = {}) {
   if (!profile?.id) throw new Error("scan profile is required");
   if (!adapter) throw new Error("scan adapter is required");
   const startedAt = now();
@@ -142,7 +168,9 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
   try {
     throwIfAborted(signal);
     logEvent(log, "capture", { stage: "known-screen" }, onLog);
-    const initialFrame = await adapter.capture({ profileId: profile.id, stage: "known-screen" });
+    const initialCaptureMeta = { profileId: profile.id, stage: "known-screen" };
+    const initialFrame = await adapter.capture(initialCaptureMeta);
+    await recordCapturedFrame({ frame: initialFrame, scanId, profile, source, meta: { ...initialCaptureMeta, scanStartedAt: startedAt.toISOString() }, log, onLog, onCaptureFrame });
     const classification = await recognizer.classify(initialFrame, { profile, source, actualResolution, scale });
     logEvent(log, "classify", classification, onLog);
     if (!classification?.known) {
@@ -190,7 +218,9 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
       for (let iteration = 0; iteration <= maxScrolls; iteration += 1) {
         throwIfAborted(signal);
         logEvent(log, "capture", { stage: "scan", iteration, passIndex: pass.passIndex, passLabel: pass.label }, onLog);
-        const frame = await adapter.capture({ profileId: profile.id, stage: "scan", iteration, passIndex: pass.passIndex });
+        const captureMeta = { profileId: profile.id, stage: "scan", iteration, passIndex: pass.passIndex };
+        const frame = await adapter.capture(captureMeta);
+        await recordCapturedFrame({ frame, scanId, profile, source, meta: { ...captureMeta, scanStartedAt: startedAt.toISOString() }, log, onLog, onCaptureFrame });
         const fingerprint = await recognizer.fingerprint(frame, { profile, region: scanRegion, iteration, passIndex: pass.passIndex, actualResolution, scale });
         logEvent(log, "fingerprint", { iteration, passIndex: pass.passIndex, fingerprint }, onLog);
         if (passFingerprints.length && fingerprintsEqual(passFingerprints[passFingerprints.length - 1], fingerprint)) stableMatches += 1;

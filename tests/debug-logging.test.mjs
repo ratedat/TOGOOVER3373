@@ -60,6 +60,8 @@ test("resolveDebugLoggingConfig creates a stable discoverable log filename", () 
 
   assert.equal(config.enabled, true);
   assert.equal(config.logFile, path.join("D:/Tools", DEBUG_LOG_DIRNAME, "main-2026-06-28T08-00-00-000Z.log"));
+  assert.equal(config.recognitionLogDir, path.join("D:/Tools", DEBUG_LOG_DIRNAME, "Recognition Scans"));
+  assert.equal(config.adbScreenshotDir, path.join("D:/Tools", DEBUG_LOG_DIRNAME, "ADB Screenshots"));
 });
 
 test("installDebugFileLogging mirrors console output to the debug log", () => {

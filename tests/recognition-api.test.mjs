@@ -4,7 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 
-import { saveAdbScreenshotFrame, startServer } from "../app/server.mjs";
+import { saveAdbScreenshotFrame, saveRecognitionAdbCaptureFrame, startServer } from "../app/server.mjs";
 
 async function closeServer(server) {
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
@@ -204,6 +204,84 @@ test("saveAdbScreenshotFrame writes PNG bytes to the local state screenshot dire
   assert.equal(screenshot.capturedAt, "2026-06-27T00:00:00.000Z");
   assert.equal(screenshot.path.endsWith(path.join("adb-screenshots", "adb-test-2026-06-27T00-00-00-000Z.png")), true);
   assert.deepEqual([...await fs.readFile(screenshot.path)], [0x89, 0x50, 0x4e, 0x47]);
+});
+
+test("saveRecognitionAdbCaptureFrame writes scan screenshots to a readable debug directory", async () => {
+  const baseDir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-adb-debug-shot-"));
+  const screenshot = await saveRecognitionAdbCaptureFrame({
+    bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+    capturedAt: "2026-06-28T09:22:06.623Z",
+  }, {
+    baseDir,
+    scanId: "scan/with unsafe chars",
+    profile: { id: "is5AgeFull" },
+    source: "adb",
+    stage: "scan",
+    passIndex: 0,
+    iteration: 2,
+    scanStartedAt: "2026-06-28T09:22:00.000Z",
+  });
+  const knownScreen = await saveRecognitionAdbCaptureFrame({
+    bytes: Buffer.from([0x89, 0x50]),
+    capturedAt: "2026-06-28T09:22:07.000Z",
+  }, {
+    baseDir,
+    scanId: "scan/with unsafe chars",
+    profile: { id: "is5AgeFull" },
+    source: "adb",
+    stage: "known-screen",
+    scanStartedAt: "2026-06-28T09:22:00.000Z",
+  });
+
+  assert.equal(screenshot.bytes, 4);
+  assert.equal(screenshot.path.startsWith(baseDir), true);
+  assert.equal(screenshot.path.endsWith(path.join("scan-p0-i2.png")), true);
+  assert.equal(path.dirname(screenshot.path), path.dirname(knownScreen.path));
+  assert.match(screenshot.path, /is5AgeFull/);
+  assert.match(screenshot.path, /scan_with_unsafe_chars/);
+  assert.deepEqual([...await fs.readFile(screenshot.path)], [0x89, 0x50, 0x4e, 0x47]);
+});
+
+test("recognition scan API passes a debug screenshot saver when adbCaptureDir is configured", async () => {
+  const recognitionLogDir = await tempRecognitionLogDir();
+  const adbCaptureDir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-adb-capture-"));
+  const { server, port } = await startServer({
+    port: 0,
+    recognitionLogDir,
+    adbCaptureDir,
+    recognitionRunner: async ({ profile, source, onCaptureFrame }) => {
+      const screenshot = await onCaptureFrame({
+        bytes: Buffer.from([0x89, 0x50, 0x4e, 0x47]),
+        capturedAt: "2026-06-28T09:22:06.623Z",
+      }, { scanId: "api-debug-scan", profile, source, stage: "scan", iteration: 0, passIndex: 0 });
+      return {
+        scanId: "api-debug-scan",
+        profileId: profile.id,
+        source,
+        status: "completed",
+        suggestions: [],
+        candidates: [],
+        log: [{ event: "screenshot", path: screenshot.path }],
+      };
+    },
+  });
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/recognition/scan`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profile: "is5AgeFull", source: "adb" }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.result.logPath.startsWith(recognitionLogDir), true);
+    const record = JSON.parse(await fs.readFile(payload.result.logPath, "utf8"));
+    assert.equal(record.counts.log, 1);
+    assert.equal(record.log[0].path.startsWith(adbCaptureDir), true);
+    assert.deepEqual([...await fs.readFile(record.log[0].path)], [0x89, 0x50, 0x4e, 0x47]);
+  } finally {
+    await closeServer(server);
+  }
 });
 
 
