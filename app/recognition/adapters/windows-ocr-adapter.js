@@ -247,7 +247,8 @@ try {
       $regionResult = Invoke-Ocr $tmp $regionId $regionMap
       $texts += $regionResult.text
       $allResults += $regionResult.results
-      if ($regionId -eq "run.idea") {
+      $hasNumericText = $regionResult.text -match "[0-9０-９Oo図IiLl一丨イィ]"
+      if ($regionId -eq "run.idea" -and -not $hasNumericText) {
         $ideaDigitText = Read-IdeaDigitText $image $regionMap
         if ($ideaDigitText) {
           $texts += $ideaDigitText

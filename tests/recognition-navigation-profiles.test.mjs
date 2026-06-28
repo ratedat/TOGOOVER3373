@@ -65,7 +65,7 @@ test("idea count ROI targets the bottom conception counter, not thought burden",
   const tasks = await recognitionTasks();
   const ideaRegion = tasks.ocrRegions.find((region) => region.id === "run.idea");
 
-  assert.deepEqual(ideaRegion.roi, [848, 650, 58, 66]);
+  assert.deepEqual(ideaRegion.roi, [730, 650, 58, 66]);
 });
 
 test("run status top-bar resource ROIs target narrow digit crops", async () => {

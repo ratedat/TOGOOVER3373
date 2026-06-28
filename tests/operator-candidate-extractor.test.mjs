@@ -12,6 +12,7 @@ const operators = [
   { id: "ines", name: "イネス", rarity: 6, class: "先鋒", branch: "偵察兵" },
   { id: "myrtle", name: "テンニンカ", rarity: 4, class: "先鋒", branch: "旗手" },
   { id: "ray", name: "レイ", rarity: 6, class: "狙撃", branch: "狩人" },
+  { id: "leizi2", name: "司霆レイズ", rarity: 6, class: "前衛", branch: "解放者" },
 ];
 
 const operatorOcrMap = {
@@ -23,6 +24,7 @@ const operatorOcrMap = {
     { pattern: "ルーメン", maaReplacement: "流明", localMatches: [{ id: "lumen", name: "ルーメン" }] },
     { pattern: "イネ(ス|ズ).*", maaReplacement: "伊内丝", localMatches: [{ id: "ines", name: "イネス" }] },
     { pattern: "テンニンカ", maaReplacement: "桃金娘", localMatches: [{ id: "myrtle", name: "テンニンカ" }] },
+    { pattern: "(司|霆).*レイズ", maaReplacement: "司霆惊蛰", localMatches: [{ id: "leizi2", name: "司霆レイズ" }] },
   ],
   equivalenceClasses: [["ン", "ソ"], ["-", "ー", "一"], ["フ", "ブ", "プ"], ["ス", "ズ"]],
 };
@@ -88,6 +90,26 @@ test("operator candidate extractor prefers MAA rules over short local-name fragm
 
   assert.deepEqual(candidates.map((item) => item.operatorId), ["blaze"]);
   assert.equal(candidates[0].source, "maa-ocr-rule");
+});
+
+test("operator candidate extractor maps the Sarkaz operator list PMEY OCR drift to Leizi alter", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "PMEY", regionId: "operator.name.left.1", roi: { x: 1200, y: 290, width: 460, height: 124 }, confidence: 0.47 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 700, y: 140, width: 1720, height: 1110 } });
+
+  assert.equal(candidates[0].operatorId, "leizi2");
+  assert.equal(candidates[0].name, "司霆レイズ");
+});
+
+test("operator candidate extractor maps Leizi alter when Windows OCR drops the dakuten", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "司 霆 レ イ ス 、", regionId: "operator.name.left.1", roi: { x: 1333, y: 346, width: 260, height: 49 }, confidence: 0.7 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 700, y: 140, width: 1720, height: 1110 } });
+
+  assert.equal(candidates[0].operatorId, "leizi2");
+  assert.equal(candidates[0].name, "司霆レイズ");
 });
 
 test("operator candidate extractor ignores OCR outside operatorsFull", async () => {

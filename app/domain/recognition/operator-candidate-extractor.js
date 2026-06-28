@@ -244,6 +244,33 @@ function localNameFallbackHitsForRow(row, db, operatorOcrMap) {
     }));
 }
 
+const operatorOcrDriftAliases = [
+  { operatorId: "leizi2", pattern: /^司霆レイス$/i, matchedPattern: "司霆レイス" },
+  { operatorId: "leizi2", pattern: /^pmey$/i, matchedPattern: "PMEY" },
+];
+
+function localOcrDriftHitsForRow(row, db, operatorOcrMap) {
+  const normalizedText = normalizeOperatorRecognitionText(row.text, operatorOcrMap);
+  const lineText = stripOperatorLineNoise(normalizedText);
+  if (!lineText) return [];
+  return operatorOcrDriftAliases
+    .filter((alias) => alias.pattern.test(lineText))
+    .map((alias) => {
+      const operator = db.find((entry) => entry.operatorId === alias.operatorId);
+      if (!operator) return null;
+      return {
+        operator,
+        rawText: row.text,
+        normalizedText,
+        confidence: Math.min(0.72, Number(row.confidence || 0.5) + 0.12),
+        source: "local-ocr-drift",
+        matchedPattern: alias.matchedPattern,
+        maaReplacement: null,
+      };
+    })
+    .filter(Boolean);
+}
+
 function candidateFromHit(hit, row) {
   return {
     kind: "operator",
@@ -278,6 +305,7 @@ export function createOperatorCandidateExtractor({ operators = [], operatorOcrMa
       const hits = maaRuleHitsForRow(row, db, operatorOcrMap);
       const maaIds = new Set(hits.map((hit) => hit.operator.operatorId));
       hits.push(...localNameFallbackHitsForRow(row, db, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
+      hits.push(...localOcrDriftHitsForRow(row, db, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
       for (const hit of hits) {
         const candidate = candidateFromHit(hit, row);
         const previous = byOperator.get(candidate.operatorId);
