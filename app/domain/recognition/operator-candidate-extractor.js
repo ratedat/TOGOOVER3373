@@ -260,6 +260,7 @@ const operatorOcrDriftAliases = [
   { operatorId: "leizi", pattern: /^レイス$/i, matchedPattern: "レイス" },
   { operatorId: "leizi2", pattern: /^司霆レイス$/i, matchedPattern: "司霆レイス" },
   { operatorId: "leizi2", pattern: /^pmey$/i, matchedPattern: "PMEY" },
+  { operatorId: "gummy", pattern: /^ク(?:ム|で|ン)$/i, matchedPattern: "クム" },
 ];
 
 function localOcrDriftHitsForRow(row, db, operatorOcrMap) {
