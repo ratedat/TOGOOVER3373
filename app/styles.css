@@ -433,6 +433,8 @@ a:hover { text-decoration: underline; }
   border-radius: 7px;
   background: rgba(255, 255, 255, 0.035);
 }
+.item-row.operator-choice,
+.item-row.relic-choice { grid-template-columns: minmax(0, 1fr) auto auto; }
 .item-row.compact { grid-template-columns: minmax(0, 1fr) auto; }
 .item-row.active { border-color: rgba(216, 72, 63, 0.65); background: rgba(216, 72, 63, 0.12); }
 .item-row.template-active { border-color: rgba(91, 181, 176, 0.55); background: rgba(91, 181, 176, 0.11); }
