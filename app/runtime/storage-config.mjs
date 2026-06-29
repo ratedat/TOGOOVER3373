@@ -23,7 +23,9 @@ function portableExecutableDir({ env = {}, execPath = process.execPath } = {}) {
   if (envDir) return envDir;
   const envFile = cleanPath(env.PORTABLE_EXECUTABLE_FILE);
   if (envFile) return path.dirname(envFile);
-  return cleanPath(execPath) ? path.dirname(execPath) : "";
+  const execDir = cleanPath(execPath) ? path.dirname(execPath) : "";
+  if (path.basename(execDir).toLowerCase() === "win-unpacked") return path.dirname(execDir);
+  return execDir;
 }
 
 export function portableStorageDir({ appRoot = process.cwd(), execPath = process.execPath, isPackaged = false, env = {} } = {}) {
@@ -70,5 +72,5 @@ export function targetFromStoredSelection(selection, context = {}) {
   if (!selection) return null;
   const mode = normalizeStorageMode(selection.mode, "");
   if (!mode) return null;
-  return storageTarget({ ...context, mode, storageDir: selection.storageDir });
+  return storageTarget({ ...context, mode, storageDir: mode === "portable" ? "" : selection.storageDir });
 }

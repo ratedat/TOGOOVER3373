@@ -25,6 +25,15 @@ test("portable storage follows the original portable executable path", () => {
   assert.equal(dir, path.join("E:/Tools", "RHODES OBS COMMANDER3373 Data"));
 });
 
+test("portable storage treats win-unpacked as a build output folder", () => {
+  const dir = portableStorageDir({
+    isPackaged: true,
+    execPath: "O:/Arknights_Rogue_OBSTool/dist/win-unpacked/RHODES OBS COMMANDER3373.exe",
+    appRoot: "O:/Arknights_Rogue_OBSTool",
+  });
+  assert.equal(dir, path.join("O:/Arknights_Rogue_OBSTool/dist", "RHODES OBS COMMANDER3373 Data"));
+});
+
 test("development portable storage stays inside the project root", () => {
   const dir = portableStorageDir({ isPackaged: false, execPath: "C:/Electron/electron.exe", appRoot: "O:/Arknights_Rogue_OBSTool" });
   assert.equal(dir, path.join("O:/Arknights_Rogue_OBSTool", "user-data"));
@@ -60,4 +69,16 @@ test("storage pointer round-trips the selected location", () => {
 test("targetFromStoredSelection resolves saved documents mode", () => {
   const target = targetFromStoredSelection({ mode: "documents", storageDir: "" }, { documentsPath: "C:/Users/owner/Documents" });
   assert.equal(target.storageDir, path.join("C:/Users/owner/Documents", "RHODES OBS COMMANDER3373"));
+});
+
+test("targetFromStoredSelection refreshes saved portable paths for the current executable", () => {
+  const target = targetFromStoredSelection(
+    { mode: "portable", storageDir: "O:/Arknights_Rogue_OBSTool/dist/win-unpacked/RHODES OBS COMMANDER3373 Data" },
+    {
+      appRoot: "O:/Arknights_Rogue_OBSTool",
+      execPath: "E:/Tools/RHODES OBS COMMANDER3373-0.1.0-x64.exe",
+      isPackaged: true,
+    },
+  );
+  assert.equal(target.storageDir, path.join("E:/Tools", "RHODES OBS COMMANDER3373 Data"));
 });
