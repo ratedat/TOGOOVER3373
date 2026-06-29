@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getChoiceActive, getChoiceCount, registerControlEvents, syncControlV2UiAfterStateReplace } from "../app/control-events.js";
+import { toggleChoiceExcluded } from "../app/control-actions.js";
 
 test("template relics count as active choices even when not manually selected", () => {
   const state = { relics: [], operators: [] };
@@ -31,6 +32,17 @@ test("state replacement preserves non-choice screen but normalizes invalid choic
   assert.equal(ui.controlV2Screen, "common");
   assert.equal(ui.controlV2ChoiceTab, "operators");
   assert.equal(ui.forceFullChoiceRender, true);
+});
+
+test("toggleChoiceExcluded stores operator and relic display exclusion ids", () => {
+  const state = { preferences: {} };
+
+  toggleChoiceExcluded(state, "operator", "exusiai");
+  toggleChoiceExcluded(state, "relic", "is5_sarkaz_relic_001");
+  toggleChoiceExcluded(state, "operator", "exusiai");
+
+  assert.deepEqual(state.preferences.operatorExcludedIds, []);
+  assert.deepEqual(state.preferences.relicExcludedIds, ["is5_sarkaz_relic_001"]);
 });
 
 

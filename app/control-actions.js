@@ -1,6 +1,7 @@
 import { asCoinEntries, asEffectStackEntries, asRevelationBoardValue, asSpecialArray, asSpecialObject, clampCoinCount, clampSpecialNumber, mergeCoinEntries, normalizeCoinFace } from "./domain/special-values.js";
 import { clampOverlayScrollSpeed, isOverlayScrollSpeedField, overlayScrollSpeedDefaults } from "./lib/overlay-config.js";
 import { clampGridColumns, normalizeOcrEngine } from "./lib/preferences.js";
+import { normalizeChoiceFilterIds } from "./domain/choice-filters.js";
 import { normalizeControlMode } from "./domain/ui-modes.js";
 import { RUN_STAT_FIELD_IDS, normalizeRunStatValue } from "./domain/run-stats.js";
 import { applyAdbPresetDefaults, normalizeAdbSettings } from "./domain/adb-settings.js";
@@ -108,6 +109,11 @@ export function clearTournamentState(state) {
   state.tournament = { pendingState: null, lastSubmissionAt: null, submittedBy: null };
 }
 
+function updatePreferenceBoolean(state, field, checked) {
+  state.preferences ||= {};
+  state.preferences[field] = Boolean(checked);
+}
+
 export function updateAdbSetting(state, field, value, checked) {
   const current = normalizeAdbSettings(state.adb);
   const booleanFields = new Set(["autoDetect", "screenshotExtension", "restartServerOnFailure", "restartProcessOnFailure", "closeAdbOnExit", "lightweightAdb"]);
@@ -155,6 +161,8 @@ export function updateRunField(state, field, value, checked) {
     state.preferences[field] = clampOverlayScrollSpeed(value, overlayScrollSpeedDefaults[field]);
   } else if (field === "showUnreleasedOperators") {
     state.preferences.showUnreleasedOperators = checked;
+  } else if (["operatorShowSelectedFirst", "operatorHideExcluded", "operatorSelectedOnly", "relicShowSelectedFirst", "relicHideExcluded", "relicSelectedOnly"].includes(field)) {
+    updatePreferenceBoolean(state, field, checked);
   }
 }
 
@@ -251,4 +259,14 @@ export function toggleChoice(state, type, id) {
   if (set.has(id)) set.delete(id);
   else set.add(id);
   state[key] = [...set];
+}
+
+export function toggleChoiceExcluded(state, type, id) {
+  if (!id) return;
+  state.preferences ||= {};
+  const key = type === "relic" ? "relicExcludedIds" : "operatorExcludedIds";
+  const set = new Set(normalizeChoiceFilterIds(state.preferences[key]));
+  if (set.has(id)) set.delete(id);
+  else set.add(id);
+  state.preferences[key] = [...set];
 }

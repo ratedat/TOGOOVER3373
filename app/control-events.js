@@ -151,8 +151,9 @@ function startGlmOcrOllamaStatusPolling(context) {
 
 function setChoicePressed(element, active) {
   if (!element) return;
-  element.classList.toggle("active", active);
-  element.setAttribute("aria-pressed", active ? "true" : "false");
+  const row = element.closest?.(".operator-choice, .relic-choice") || element;
+  row.classList.toggle("active", active);
+  if (element.hasAttribute?.("aria-pressed")) element.setAttribute("aria-pressed", active ? "true" : "false");
 }
 
 export function getChoiceActive(type, id, state, context = {}) {
@@ -194,14 +195,16 @@ function relicBadges(meta = {}) {
   return [
     autoOnly ? '<span class="item-badge template">自動</span>' : '',
     meta.manual && meta.template ? '<span class="item-badge template">手動+自動</span>' : '',
+    meta.excluded ? '<span class="item-badge excluded">除外</span>' : '',
   ].filter(Boolean).join("");
 }
 
 function updateRelicChoiceMeta(element, meta) {
   if (!element || !meta) return;
-  element.classList.toggle("template-active", Boolean(meta.template && !meta.manual));
-  const badges = element.querySelector(".item-badges");
-  if (badges) badges.innerHTML = relicBadges(meta);
+  const row = element.closest?.(".relic-choice") || element;
+  row.classList.toggle("template-active", Boolean(meta.template && !meta.manual));
+  const badges = row.querySelector(".item-badges");
+  if (badges) badges.innerHTML = relicBadges({ ...meta, excluded: row.classList.contains("choice-excluded") });
 }
 
 function refreshChoiceCountLabels(ui, state, context) {
@@ -218,7 +221,11 @@ function toggleChoiceElement(element, type, id, context) {
     context.mutate((state) => controlActions.toggleChoice(state, type, id));
     return;
   }
-  const renderAfterToggle = Boolean(context.ui.forceFullChoiceRender);
+  const preferences = context.getState().preferences || {};
+  const renderForFilters = type === "relic"
+    ? Boolean(preferences.relicSelectedOnly || preferences.relicShowSelectedFirst)
+    : Boolean(preferences.operatorSelectedOnly || preferences.operatorShowSelectedFirst);
+  const renderAfterToggle = Boolean(context.ui.forceFullChoiceRender || renderForFilters);
   context.ui.forceFullChoiceRender = false;
   context.mutate((state) => controlActions.toggleChoice(state, type, id), { render: renderAfterToggle });
   if (renderAfterToggle) return;
@@ -335,6 +342,8 @@ export function registerControlEvents(app, context) {
     }
     if (action === "toggle-relic") { toggleChoiceElement(button, "relic", id, context); return; }
     if (action === "toggle-operator") { toggleChoiceElement(button, "operator", id, context); return; }
+    if (action === "toggle-relic-excluded") { context.mutate((state) => controlActions.toggleChoiceExcluded(state, "relic", id)); return; }
+    if (action === "toggle-operator-excluded") { context.mutate((state) => controlActions.toggleChoiceExcluded(state, "operator", id)); return; }
     if (action === "clear-relics") context.mutate(controlActions.clearRelics);
     if (action === "adb-browse-path") {
       button.disabled = true;

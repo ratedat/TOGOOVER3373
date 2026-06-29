@@ -1,6 +1,7 @@
-export function renderRelicListContent({ shown, filtered, owned }, renderRelicControlRow) {
+export function renderRelicListContent({ shown, filtered, owned, excluded = new Set() }, renderRelicControlRow) {
   return `
-    ${shown.map((item) => renderRelicControlRow(item, owned.has(item.id))).join("")}
+    ${shown.map((item) => renderRelicControlRow(item, owned.has(item.id), excluded.has(item.id))).join("")}
+    ${shown.length === 0 ? `<div class="empty-state field-wide">条件に合う秘宝はありません。</div>` : ""}
     ${shown.length < filtered.length ? `<div class="empty-state field-wide">表示を絞り込んでください。残り${filtered.length - shown.length}件があります。</div>` : ""}
   `;
 }
@@ -11,9 +12,10 @@ export function renderRelicListArea(viewData, renderRelicListContent) {
   </div>`;
 }
 
-export function renderOperatorListContent({ shown, operators, selected }, renderOperatorControlRow) {
+export function renderOperatorListContent({ shown, operators, selected, excluded = new Set() }, renderOperatorControlRow) {
   return `
-    ${shown.map((item) => renderOperatorControlRow(item, selected.has(item.id))).join("")}
+    ${shown.map((item) => renderOperatorControlRow(item, selected.has(item.id), excluded.has(item.id))).join("")}
+    ${shown.length === 0 ? `<div class="empty-state field-wide">条件に合うオペレーターはありません。</div>` : ""}
     ${shown.length < operators.length ? `<div class="empty-state field-wide">表示を絞り込んでください。残り${operators.length - shown.length}件があります。</div>` : ""}
   `;
 }

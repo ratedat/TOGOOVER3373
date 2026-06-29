@@ -7,7 +7,7 @@ import { fileURLToPath } from "node:url";
 import { normalizeControlMode } from "./domain/ui-modes.js";
 import { mergeImplementationHistory } from "./domain/operator-implementation-history.js";
 import { isAppShellPath } from "./lib/view-route.js";
-import { normalizeOcrEngine } from "./lib/preferences.js";
+import { normalizeOcrEngine, normalizePreferences } from "./lib/preferences.js";
 import { normalizeRunStats } from "./domain/run-stats.js";
 import { normalizeAdbSettings } from "./domain/adb-settings.js";
 import { preserveLocalConfigOnReset } from "./domain/local-config.js";
@@ -50,14 +50,6 @@ const NO_CACHE_HEADERS = {
   "cache-control": "no-store, max-age=0, must-revalidate",
   "pragma": "no-cache",
   "expires": "0",
-};
-
-const OVERLAY_SCROLL_SPEED_DEFAULTS = {
-  compactRelicScrollSpeed: 9,
-  verticalRelicScrollSpeed: 11,
-  verticalOperatorScrollSpeed: 13,
-  horizontalRelicScrollSpeed: 14,
-  horizontalOperatorScrollSpeed: 16,
 };
 
 const mime = new Map([
@@ -109,38 +101,8 @@ function initialStateFromExample(example) {
   state.pendingSuggestions = Array.isArray(state.pendingSuggestions) ? state.pendingSuggestions : [];
   state.tournament = state.tournament || { pendingState: null, lastSubmissionAt: null, submittedBy: null };
   state.adb = normalizeAdbSettings(state.adb);
-  state.preferences = {
-    showUnreleasedOperators: false,
-    ocrEngine: "profile",
-    operatorSort: "rarity_desc",
-    operatorGridColumns: 2,
-    relicGridColumns: 2,
-    ...OVERLAY_SCROLL_SPEED_DEFAULTS,
-    ...(state.preferences || {}),
-  };
-  state.preferences.operatorGridColumns = clampOperatorGridColumns(state.preferences.operatorGridColumns);
-  state.preferences.relicGridColumns = clampOperatorGridColumns(state.preferences.relicGridColumns);
-  state.preferences.ocrEngine = normalizeOcrEngine(state.preferences.ocrEngine);
-  normalizeOverlayScrollSpeeds(state.preferences);
+  state.preferences = normalizePreferences(state.preferences);
   return state;
-}
-
-function clampOperatorGridColumns(value) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return 2;
-  return Math.min(6, Math.max(1, Math.trunc(numeric)));
-}
-
-function clampOverlayScrollSpeed(value, fallback = 12) {
-  const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return fallback;
-  return Math.min(30, Math.max(0, Math.round(numeric)));
-}
-
-function normalizeOverlayScrollSpeeds(preferences) {
-  for (const [key, fallback] of Object.entries(OVERLAY_SCROLL_SPEED_DEFAULTS)) {
-    preferences[key] = clampOverlayScrollSpeed(preferences[key], fallback);
-  }
 }
 
 function normalizeState(state) {
@@ -165,19 +127,7 @@ function normalizeState(state) {
   next.pendingSuggestions = Array.isArray(next.pendingSuggestions) ? next.pendingSuggestions : [];
   next.tournament = next.tournament || { pendingState: null, lastSubmissionAt: null, submittedBy: null };
   next.adb = normalizeAdbSettings(next.adb);
-  next.preferences = {
-    showUnreleasedOperators: false,
-    ocrEngine: "profile",
-    operatorSort: "rarity_desc",
-    operatorGridColumns: 2,
-    relicGridColumns: 2,
-    ...OVERLAY_SCROLL_SPEED_DEFAULTS,
-    ...(next.preferences || {}),
-  };
-  next.preferences.operatorGridColumns = clampOperatorGridColumns(next.preferences.operatorGridColumns);
-  next.preferences.relicGridColumns = clampOperatorGridColumns(next.preferences.relicGridColumns);
-  next.preferences.ocrEngine = normalizeOcrEngine(next.preferences.ocrEngine);
-  normalizeOverlayScrollSpeeds(next.preferences);
+  next.preferences = normalizePreferences(next.preferences);
   return next;
 }
 

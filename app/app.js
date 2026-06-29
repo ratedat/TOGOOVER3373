@@ -33,6 +33,7 @@ import { cancelOverlayAutoScroll, setupOverlayAutoScroll } from "./overlay/autos
 import { RUN_STAT_FIELDS, formatRunStatValue, normalizeRunStats, runStatDisplayItems } from "./domain/run-stats.js";
 import { getRecognitionScanActions } from "./domain/recognition/scan-actions.js";
 import { adbConnectionPresetDetails, adbConnectionPresetOptions, filterVisibleAdbCandidates, normalizeAdbSettings } from "./domain/adb-settings.js";
+import { applyChoiceListFilters } from "./domain/choice-filters.js";
 
 const app = document.querySelector("#app");
 const routeParams = new URLSearchParams(location.search);
@@ -643,6 +644,38 @@ function getOperatorGridColumns() {
 function getRelicGridColumns() {
   return clampGridColumns(state?.preferences?.relicGridColumns ?? 2);
 }
+
+function choiceFilterField(prefix, suffix) {
+  return `${prefix}${suffix}`;
+}
+
+function getChoiceExcludedIds(prefix) {
+  const value = state?.preferences?.[choiceFilterField(prefix, "ExcludedIds")];
+  return Array.isArray(value) ? value : [];
+}
+
+function getChoiceFilterOptions(prefix, selectedIds) {
+  return {
+    selectedIds,
+    excludedIds: getChoiceExcludedIds(prefix),
+    selectedOnly: state?.preferences?.[choiceFilterField(prefix, "SelectedOnly")],
+    hideExcluded: state?.preferences?.[choiceFilterField(prefix, "HideExcluded")],
+    showSelectedFirst: state?.preferences?.[choiceFilterField(prefix, "ShowSelectedFirst")],
+  };
+}
+
+function renderChoiceFilterToggles(prefix) {
+  const items = [
+    ["ShowSelectedFirst", "優先表示"],
+    ["HideExcluded", "除外を隠す"],
+    ["SelectedOnly", "選択のみ"],
+  ];
+  return items.map(([suffix, label]) => {
+    const field = choiceFilterField(prefix, suffix);
+    return `<label class="choice-filter-toggle"><input type="checkbox" data-field="${field}" ${state.preferences[field] ? "checked" : ""} /> ${label}</label>`;
+  }).join("");
+}
+
 function getOperatorFilterViewForUi() {
   const viewData = getOperatorFilterView(master.operators, ui);
   Object.assign(ui, viewData.filters);
@@ -1276,12 +1309,14 @@ function renderControlV2StatusStrip() {
 
 function renderControlV2OperatorsPanel() {
   const { rarityOptions, classOptions, branchOptions, operators } = getOperatorFilterViewForUi();
-  const shown = sortOperators(operators).slice(0, 500);
   const selected = new Set(state.operators);
+  const excluded = new Set(getChoiceExcludedIds("operator"));
+  const filtered = applyChoiceListFilters(sortOperators(operators), getChoiceFilterOptions("operator", state.operators));
+  const shown = filtered.slice(0, 500);
   const gridColumns = getOperatorGridColumns();
   return `
     <section class="control-v2-panel control-v2-choice-panel">
-      <div class="control-v2-panel-head"><h2>オペレーター</h2><span class="control-v2-operator-count">${operators.length}件 / 招集${selected.size}名</span></div>
+      <div class="control-v2-panel-head"><h2>オペレーター</h2><span class="control-v2-operator-count">${filtered.length}件 / 招集${selected.size}名</span></div>
       <div class="control-v2-filter-grid">
         <label>実装状態<select data-ui="operatorRelease"><option value="released" ${ui.operatorRelease === "released" ? "selected" : ""}>日本実装のみ</option><option value="all" ${ui.operatorRelease === "all" ? "selected" : ""}>すべて</option><option value="unreleased" ${ui.operatorRelease === "unreleased" ? "selected" : ""}>日本未実装のみ</option></select></label>
         <label>レア度<select data-ui="operatorRarity"><option value="all">すべて</option>${rarityOptions.map((rarity) => `<option value="${rarity}" ${String(rarity) === ui.operatorRarity ? "selected" : ""}>★${rarity}</option>`).join("")}</select></label>
@@ -1289,8 +1324,9 @@ function renderControlV2OperatorsPanel() {
         <label>職分<select data-ui="operatorBranch"><option value="all">すべて</option>${branchOptions.map((value) => `<option value="${html(value)}" ${value === ui.operatorBranch ? "selected" : ""}>${html(value)}</option>`).join("")}</select></label>
         <label>並び順<select data-field="operatorSort"><option value="rarity_desc" ${state.preferences.operatorSort === "rarity_desc" ? "selected" : ""}>レア度 高い順</option><option value="rarity_asc" ${state.preferences.operatorSort === "rarity_asc" ? "selected" : ""}>レア度 低い順</option><option value="implementation_desc" ${state.preferences.operatorSort === "implementation_desc" ? "selected" : ""}>実装順 新しい順</option><option value="implementation_asc" ${state.preferences.operatorSort === "implementation_asc" ? "selected" : ""}>実装順 古い順</option><option value="class" ${state.preferences.operatorSort === "class" ? "selected" : ""}>職業順</option><option value="name" ${state.preferences.operatorSort === "name" ? "selected" : ""}>名前順</option></select></label>
         <label>表示列<select data-field="operatorGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
+        ${renderChoiceFilterToggles("operator")}
       </div>
-      ${renderOperatorListAreaComponent({ shown, operators, selected, gridColumns }, renderOperatorControlRow)}
+      ${renderOperatorListAreaComponent({ shown, operators: filtered, selected, excluded, gridColumns }, renderOperatorControlRow)}
     </section>
   `;
 }
@@ -1306,6 +1342,7 @@ function renderControlV2RelicsPanel() {
         <label>カテゴリ<select data-ui="relicCategory"><option value="all">すべて</option>${categories.map((cat) => `<option value="${html(cat)}" ${cat === ui.relicCategory ? "selected" : ""}>${html(cat)}</option>`).join("")}</select></label>
         <label>表示列<select data-field="relicGridColumns">${gridColumnOptions.map((count) => `<option value="${count}" ${count === viewData.gridColumns ? "selected" : ""}>${count}列</option>`).join("")}</select></label>
         <button data-action="clear-relics">手入力秘宝を全解除</button>
+        ${renderChoiceFilterToggles("relic")}
       </div>
       ${renderRelicListArea(viewData)}
     </section>
@@ -1526,7 +1563,15 @@ function renderControlV2() {
   `;
 }
 function getRelicListView() {
-  return buildRelicListView(getCampaignRelics(), ui, getEffectiveRelicIdList(), getRelicGridColumns());
+  const ownedIds = getEffectiveRelicIdList();
+  const base = buildRelicListView(getCampaignRelics(), ui, ownedIds, getRelicGridColumns());
+  const filtered = applyChoiceListFilters(base.filtered, getChoiceFilterOptions("relic", ownedIds));
+  return {
+    ...base,
+    filtered,
+    shown: filtered.slice(0, 500),
+    excluded: new Set(getChoiceExcludedIds("relic")),
+  };
 }
 
 function renderRelicListContent(viewData) {
@@ -1550,14 +1595,16 @@ function refreshRelicListOnly() {
 }
 
 
-function renderRelicControlRow(item, active) {
+function renderRelicControlRow(item, active, excludedOrOptions = false) {
+  const options = typeof excludedOrOptions === "object" ? excludedOrOptions : { excluded: Boolean(excludedOrOptions), showExclude: true };
   const manual = new Set(state.relics || []).has(item.id);
   const template = getTemplateRelicIds().has(item.id);
-  return renderRelicControlRowComponent(item, active, relicEffectForDisplay(item), { manual, template });
+  return renderRelicControlRowComponent(item, active, relicEffectForDisplay(item), { manual, template, ...options });
 }
 
-function renderOperatorControlRow(item, active) {
-  return renderOperatorControlRowComponent(item, active);
+function renderOperatorControlRow(item, active, excludedOrOptions = false) {
+  const options = typeof excludedOrOptions === "object" ? excludedOrOptions : { excluded: Boolean(excludedOrOptions), showExclude: true };
+  return renderOperatorControlRowComponent(item, active, options);
 }
 
 function renderBossToggleSection(section, campaignId) {
@@ -1596,7 +1643,7 @@ function renderBossSelector(section, campaignId) {
 function renderSidecarRelics(relics) {
   if (!relics.length) return `<div class="empty-state">所持秘宝はありません。</div>`;
   return `<div class="sidecar-mini-list sidecar-relic-list">
-    ${relics.map((item) => renderRelicControlRow(item, true)).join("")}
+    ${relics.map((item) => renderRelicControlRow(item, true, { showExclude: false })).join("")}
   </div>`;
 }
 
@@ -1606,7 +1653,7 @@ function renderSidecarOperators(operators) {
     .map((rarity) => ({ rarity, items: operators.filter((item) => Number(item.rarity) === rarity) }))
     .filter((group) => group.items.length);
   return `<div class="sidecar-operator-groups">
-    ${groups.map((group) => `<section class="sidecar-operator-group"><h3>${stars(group.rarity)} <span>${group.items.length}</span></h3><div class="sidecar-mini-list">${group.items.map((item) => renderOperatorControlRow(item, true)).join("")}</div></section>`).join("")}
+    ${groups.map((group) => `<section class="sidecar-operator-group"><h3>${stars(group.rarity)} <span>${group.items.length}</span></h3><div class="sidecar-mini-list">${group.items.map((item) => renderOperatorControlRow(item, true, { showExclude: false })).join("")}</div></section>`).join("")}
   </div>`;
 }
 
