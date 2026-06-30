@@ -4,6 +4,8 @@ This document records the current UI direction for the Suki/Avalonia verificatio
 
 For the full product surface and information architecture, see `docs/suki-product-ui-information-architecture.md`. This document describes the current screen direction; the information architecture document defines the larger UI scope that the Suki shell still needs to cover.
 
+For the Japanese design philosophy summary, see `docs/suki-design-philosophy-ja.md`.
+
 ## Product Role
 
 The Suki shell is a maintainer/debugger workbench for validating and correcting Integrated Strategies run state: IS selection, recruited operators, owned relics, ADB connection, MAAFramework resource tasks, OCR candidates, screenshots, and diagnostics. It is not a public landing page, a consumer dashboard, or a tutorial-first setup wizard.

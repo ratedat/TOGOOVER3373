@@ -2,6 +2,8 @@
 
 This document records the product UI coverage needed before the Suki/Avalonia shell can replace the current Electron Control v2 surface.
 
+The Japanese design philosophy summary is recorded in `docs/suki-design-philosophy-ja.md`.
+
 ## Current Assessment
 
 The current Suki shell is a useful operational foundation, but it is not yet a complete UI model for RHODES OBS COMMANDER3373. It covers the first layer of ADB connection, campaign switching, operator/relic filtering, and MAA resource task execution. It does not yet fully cover the number of input types, review states, and run-state dependencies that the production workflow requires.
