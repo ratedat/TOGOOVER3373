@@ -39,6 +39,23 @@ function appFilter(source) {
   return !ignoredNames.has(path.basename(source));
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function removeResourceRoot() {
+  const retryableCodes = new Set(["EBUSY", "EPERM", "ENOTEMPTY"]);
+  for (let attempt = 1; attempt <= 6; attempt += 1) {
+    try {
+      await rm(resourceRoot, { recursive: true, force: true });
+      return;
+    } catch (error) {
+      if (!retryableCodes.has(error?.code) || attempt === 6) throw error;
+      await sleep(250 * attempt);
+    }
+  }
+}
+
 async function hostTriple() {
   try {
     const { stdout } = await execFileAsync("rustc", ["-vV"]);
@@ -57,7 +74,7 @@ async function copyDir(name, options = {}) {
   });
 }
 
-await rm(resourceRoot, { recursive: true, force: true });
+await removeResourceRoot();
 await mkdir(path.join(appResource, "data"), { recursive: true });
 await mkdir(binResource, { recursive: true });
 

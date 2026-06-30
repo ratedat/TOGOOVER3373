@@ -11,8 +11,9 @@ use std::{
 
 use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 
+mod storage;
+
 const DEFAULT_PORT: u16 = 5173;
-const PORTABLE_STORAGE_DIRNAME: &str = "RHODES OBS COMMANDER3373 Data";
 
 type DynError = Box<dyn Error>;
 
@@ -72,16 +73,10 @@ fn app_root(app: &tauri::App) -> PathBuf {
         .unwrap_or_else(|_| executable_dir())
 }
 
-fn state_dir(app_root: &Path) -> PathBuf {
-    if let Ok(state_dir) = env::var("ARKNIGHTS_STATE_DIR") {
-        return PathBuf::from(state_dir);
-    }
-    if cfg!(debug_assertions) {
-        return app_root.join("user-data").join("state");
-    }
-    executable_dir()
-        .join(PORTABLE_STORAGE_DIRNAME)
-        .join("state")
+fn runtime_storage_target(app_root: &Path) -> storage::StorageTarget {
+    let context =
+        storage::StorageContext::from_runtime(app_root.to_path_buf(), !cfg!(debug_assertions));
+    storage::storage_target(&context)
 }
 
 fn bundled_node_path(app: &tauri::App) -> Option<PathBuf> {
@@ -107,7 +102,12 @@ fn node_bin(app: &tauri::App) -> PathBuf {
     PathBuf::from("node")
 }
 
-fn start_node_server(app_root: &Path, node_bin: &Path, port: u16, state_dir: &Path) -> Result<Child, DynError> {
+fn start_node_server(
+    app_root: &Path,
+    node_bin: &Path,
+    port: u16,
+    state_dir: &Path,
+) -> Result<Child, DynError> {
     let server_script = app_root.join("app").join("server.mjs");
     if !server_script.exists() {
         return Err(boxed_error(format!(
@@ -175,9 +175,9 @@ fn main() {
         .setup(|app| {
             let port = startup_port();
             let app_root = app_root(app);
-            let state_dir = state_dir(&app_root);
+            let storage_target = runtime_storage_target(&app_root);
             let node_bin = node_bin(app);
-            let child = start_node_server(&app_root, &node_bin, port, &state_dir)?;
+            let child = start_node_server(&app_root, &node_bin, port, &storage_target.state_dir)?;
             *app.state::<LocalServer>()
                 .child
                 .lock()
@@ -187,7 +187,9 @@ fn main() {
             Ok(())
         })
         .on_window_event(|window, event| {
-            if matches!(event, tauri::WindowEvent::CloseRequested { .. }) && window.label() == "main" {
+            if matches!(event, tauri::WindowEvent::CloseRequested { .. })
+                && window.label() == "main"
+            {
                 window.app_handle().exit(0);
             }
         })

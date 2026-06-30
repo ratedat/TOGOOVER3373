@@ -31,10 +31,18 @@ Rust prerequisites are required before the command can run. The Node server can 
 
 The first successful Windows Tauri package with bundled Node resources was about 56 MB as an NSIS installer. This is still far smaller than the Electron portable build and keeps GLM-OCR/Ollama as optional runtime downloads.
 
+Rust-side storage tests can be run with:
+
+```bash
+npm run tauri:test
+```
+
+The Tauri shell now mirrors the Electron portable storage contract in `src-tauri/src/storage.rs`: development state stays under `user-data/state`, packaged portable state goes beside the executable under `RHODES OBS COMMANDER3373 Data/state`, and `PORTABLE_EXECUTABLE_FILE` / `ARKNIGHTS_STATE_DIR` overrides are honored.
+
 ## Next slices
 
-1. Move portable storage selection into a shared contract used by both Electron and Tauri.
-2. Verify installed NSIS output, not just the raw release EXE. The raw EXE needs resources beside it or `RHODES_APP_ROOT` / `RHODES_NODE_BIN` overrides.
-3. Move portable storage selection into Tauri commands and UI.
+1. Verify installed NSIS output, not just the raw release EXE. The raw EXE needs resources beside it or `RHODES_APP_ROOT` / `RHODES_NODE_BIN` overrides.
+2. Expose storage target details through Tauri commands for the UI.
+3. Move portable storage selection UI actions away from Electron-specific code.
 4. Move small desktop-only actions from Electron menus to Tauri commands.
 5. Keep GLM-OCR and Ollama as optional runtime downloads under `RHODES OBS COMMANDER3373 Data/state`.

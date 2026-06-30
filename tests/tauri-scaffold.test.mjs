@@ -7,6 +7,7 @@ test("package exposes Tauri development and build scripts", async () => {
   assert.equal(pkg.scripts["tauri:prepare"], "node tools/prepare-tauri-resources.mjs");
   assert.equal(pkg.scripts["tauri:dev"], "tauri dev");
   assert.equal(pkg.scripts["tauri:build"], "npm run tauri:prepare && tauri build");
+  assert.equal(pkg.scripts["tauri:test"], "cargo test --manifest-path src-tauri/Cargo.toml");
   assert.match(pkg.devDependencies["@tauri-apps/cli"], /^\^2\./);
 });
 
@@ -21,13 +22,24 @@ test("Tauri config keeps the existing localhost control surface", async () => {
 
 test("Tauri Rust shell starts the existing local server before opening the main window", async () => {
   const source = await readFile(new URL("../src-tauri/src/main.rs", import.meta.url), "utf8");
+  assert.match(source, /mod storage;/);
   assert.match(source, /start_node_server/);
   assert.match(source, /app[\\"]\)\.join\("server\.mjs"\)/);
   assert.match(source, /wait_for_server\(port, Duration::from_secs\(12\)\)/);
   assert.match(source, /WebviewWindowBuilder::new\(app, "main", WebviewUrl::External\(url\)\)/);
-  assert.match(source, /ARKNIGHTS_STATE_DIR/);
+  assert.match(source, /runtime_storage_target/);
   assert.match(source, /resource_dir\(\)/);
   assert.match(source, /node-\{triple\}/);
+});
+
+test("Tauri storage module mirrors the portable storage contract", async () => {
+  const source = await readFile(new URL("../src-tauri/src/storage.rs", import.meta.url), "utf8");
+  assert.match(source, /PORTABLE_STORAGE_DIRNAME: &str = "RHODES OBS COMMANDER3373 Data"/);
+  assert.match(source, /DEV_STORAGE_DIRNAME: &str = "user-data"/);
+  assert.match(source, /PORTABLE_EXECUTABLE_FILE/);
+  assert.match(source, /ARKNIGHTS_STATE_DIR/);
+  assert.match(source, /win-unpacked/);
+  assert.match(source, /storage_target/);
 });
 
 test("Tauri default capability is restricted to the main window core permissions", async () => {
@@ -44,6 +56,7 @@ test("Tauri resource preparation copies runtime assets without user state", asyn
   const source = await readFile(new URL("../tools/prepare-tauri-resources.mjs", import.meta.url), "utf8");
   assert.match(source, /process\.execPath/);
   assert.match(source, /node-\$\{triple\}/);
+  assert.match(source, /EBUSY/);
   assert.match(source, /overlay-state\.example\.json/);
   assert.doesNotMatch(source, /current-state\.json/);
   assert.doesNotMatch(source, /dataFiles = \[[\s\S]*electron/);
