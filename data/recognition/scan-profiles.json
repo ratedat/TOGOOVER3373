@@ -7,7 +7,7 @@
       "label": "基本情報スキャン",
       "triggerPath": "/trigger/scan/run/status",
       "candidateKind": "runStatus",
-      "ocrEngine": "windows-paddle",
+      "ocrEngine": "hybrid",
       "ocrRegionIds": [
         "run.status_top",
         "run.status_band",
@@ -290,7 +290,7 @@
       "label": "オペレーターフルスキャン",
       "triggerPath": "/trigger/scan/operators/full",
       "candidateKind": "operator",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "ocrFullFrame": false,
       "ocrRegionIds": [
         "operator.name.left.1",
@@ -493,7 +493,7 @@
       "label": "秘宝フルスキャン",
       "triggerPath": "/trigger/scan/relics/full",
       "candidateKind": "relic",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "baseResolution": {
         "width": 1280,
         "height": 720
@@ -634,7 +634,7 @@
       "triggerPath": "/trigger/scan/sami/revelation",
       "campaignId": "is4_sami",
       "candidateKind": "revelation",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "baseResolution": {
         "width": 1280,
         "height": 720
@@ -727,7 +727,7 @@
       "triggerPath": "/trigger/scan/sarkaz/thought",
       "campaignId": "is5_sarkaz",
       "candidateKind": "thought",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "baseResolution": {
         "width": 1280,
         "height": 720
@@ -869,7 +869,7 @@
       "triggerPath": "/trigger/scan/sarkaz/age",
       "campaignId": "is5_sarkaz",
       "candidateKind": "age",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "baseResolution": {
         "width": 1280,
         "height": 720
@@ -943,7 +943,7 @@
       "triggerPath": "/trigger/scan/sui/coins",
       "campaignId": "is6_sui",
       "candidateKind": "coin",
-      "ocrEngine": "windows",
+      "ocrEngine": "hybrid",
       "baseResolution": {
         "width": 1280,
         "height": 720

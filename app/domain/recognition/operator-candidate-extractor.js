@@ -196,6 +196,64 @@ export function buildOperatorRecognitionDb(operators = [], { operatorOcrMap = {}
     .filter((entry) => entry.normalizedName.length >= 2 || entry.operatorId === "w");
 }
 
+const operatorClassAliases = new Map([
+  ["vanguard", "先鋒"],
+  ["先锋", "先鋒"],
+  ["先鋒", "先鋒"],
+  ["guard", "前衛"],
+  ["近卫", "前衛"],
+  ["前衛", "前衛"],
+  ["defender", "重装"],
+  ["重装", "重装"],
+  ["sniper", "狙撃"],
+  ["狙击", "狙撃"],
+  ["狙撃", "狙撃"],
+  ["caster", "術師"],
+  ["术师", "術師"],
+  ["術師", "術師"],
+  ["medic", "医療"],
+  ["医疗", "医療"],
+  ["医療", "医療"],
+  ["supporter", "補助"],
+  ["辅助", "補助"],
+  ["補助", "補助"],
+  ["specialist", "特殊"],
+  ["特种", "特殊"],
+  ["特殊", "特殊"],
+]);
+
+function normalizeOperatorClass(value) {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  return operatorClassAliases.get(raw.toLowerCase()) || operatorClassAliases.get(raw) || raw;
+}
+
+function operatorClassSetFromContext(context = {}) {
+  const values = [
+    context.operatorClass,
+    context.operatorClasses,
+    context.allowedOperatorClass,
+    context.allowedOperatorClasses,
+    context.allowedClasses,
+    context.expectedOperatorClass,
+    context.expectedOperatorClasses,
+    context.profile?.operatorClass,
+    context.profile?.operatorClasses,
+    context.profile?.allowedOperatorClass,
+    context.profile?.allowedOperatorClasses,
+    context.profile?.allowedClasses,
+    context.profile?.expectedOperatorClass,
+    context.profile?.expectedOperatorClasses,
+  ].flatMap(asArray);
+  const classes = new Set(values.map(normalizeOperatorClass).filter(Boolean));
+  return classes.size ? classes : null;
+}
+
+function filterDbByOperatorClass(db, classSet) {
+  if (!classSet?.size) return db;
+  return db.filter((operator) => classSet.has(normalizeOperatorClass(operator.class)));
+}
+
 function isOperatorRowOcrResult(row, scanRegion) {
   const regionId = String(row.regionId || "");
   if (regionId && !regionId.includes("operator")) return false;
@@ -214,13 +272,15 @@ function stripOperatorLineNoise(normalizedText) {
   return String(normalizedText || "")
     .replace(/^[ー\-]+/g, "")
     .replace(/^[^0-9A-Za-zぁ-んァ-ヶー一-龠]+/g, "")
-    .replace(/^(?:(?:code|coce|c0de)[-_ー一]?(?:name|n[a-z]*me|nurme)|edge[-_ー一]?name|orig[-_ー一]?(?:code[-_ー一]?name|name))[:：_\-ー一]*/i, "")
+    .replace(/^(?:(?:code|coce|c0de|core|coche)[-_ー一]?(?:name|n[a-z]*me|nurme)|edge[-_ー一]?name|orig[-_ー一]?(?:code[-_ー一]?name|name))[:：_\-ー一]*/i, "")
     .replace(/^[ー\-]+/g, "")
     .replace(/[^0-9A-Za-zぁ-んァ-ヶー一-龠]+$/g, "");
 }
 
 function maaRuleCanUseText(pattern, text) {
   if (pattern?.pattern === "^ユー(?:$|[^ネ])") return text === "ユー";
+  if (String(pattern?.pattern || "").startsWith("^シー(?:") && /^シー[ゴコ]$/i.test(text)) return false;
+  if (pattern?.pattern === "^シュウ" && /^シ[ュユ]ウ[アァ]?ルツ$/i.test(text)) return false;
   return true;
 }
 
@@ -264,6 +324,11 @@ const operatorOcrDriftAliases = [
   { operatorId: "bluepoison", pattern: /^アスリウス$/i, matchedPattern: "アスリウス" },
   { operatorId: "wisadel", pattern: /^ウイシ[ヤャ][テデ]ル$/i, matchedPattern: "ウイシャデル" },
   { operatorId: "pozyomka", pattern: /^ゼオンカ$/i, matchedPattern: "ゼオンカ" },
+  { operatorId: "schwarz", pattern: /^シ[ュユ]ウ[アァ]?ルツ$/i, matchedPattern: "シュウアルツ" },
+  { operatorId: "executor", pattern: /^イクセキ[ュユ]ター$/i, matchedPattern: "イクセキュター" },
+  { operatorId: "jessica", pattern: /^シ[ェエ]シカ$/i, matchedPattern: "シェシカ" },
+  { operatorId: "insider", pattern: /^インサイター$/i, matchedPattern: "インサイター" },
+  { operatorId: "provence", pattern: /^フロ[ウヴ]アンス$/i, matchedPattern: "フロウアンス" },
   { operatorId: "ray", pattern: /^(?:o|0)?ー?レイ$/i, matchedPattern: "Oーレイ" },
   { operatorId: "rangers", pattern: /^レンシ[ヤャ]ー$/i, matchedPattern: "レンシャー" },
   { operatorId: "brigid", pattern: /^[フブプ]リキ[ツッ]ド$/i, matchedPattern: "ブリキッド" },
@@ -272,6 +337,9 @@ const operatorOcrDriftAliases = [
   { operatorId: "rosesalt", pattern: /^ロース[ソン]ルト$/i, matchedPattern: "ロースソルト" },
   { operatorId: "reserve_sniper", pattern: /^(?:予)?備隊員[-ー]?狙[撃擊]$/i, matchedPattern: "予備隊員-狙擊" },
   { operatorId: "terraresearchcommission", pattern: /^テラ大[陸陆]調査団$/i, matchedPattern: "テラ大陆調査団" },
+  { operatorId: "siege", pattern: /^シー[ゴコ]$/i, matchedPattern: "シーゴ" },
+  { operatorId: "zima", pattern: /^スイマー$/i, matchedPattern: "スイマー" },
+  { operatorId: "fang2", pattern: /^歴陣[鋭銳].*フ[ェエ]ン$/i, matchedPattern: "歴陣銳槍フェン" },
   { operatorId: "leizi", pattern: /^レイス$/i, matchedPattern: "レイス" },
   { operatorId: "leizi2", pattern: /^司霆レイス$/i, matchedPattern: "司霆レイス" },
   { operatorId: "leizi2", pattern: /^pmey$/i, matchedPattern: "PMEY" },
@@ -346,6 +414,9 @@ export function createOperatorCandidateExtractor({ operators = [], operatorOcrMa
   const db = buildOperatorRecognitionDb(operators, { operatorOcrMap });
   return async function extractOperatorCandidates(frame, context = {}) {
     if (context.profile?.id !== "operatorsFull") return [];
+    const operatorClassSet = operatorClassSetFromContext(context);
+    const scopedDb = filterDbByOperatorClass(db, operatorClassSet);
+    if (!scopedDb.length) return [];
     const scanRegion = rectFrom(context.region);
     const rows = frameTextResults(frame, { includeFrameText: false })
       .filter((row) => isOperatorRowOcrResult(row, scanRegion));
@@ -353,17 +424,17 @@ export function createOperatorCandidateExtractor({ operators = [], operatorOcrMa
 
     const byOperator = new Map();
     for (const row of rows) {
-      const hits = maaRuleHitsForRow(row, db, operatorOcrMap);
+      const hits = maaRuleHitsForRow(row, scopedDb, operatorOcrMap);
       const maaIds = new Set(hits.map((hit) => hit.operator.operatorId));
-      hits.push(...localNameFallbackHitsForRow(row, db, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
-      hits.push(...localOcrDriftHitsForRow(row, db, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
+      hits.push(...localNameFallbackHitsForRow(row, scopedDb, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
+      hits.push(...localOcrDriftHitsForRow(row, scopedDb, operatorOcrMap).filter((hit) => !maaIds.has(hit.operator.operatorId)));
       for (const hit of hits) {
         const candidate = candidateFromHit(hit, row);
         const previous = byOperator.get(candidate.operatorId);
         if (!previous || Number(candidate.confidence || 0) > Number(previous.confidence || 0)) byOperator.set(candidate.operatorId, candidate);
       }
     }
-    return suppressOverlappedSuffixCandidates([...byOperator.values()], db).sort((a, b) => {
+    return suppressOverlappedSuffixCandidates([...byOperator.values()], scopedDb).sort((a, b) => {
       const ar = rectFrom(a.roi);
       const br = rectFrom(b.roi);
       if (ar && br) return (ar.y - br.y) || (ar.x - br.x);

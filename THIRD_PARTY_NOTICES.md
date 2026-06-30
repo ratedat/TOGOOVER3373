@@ -17,6 +17,15 @@ Vendored reference files are kept under `third_party/maa`; generated OCR rule da
 
 MAA OCR configs, dictionaries, and optional ONNX model files may be synchronized into `third_party/maa/resource` by `npm run ocr:sync-maa` or `npm run ocr:sync-maa:models`. Keep these files under the same AGPL-3.0-only attribution.
 
+## MFAToolsPlus
+
+This project uses MFAToolsPlus as a reference implementation for MAAFramework developer tooling patterns, including MaaTasker session setup and small recognition probe payloads. MFAToolsPlus is a developer tool for RHODES maintainers; it is not vendored into release builds.
+
+- Project: https://github.com/SweetSmellFox/MFAToolsPlus
+- License: GPL-3.0
+
+If RHODES copies MFAToolsPlus code directly in future work, keep source attribution near the copied files and preserve applicable GPL-compatible notices.
+
 ## GLM-OCR
 
 This project can optionally call a user-installed local GLM-OCR SDK or local GLM-OCR server for verification-only OCR experiments. GLM-OCR packages and model files are not bundled with RHODES OBS COMMANDER3373.

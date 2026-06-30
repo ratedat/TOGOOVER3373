@@ -1,0 +1,97 @@
+{
+  "RhodesEmpty": {
+    "recognition": "DirectHit",
+    "action": "DoNothing"
+  },
+  "RhodesProbe": {
+    "recognition": "DirectHit",
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusTopBarOcr": {
+    "recognition": "OCR",
+    "roi": [820, 0, 440, 92],
+    "only_rec": false,
+    "threshold": 0.3,
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusHopeIcon": {
+    "recognition": "TemplateMatch",
+    "roi": [820, 0, 190, 72],
+    "template": "run/HopeIcon.png",
+    "threshold": 0.74,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusIdeaIcon": {
+    "recognition": "TemplateMatch",
+    "roi": [820, 620, 100, 90],
+    "template": "run/IdeaIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusIngotIcon": {
+    "recognition": "TemplateMatch",
+    "roi": [1040, 0, 160, 60],
+    "template": "run/IngotIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusLifeIcon": {
+    "recognition": "TemplateMatch",
+    "roi": [140, 0, 90, 70],
+    "template": "run/LifeIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesRunStatusShieldIcon": {
+    "recognition": "TemplateMatch",
+    "roi": [245, 18, 80, 50],
+    "template": "run/ShieldIcon.png",
+    "threshold": 0.84,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesOperatorCodenameFlag": {
+    "recognition": "TemplateMatch",
+    "roi": [520, 80, 720, 560],
+    "template": "run/OperatorCardCodeNameFlag.png",
+    "threshold": 0.72,
+    "method": 5,
+    "order_by": "Vertical",
+    "action": "DoNothing"
+  },
+  "RhodesOperatorNameOcr": {
+    "recognition": "OCR",
+    "roi": [560, 80, 700, 560],
+    "only_rec": false,
+    "threshold": 0.3,
+    "action": "DoNothing"
+  },
+  "RhodesRelicButton": {
+    "recognition": "TemplateMatch",
+    "roi": [120, 620, 180, 90],
+    "template": "run/RelicButton.png",
+    "threshold": 0.76,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesOperatorButton": {
+    "recognition": "TemplateMatch",
+    "roi": [880, 620, 180, 90],
+    "template": "run/OperatorButton.png",
+    "threshold": 0.76,
+    "method": 5,
+    "action": "DoNothing"
+  },
+  "RhodesThoughtButton": {
+    "recognition": "TemplateMatch",
+    "roi": [520, 620, 230, 90],
+    "template": "run/ThoughtButton.png",
+    "threshold": 0.76,
+    "method": 5,
+    "action": "DoNothing"
+  }
+}

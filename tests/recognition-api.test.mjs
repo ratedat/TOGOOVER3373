@@ -61,6 +61,87 @@ test("recognition scan API accepts POST profile requests without using the defau
   }
 });
 
+test("recognition scan API forwards operator class constraints to the runner", async () => {
+  const recognitionLogDir = await tempRecognitionLogDir();
+  let receivedContext = null;
+  const { server, port } = await startServer({
+    port: 0,
+    recognitionLogDir,
+    recognitionRunner: async ({ profile, source, recognitionContext }) => {
+      receivedContext = recognitionContext;
+      return {
+        scanId: "api-scan-context",
+        profileId: profile.id,
+        source,
+        status: "completed",
+        suggestions: [],
+        candidates: [],
+        log: [],
+      };
+    },
+  });
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/recognition/scan`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ profile: "operatorsFull", source: "adb", operatorClasses: ["sniper"] }),
+    });
+    const payload = await response.json();
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.result.profileId, "operatorsFull");
+    assert.deepEqual(receivedContext, { operatorClasses: ["sniper"] });
+  } finally {
+    await closeServer(server);
+  }
+});
+
+test("MAA Resource recognition API converts task detail JSON into RHODES candidates", async () => {
+  const { server, port } = await startServer({ port: 0 });
+  try {
+    const response = await fetch(`http://127.0.0.1:${port}/api/recognition/maa-resource`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        profile: "runStatusFull",
+        pipeline: {
+          RhodesOcrRegion_run_hope_current: { attach: { id: "run.hope.current" } },
+          RhodesOcrRegion_run_hope_max: { attach: { id: "run.hope.max" } },
+          RhodesOcrRegion_run_ingot: { attach: { id: "run.ingot" } },
+        },
+        taskResults: [
+          {
+            entry: "RhodesOcrRegion_run_hope_current",
+            algorithm: "OCR",
+            recognitionDetailJson: JSON.stringify({ best: { text: "3", score: 0.94, box: [941, 17, 32, 35] } }),
+          },
+          {
+            entry: "RhodesOcrRegion_run_hope_max",
+            algorithm: "OCR",
+            recognitionDetailJson: JSON.stringify({ best: { text: "8", score: 0.95, box: [965, 17, 64, 35] } }),
+          },
+          {
+            entry: "RhodesOcrRegion_run_ingot",
+            algorithm: "OCR",
+            recognitionDetailJson: JSON.stringify({ best: { text: "20", score: 0.96, box: [1190, 10, 90, 52] } }),
+          },
+        ],
+      }),
+    });
+    const payload = await response.json();
+    const candidates = payload.result.candidates;
+
+    assert.equal(response.status, 200);
+    assert.equal(payload.result.source, "maa-framework");
+    assert.equal(candidates.find((candidate) => candidate.field === "hope")?.value, 3);
+    assert.equal(candidates.find((candidate) => candidate.field === "maxHope")?.value, 8);
+    assert.equal(candidates.find((candidate) => candidate.field === "ingot")?.value, 20);
+    assert.equal(payload.result.suggestions.length, 3);
+  } finally {
+    await closeServer(server);
+  }
+});
+
 test("external trigger routes map to full scan profiles and return aborted scans as 409", async () => {
   const recognitionLogDir = await tempRecognitionLogDir();
   const { server, port } = await startServer({

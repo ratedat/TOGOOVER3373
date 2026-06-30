@@ -1,8 +1,14 @@
 import base64
 import json
 import os
+import re
 import tempfile
 from pathlib import Path
+
+try:
+    import numpy as np
+except Exception as exc:
+    raise RuntimeError(f"NumPy is required for Paddle template OCR regions: {exc}") from exc
 
 try:
     from PIL import Image
@@ -82,6 +88,108 @@ def region_rect(region):
         "width": float(region_value(region, "width", 1)),
         "height": float(region_value(region, "height", 1)),
     }
+
+
+def clamp_rect(rect, width, height):
+    x = min(max(0, int(float(rect.get("x", 0)))), max(0, width - 1))
+    y = min(max(0, int(float(rect.get("y", 0)))), max(0, height - 1))
+    w = max(1, int(float(rect.get("width", 1))))
+    h = max(1, int(float(rect.get("height", 1))))
+    w = max(1, min(w, width - x))
+    h = max(1, min(h, height - y))
+    return {"x": x, "y": y, "width": w, "height": h}
+
+
+def resize_template(template, config):
+    scale_x = float(region_value(config, "templateScaleX", 1))
+    scale_y = float(region_value(config, "templateScaleY", 1))
+    if abs(scale_x - 1) < 0.001 and abs(scale_y - 1) < 0.001:
+        return template
+    width = max(1, int(round(template.width * scale_x)))
+    height = max(1, int(round(template.height * scale_y)))
+    return template.resize((width, height), Image.Resampling.BICUBIC)
+
+
+def match_template_positions(image, config):
+    template_path = Path(str(region_value(config, "templatePath", "")))
+    if not template_path.exists():
+        return []
+    search_roi = clamp_rect(region_value(config, "searchRoi", {}) or {}, image.width, image.height)
+    with Image.open(template_path).convert("L") as raw_template:
+        template = resize_template(raw_template, config)
+        search = image.crop((search_roi["x"], search_roi["y"], search_roi["x"] + search_roi["width"], search_roi["y"] + search_roi["height"])).convert("L")
+        if template.width > search.width or template.height > search.height:
+            return []
+        sample_stride = max(1, int(float(region_value(config, "sampleStride", 4))))
+        step = max(1, int(float(region_value(config, "step", 2))))
+        threshold = float(region_value(config, "threshold", 0.9))
+        template_arr = np.asarray(template, dtype=np.float32)[::sample_stride, ::sample_stride]
+        template_arr = template_arr - float(template_arr.mean())
+        template_norm = float(np.linalg.norm(template_arr))
+        if template_norm <= 0:
+            return []
+        search_arr = np.asarray(search, dtype=np.float32)
+        matches = []
+        for y in range(0, search.height - template.height + 1, step):
+            for x in range(0, search.width - template.width + 1, step):
+                patch = search_arr[y:y + template.height:sample_stride, x:x + template.width:sample_stride]
+                if patch.shape != template_arr.shape:
+                    continue
+                patch = patch - float(patch.mean())
+                patch_norm = float(np.linalg.norm(patch))
+                if patch_norm <= 0:
+                    continue
+                score = float(np.sum(patch * template_arr) / (patch_norm * template_norm))
+                if score >= threshold:
+                    matches.append({
+                        "x": search_roi["x"] + x,
+                        "y": search_roi["y"] + y,
+                        "width": template.width,
+                        "height": template.height,
+                        "score": score,
+                    })
+        matches.sort(key=lambda item: item["score"], reverse=True)
+        max_matches = max(1, int(float(region_value(config, "maxMatches", 8))))
+        selected = []
+        for match in matches:
+            cx = match["x"] + match["width"] / 2
+            cy = match["y"] + match["height"] / 2
+            if any(abs(cx - (previous["x"] + previous["width"] / 2)) < match["width"] * 0.65 and abs(cy - (previous["y"] + previous["height"] / 2)) < match["height"] * 0.65 for previous in selected):
+                continue
+            selected.append(match)
+            if len(selected) >= max_matches:
+                break
+        selected.sort(key=lambda item: (item["y"], item["x"]))
+        return selected
+
+
+def dynamic_template_ocr_regions(image_path, configs, regions):
+    if not configs:
+        return regions
+    image = Image.open(image_path).convert("RGB")
+    try:
+        next_regions = list(regions or [])
+        dynamic = []
+        for config in configs:
+            suppress_pattern = str(region_value(config, "suppressStaticRegionIdPattern", "") or "")
+            if suppress_pattern:
+                matcher = re.compile(suppress_pattern)
+                next_regions = [region for region in next_regions if not matcher.search(str(region_value(region, "id", "")))]
+            ocr_offset = region_value(config, "ocrOffset", {}) or {}
+            for index, match in enumerate(match_template_positions(image, config)):
+                region = {
+                    "id": f"{region_value(config, 'idPrefix', 'template.region')}.{index}",
+                    "x": match["x"] + int(float(region_value(ocr_offset, "x", 0))),
+                    "y": match["y"] + int(float(region_value(ocr_offset, "y", 0))),
+                    "width": int(float(region_value(ocr_offset, "width", max(1, match["width"])))),
+                    "height": int(float(region_value(ocr_offset, "height", max(1, match["height"])))),
+                    "scale": int(float(region_value(config, "scale", 1))),
+                    "templateScore": match["score"],
+                }
+                dynamic.append(clamp_rect(region, image.width, image.height) | {"id": region["id"], "scale": region["scale"], "templateScore": region["templateScore"]})
+        return dynamic + next_regions
+    finally:
+        image.close()
 
 
 def result_json(result):
@@ -232,6 +340,8 @@ def recognize_text_path(recognizer, image_path, region_id, region):
 def main():
     image_path = os.environ["ARK_OCR_IMAGE"]
     regions = json.loads(os.environ.get("ARK_OCR_REGIONS_JSON") or "[]")
+    template_regions = json.loads(os.environ.get("ARK_OCR_TEMPLATE_REGIONS_JSON") or "[]")
+    regions = dynamic_template_ocr_regions(image_path, template_regions, regions)
     recognition_only = env_bool("RHODES_PADDLE_RECOGNITION_ONLY", default=bool(regions))
     include_full = env_bool("RHODES_PADDLE_INCLUDE_FULL", default=not bool(regions) and not recognition_only)
     all_results = []

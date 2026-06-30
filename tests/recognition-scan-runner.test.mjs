@@ -67,6 +67,42 @@ test("scan runner executes open -> scan -> scroll -> restore and dedupes candida
   assert.equal(result.log.some((entry) => entry.event === "scroll" && entry.status === "end"), true);
 });
 
+test("scan runner forwards recognition context to classify, fingerprint, and recognize", async () => {
+  const contexts = [];
+  const recognizer = {
+    async classify(_frame, context) {
+      contexts.push(["classify", context]);
+      return { known: true, screenId: "run-home", confidence: 0.9 };
+    },
+    async fingerprint(_frame, context) {
+      contexts.push(["fingerprint", context]);
+      return "scan-page";
+    },
+    async recognize(_frame, context) {
+      contexts.push(["recognize", context]);
+      return [];
+    },
+  };
+
+  const result = await runScanProfile({
+    profile: baseProfile({ maxScrolls: 0 }),
+    adapter: createAdapter([{ knownScreenId: "run-home" }, { fingerprint: "scan-page", candidates: [] }]),
+    recognizer,
+    scanId: "scan-context",
+    random: () => 0.5,
+    recognitionContext: { operatorClasses: ["sniper"] },
+  });
+
+  assert.equal(result.status, "completed");
+  assert.deepEqual(contexts.map((entry) => entry[0]), ["classify", "fingerprint", "recognize"]);
+  assert.deepEqual(contexts[0][1].operatorClasses, ["sniper"]);
+  assert.deepEqual(contexts[2][1].operatorClasses, ["sniper"]);
+  assert.equal(contexts[2][1].profile.id, "testProfile");
+  assert.equal(contexts[2][1].source, "adb");
+  assert.deepEqual(contexts[2][1].region, { x: 20, y: 40, width: 200, height: 100 });
+  assert.deepEqual(result.log.find((entry) => entry.event === "recognize").operatorClassConstraint, ["sniper"]);
+});
+
 test("coins profile keeps horizontal/right scroll semantics in operation log", async () => {
   const adapterLog = [];
   const result = await runScanProfile({

@@ -7,6 +7,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import { resolvePaddlePythonExecutable } from "./paddle-ocr-adapter.js";
+import { resolveTemplateOcrRegions } from "./template-ocr-regions.js";
 
 const BRIDGE_SCRIPT = fileURLToPath(new URL("./maa-onnx-ocr-bridge.py", import.meta.url));
 
@@ -33,6 +34,7 @@ function pythonExecutable() {
 export function runPythonMaaOnnxOcr({
   imagePath,
   regions = [],
+  templateOcrRegions = [],
   timeoutMs = 90000,
   pythonPath = pythonExecutable(),
   paths = resolveMaaOnnxOcrPaths(),
@@ -54,6 +56,7 @@ export function runPythonMaaOnnxOcr({
         ...process.env,
         ARK_OCR_IMAGE: imagePath,
         ARK_OCR_REGIONS_JSON: JSON.stringify(regions),
+        ARK_OCR_TEMPLATE_REGIONS_JSON: JSON.stringify(templateOcrRegions),
         RHODES_MAA_ONNX_REC_MODEL: paths.recModel,
         RHODES_MAA_ONNX_REC_KEYS: paths.recKeys,
         RHODES_MAA_OCR_CONFIG: paths.ocrConfig,
@@ -108,7 +111,8 @@ export function createMaaOnnxOcrTextExtractor({
 } = {}) {
   let unavailableError = null;
   return {
-    async extract(frame, { regions = [] } = {}) {
+    async extract(frame, context = {}) {
+      const regions = Array.isArray(context.regions) ? context.regions : [];
       if (!enabled || !Buffer.isBuffer(frame?.bytes)) return frame;
       if (unavailableError && !required) throw unavailableError;
       if (!nodeFs.existsSync(paths.recModel)) {
@@ -125,7 +129,8 @@ export function createMaaOnnxOcrTextExtractor({
       const imagePath = path.join(dir, `${randomUUID()}.png`);
       try {
         await fs.writeFile(imagePath, frame.bytes);
-        const stdout = await runOcr({ imagePath, regions, timeoutMs, pythonPath, paths });
+        const templateOcrRegions = resolveTemplateOcrRegions(context);
+        const stdout = await runOcr({ imagePath, regions, templateOcrRegions, timeoutMs, pythonPath, paths });
         const payload = normalizeMaaOnnxOcrPayload(parseMaaOnnxOcrStdout(stdout));
         return {
           ...frame,

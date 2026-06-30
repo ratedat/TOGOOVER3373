@@ -60,14 +60,27 @@ test("MAA ONNX OCR extractor can use an injected runner and returns OCR text", a
   }), "utf8").toString("base64");
   const extractor = createMaaOnnxOcrTextExtractor({
     paths: { recModel: model, recKeys: keys, ocrConfig: path.join(dir, "ocr_config.json") },
-    runOcr: async ({ regions }) => {
+    runOcr: async ({ regions, templateOcrRegions }) => {
       assert.equal(regions[0].id, "run.life_points");
+      assert.equal(templateOcrRegions[0].idPrefix, "operator.card.name");
+      assert.deepEqual(templateOcrRegions[0].searchRoi, { x: 20, y: 40, width: 60, height: 80 });
       return encoded;
     },
   });
 
   try {
-    const frame = await extractor.extract({ bytes: Buffer.from("image") }, { regions: [{ id: "run.life_points" }] });
+    const frame = await extractor.extract({ bytes: Buffer.from("image") }, {
+      regions: [{ id: "run.life_points" }],
+      scale: { scaleX: 2, scaleY: 2 },
+      profile: {
+        templateOcrRegions: [{
+          idPrefix: "operator.card.name",
+          templatePath: "assets/recognition/templates/run/OperatorCardCodeNameFlag.png",
+          searchRoi: { x: 10, y: 20, width: 30, height: 40 },
+          ocrOffset: { x: 1, y: 2, width: 3, height: 4 },
+        }],
+      },
+    });
     assert.equal(frame.ocrEngine, "maa-onnx-recognition");
     assert.equal(frame.text, "4/4");
     assert.equal(frame.ocrResults[0].rawText, "4/4");

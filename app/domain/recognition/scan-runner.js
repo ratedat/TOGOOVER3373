@@ -15,6 +15,13 @@ function logEvent(log, event, details = {}, onLog = null) {
   return entry;
 }
 
+function recognitionContextForCall(baseContext, overrides = {}) {
+  return {
+    ...baseContext,
+    ...overrides,
+  };
+}
+
 async function recordCapturedFrame({ frame, scanId, profile, source, meta, log, onLog, onCaptureFrame }) {
   if (typeof onCaptureFrame !== "function") return null;
   try {
@@ -191,7 +198,33 @@ function collectCandidatesForPass(candidates, { pass, iteration, scanRegion } = 
   return list.filter((candidate) => candidateWithinCollectWindow(candidate, { pass, iteration, scanRegion }));
 }
 
-export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal, random = Math.random, onLog = null, onCaptureFrame = null } = {}) {
+function countBy(candidates = [], field) {
+  const counts = {};
+  for (const candidate of candidates || []) {
+    const key = candidate?.[field] == null || candidate[field] === "" ? "unknown" : String(candidate[field]);
+    counts[key] = (counts[key] || 0) + 1;
+  }
+  return counts;
+}
+
+function recognizeLogDetails(candidates = [], collectedCandidates = candidates, context = {}) {
+  const all = Array.isArray(candidates) ? candidates : [];
+  const collected = Array.isArray(collectedCandidates) ? collectedCandidates : [];
+  const details = {
+    count: all.length,
+    ...(collected.length !== all.length ? { collectedCount: collected.length } : {}),
+  };
+  if (all.length) {
+    details.kinds = countBy(all, "kind");
+    details.sources = countBy(all, "source");
+  }
+  if (context.operatorClasses || context.allowedOperatorClasses || context.allowedClasses || context.expectedOperatorClasses) {
+    details.operatorClassConstraint = context.operatorClasses || context.allowedOperatorClasses || context.allowedClasses || context.expectedOperatorClasses;
+  }
+  return details;
+}
+
+export async function runScanProfile({ profile, adapter, recognizer = createMetadataRecognizer(), source = "adb", now = () => new Date(), scanId = randomUUID(), signal, random = Math.random, onLog = null, onCaptureFrame = null, recognitionContext = {} } = {}) {
   if (!profile?.id) throw new Error("scan profile is required");
   if (!adapter) throw new Error("scan adapter is required");
   const startedAt = now();
@@ -205,6 +238,7 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
   const actualResolution = await adapter.getActualResolution();
   const scale = computeResolutionScale(profile.baseResolution, actualResolution);
   const scanRegion = profile.scanRegion ? scaleRect(profile.scanRegion, scale) : null;
+  const baseRecognitionContext = { ...(recognitionContext || {}), profile, source, actualResolution, scale };
 
   try {
     throwIfAborted(signal);
@@ -212,7 +246,7 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
     const initialCaptureMeta = { profileId: profile.id, stage: "known-screen" };
     const initialFrame = await adapter.capture(initialCaptureMeta);
     await recordCapturedFrame({ frame: initialFrame, scanId, profile, source, meta: { ...initialCaptureMeta, scanStartedAt: startedAt.toISOString() }, log, onLog, onCaptureFrame });
-    const classification = await recognizer.classify(initialFrame, { profile, source, actualResolution, scale });
+    const classification = await recognizer.classify(initialFrame, recognitionContextForCall(baseRecognitionContext));
     logEvent(log, "classify", classification, onLog);
     if (!classification?.known) {
       status = "aborted";
@@ -262,7 +296,7 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
         const captureMeta = { profileId: profile.id, stage: "scan", iteration, passIndex: pass.passIndex };
         const frame = await adapter.capture(captureMeta);
         await recordCapturedFrame({ frame, scanId, profile, source, meta: { ...captureMeta, scanStartedAt: startedAt.toISOString() }, log, onLog, onCaptureFrame });
-        const fingerprint = await recognizer.fingerprint(frame, { profile, region: scanRegion, iteration, passIndex: pass.passIndex, actualResolution, scale });
+        const fingerprint = await recognizer.fingerprint(frame, recognitionContextForCall(baseRecognitionContext, { region: scanRegion, iteration, passIndex: pass.passIndex }));
         logEvent(log, "fingerprint", { iteration, passIndex: pass.passIndex, fingerprint }, onLog);
         if (passFingerprints.length && fingerprintsEqual(passFingerprints[passFingerprints.length - 1], fingerprint)) stableMatches += 1;
         else stableMatches = 0;
@@ -272,13 +306,12 @@ export async function runScanProfile({ profile, adapter, recognizer = createMeta
         let candidates = [];
         let collectedCandidates = [];
         if (pass.collectCandidates) {
-          candidates = await recognizer.recognize(frame, { profile, region: scanRegion, iteration, passIndex: pass.passIndex, actualResolution, scale });
+          candidates = await recognizer.recognize(frame, recognitionContextForCall(baseRecognitionContext, { region: scanRegion, iteration, passIndex: pass.passIndex }));
           collectedCandidates = collectCandidatesForPass(candidates, { pass, iteration, scanRegion });
           logEvent(log, "recognize", {
             iteration,
             passIndex: pass.passIndex,
-            count: Array.isArray(candidates) ? candidates.length : 0,
-            ...(collectedCandidates.length !== (Array.isArray(candidates) ? candidates.length : 0) ? { collectedCount: collectedCandidates.length } : {}),
+            ...recognizeLogDetails(candidates, collectedCandidates, baseRecognitionContext),
           }, onLog);
           rawCandidates.push(...collectedCandidates);
         } else {

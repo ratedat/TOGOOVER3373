@@ -9,6 +9,8 @@ dist-debugger/
 build/
 out/
 coverage/
+apps/**/bin/
+apps/**/obj/
 src-tauri/target/
 src-tauri/gen/
 src-tauri/resources/

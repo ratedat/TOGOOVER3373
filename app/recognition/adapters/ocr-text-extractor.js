@@ -92,12 +92,14 @@ export function createDefaultOcrTextExtractor({ engine = process.env.RHODES_OCR_
     return createMergedTextExtractor([
       createMaaOnnxOcrTextExtractor({ required: false }),
       createPaddleOcrTextExtractor({ required: false }),
+      createWindowsOcrTextExtractor(),
     ], {
-      engine: "hybrid-maa-onnx-paddle",
+      engine: "hybrid-maa-onnx-paddle-windows",
       minConfidence: Number(process.env.RHODES_HYBRID_OCR_MIN_CONFIDENCE || 0.2),
     });
   }
   return createFallbackTextExtractor([
+    createMaaOnnxOcrTextExtractor({ required: false }),
     createPaddleOcrTextExtractor({ required: false }),
     createWindowsOcrTextExtractor(),
   ]);

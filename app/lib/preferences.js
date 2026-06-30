@@ -5,9 +5,11 @@ export const gridColumnOptions = [1, 2, 3, 4, 5, 6];
 
 export const ocrEngineOptions = Object.freeze([
   { id: "profile", label: "プロファイル既定" },
-  { id: "windows", label: "Windows OCR" },
-  { id: "windows-paddle", label: "Windows + PaddleOCR" },
-  { id: "hybrid", label: "MAA ONNX + PaddleOCR" },
+  { id: "hybrid", label: "MAA ONNX + PaddleOCR + Windows保険" },
+  { id: "maa-onnx", label: "MAA ONNX OCR" },
+  { id: "paddle", label: "PaddleOCR" },
+  { id: "windows-paddle", label: "Windows + PaddleOCR 旧互換" },
+  { id: "windows", label: "Windows OCR 旧互換" },
   { id: "windows-glm", label: "Windows + GLM-OCR 検証" },
   { id: "glm-ocr", label: "GLM-OCR 検証" },
 ]);

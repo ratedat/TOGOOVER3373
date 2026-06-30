@@ -1,0 +1,58 @@
+{
+  "interface_version": 2,
+  "name": "rhodes_obs_commander3373",
+  "label": "RHODES OBS COMMANDER3373",
+  "title": "RHODES OBS COMMANDER3373",
+  "version": "0.1.0",
+  "github": "https://github.com/ratedat/RHODES-OBS-COMMANDER3373",
+  "license": "AGPL-3.0-only",
+  "description": "MAAFramework resource shell for Arknights Integrated Strategies OCR and OBS support.",
+  "controller": [
+    {
+      "name": "android_adb",
+      "label": "Android / Google Play Games / Emulator ADB",
+      "type": "Adb",
+      "display_short_side": 720,
+      "adb": {}
+    }
+  ],
+  "resource": [
+    {
+      "name": "base",
+      "label": "RHODES Base 1280x720",
+      "path": ["resource/base"],
+      "controller": ["android_adb"]
+    }
+  ],
+  "task": [
+    {
+      "name": "run_status_top_bar",
+      "label": "Run status top bar OCR",
+      "entry": "RhodesRunStatusTopBarOcr",
+      "controller": ["android_adb"],
+      "resource": ["base"]
+    },
+    {
+      "name": "operator_name_ocr",
+      "label": "Operator name OCR",
+      "entry": "RhodesOperatorNameOcr",
+      "controller": ["android_adb"],
+      "resource": ["base"]
+    },
+    {
+      "name": "operator_codename_flag",
+      "label": "Operator CODENAME template",
+      "entry": "RhodesOperatorCodenameFlag",
+      "controller": ["android_adb"],
+      "resource": ["base"]
+    },
+    {
+      "name": "run_status_template_set",
+      "label": "Run status icon templates",
+      "entry": "RhodesRunStatusHopeIcon",
+      "controller": ["android_adb"],
+      "resource": ["base"],
+      "description": "First MAAFramework template entry for hope icon; sibling entries cover idea, ingot, life, and shield."
+    }
+  ]
+}

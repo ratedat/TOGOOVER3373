@@ -51,13 +51,13 @@ test("scan profiles own the server-side OCR engine routing", async () => {
   const engines = ocrEnginesFromScanProfiles(profileList);
 
   assert.deepEqual(engines, {
-    runStatusFull: "windows-paddle",
-    operatorsFull: "windows",
-    relicsFull: "windows",
-    is4RevelationFull: "windows",
-    is5ThoughtFull: "windows",
-    is5AgeFull: "windows",
-    is6CoinsFull: "windows",
+    runStatusFull: "hybrid",
+    operatorsFull: "hybrid",
+    relicsFull: "hybrid",
+    is4RevelationFull: "hybrid",
+    is5ThoughtFull: "hybrid",
+    is5AgeFull: "hybrid",
+    is6CoinsFull: "hybrid",
   });
   for (const profile of profileList) {
     assert.ok(profile.ocrEngine, `${profile.id} should declare ocrEngine for server routing`);

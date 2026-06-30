@@ -1,0 +1,1228 @@
+{
+  "RhodesGeneratedEmpty": {
+    "recognition": "DirectHit",
+    "action": "DoNothing",
+    "attach": {
+      "generatedFrom": [
+        "data/recognition/maa-tasks.json",
+        "data/recognition/scan-profiles.json"
+      ]
+    }
+  },
+  "RhodesScreen_run_squad_info_panel": {
+    "recognition": "OCR",
+    "roi": [
+      0,
+      392,
+      540,
+      270
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.screens",
+      "id": "run.squad_info_panel",
+      "label": "分隊情報パネル",
+      "screenId": "run-squad-info-panel",
+      "profileIds": [
+        "runStatusFull"
+      ]
+    },
+    "expected": [
+      "分隊"
+    ]
+  },
+  "RhodesScreen_run_operator_list": {
+    "recognition": "OCR",
+    "roi": [
+      0,
+      130,
+      360,
+      260
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.screens",
+      "id": "run.operator_list",
+      "label": "オペレーター一覧",
+      "screenId": "operator-list",
+      "profileIds": [
+        "operatorsFull"
+      ]
+    },
+    "expected": [
+      "スキル",
+      "職分"
+    ]
+  },
+  "RhodesScreen_run_sarkaz_age_detail": {
+    "recognition": "OCR",
+    "roi": [
+      360,
+      0,
+      560,
+      280
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.screens",
+      "id": "run.sarkaz_age_detail",
+      "label": "サルカズ 時代詳細",
+      "screenId": "sarkaz-age-detail",
+      "profileIds": [
+        "is5AgeFull"
+      ]
+    },
+    "expected": [
+      "形成期",
+      "拡張期",
+      "全盛期"
+    ]
+  },
+  "RhodesScreen_run_map_footer": {
+    "recognition": "OCR",
+    "roi": [
+      0,
+      620,
+      1280,
+      100
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.screens",
+      "id": "run.map_footer",
+      "label": "マップ下部フッター",
+      "screenId": "run-home",
+      "profileIds": [
+        "runStatusFull",
+        "operatorsFull",
+        "relicsFull",
+        "is4RevelationFull",
+        "is5ThoughtFull",
+        "is5AgeFull",
+        "is6CoinsFull"
+      ]
+    },
+    "expected": [
+      "秘宝",
+      "思案",
+      "隊員"
+    ],
+    "replace": [
+      [
+        "5宝",
+        "秘宝"
+      ]
+    ]
+  },
+  "RhodesScreen_run_map_footer_relic": {
+    "recognition": "OCR",
+    "roi": [
+      134,
+      648,
+      84,
+      60
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.screens",
+      "id": "run.map_footer.relic",
+      "label": "マップ下部フッター 秘宝ボタン",
+      "screenId": "run-home",
+      "profileIds": [
+        "relicsFull"
+      ]
+    },
+    "expected": [
+      "秘宝"
+    ],
+    "replace": [
+      [
+        "5宝",
+        "秘宝"
+      ]
+    ]
+  },
+  "RhodesCandidate_is5_sarkaz_map_select_campaign": {
+    "recognition": "OCR",
+    "roi": [
+      0,
+      0,
+      520,
+      126
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.candidates",
+      "id": "is5.sarkaz.map_select.campaign",
+      "label": "IS#5 campaign marker",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "candidate": {
+        "kind": "runStatus",
+        "field": "campaignId",
+        "label": "統合戦略",
+        "value": "is5_sarkaz",
+        "confidence": 0.82,
+        "needsReview": true
+      }
+    },
+    "expected": [
+      "サルカズの炉辺奇談"
+    ]
+  },
+  "RhodesOcrRegion_run_status_top": {
+    "recognition": "OCR",
+    "roi": [
+      310,
+      0,
+      490,
+      68
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.status_top",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_run_status_band": {
+    "recognition": "OCR",
+    "roi": [
+      125,
+      0,
+      650,
+      65
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.status_band",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 1
+    }
+  },
+  "RhodesOcrRegion_run_command_level": {
+    "recognition": "OCR",
+    "roi": [
+      325,
+      26,
+      24,
+      34
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.command_level",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 12
+    }
+  },
+  "RhodesOcrRegion_run_life_points": {
+    "recognition": "OCR",
+    "roi": [
+      185,
+      32,
+      50,
+      33
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.life_points",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_shield": {
+    "recognition": "OCR",
+    "roi": [
+      260,
+      32,
+      55,
+      33
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.shield",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_top_right_status": {
+    "recognition": "OCR",
+    "roi": [
+      900,
+      0,
+      380,
+      70
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.top_right_status",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 5
+    }
+  },
+  "RhodesOcrRegion_run_resource_numbers": {
+    "recognition": "OCR",
+    "roi": [
+      900,
+      10,
+      380,
+      52
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.resource_numbers",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_hope": {
+    "recognition": "OCR",
+    "roi": [
+      940,
+      10,
+      170,
+      52
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.hope",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_hope_current": {
+    "recognition": "OCR",
+    "roi": [
+      941,
+      17,
+      32,
+      35
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.hope.current",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_hope_max": {
+    "recognition": "OCR",
+    "roi": [
+      965,
+      17,
+      64,
+      35
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.hope.max",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_ingot": {
+    "recognition": "OCR",
+    "roi": [
+      1190,
+      10,
+      90,
+      52
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.ingot",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_top_ingot": {
+    "recognition": "OCR",
+    "roi": [
+      916,
+      14,
+      31,
+      36
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.top_ingot",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 10
+    }
+  },
+  "RhodesOcrRegion_run_top_hope": {
+    "recognition": "OCR",
+    "roi": [
+      960,
+      13,
+      38,
+      38
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.top_hope",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 10
+    }
+  },
+  "RhodesOcrRegion_run_top_ingot_wide": {
+    "recognition": "OCR",
+    "roi": [
+      965,
+      13,
+      38,
+      38
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.top_ingot.wide",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 10
+    }
+  },
+  "RhodesOcrRegion_run_top_hope_wide": {
+    "recognition": "OCR",
+    "roi": [
+      1004,
+      13,
+      38,
+      38
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.top_hope.wide",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 10
+    }
+  },
+  "RhodesOcrRegion_run_idea": {
+    "recognition": "OCR",
+    "roi": [
+      730,
+      650,
+      58,
+      66
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.idea",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 8
+    }
+  },
+  "RhodesOcrRegion_run_idea_current": {
+    "recognition": "OCR",
+    "roi": [
+      748,
+      652,
+      28,
+      36
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.idea.current",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 10
+    }
+  },
+  "RhodesOcrRegion_run_squad_card": {
+    "recognition": "OCR",
+    "roi": [
+      20,
+      380,
+      260,
+      135
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.squad_card",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 3
+    }
+  },
+  "RhodesOcrRegion_run_squad_name": {
+    "recognition": "OCR",
+    "roi": [
+      45,
+      410,
+      190,
+      52
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.squad_name",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_run_difficulty_grade": {
+    "recognition": "OCR",
+    "roi": [
+      125,
+      530,
+      110,
+      85
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.difficulty_grade",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 6
+    }
+  },
+  "RhodesOcrRegion_run_difficulty_block": {
+    "recognition": "OCR",
+    "roi": [
+      0,
+      520,
+      900,
+      190
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "run.difficulty_block",
+      "profileIds": [
+        "runStatusFull"
+      ],
+      "scale": 2
+    }
+  },
+  "RhodesOcrRegion_relic_list_text": {
+    "recognition": "OCR",
+    "roi": [
+      90,
+      84,
+      1100,
+      540
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "relic.list_text",
+      "profileIds": [
+        "relicsFull"
+      ],
+      "scale": 2
+    }
+  },
+  "RhodesOcrRegion_operator_list_text": {
+    "recognition": "OCR",
+    "roi": [
+      350,
+      70,
+      880,
+      555
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.list_text",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 3
+    }
+  },
+  "RhodesOcrRegion_operator_name_left_1": {
+    "recognition": "OCR",
+    "roi": [
+      700,
+      165,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.left.1",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_center_1": {
+    "recognition": "OCR",
+    "roi": [
+      640,
+      165,
+      285,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.center.1",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_right_1": {
+    "recognition": "OCR",
+    "roi": [
+      1070,
+      165,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.right.1",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_left_2": {
+    "recognition": "OCR",
+    "roi": [
+      700,
+      305,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.left.2",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_center_2": {
+    "recognition": "OCR",
+    "roi": [
+      640,
+      305,
+      285,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.center.2",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_right_2": {
+    "recognition": "OCR",
+    "roi": [
+      1070,
+      305,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.right.2",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_left_3": {
+    "recognition": "OCR",
+    "roi": [
+      700,
+      442,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.left.3",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_center_3": {
+    "recognition": "OCR",
+    "roi": [
+      640,
+      442,
+      285,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.center.3",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_right_3": {
+    "recognition": "OCR",
+    "roi": [
+      1070,
+      442,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.right.3",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_left_4": {
+    "recognition": "OCR",
+    "roi": [
+      700,
+      580,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.left.4",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_center_4": {
+    "recognition": "OCR",
+    "roi": [
+      640,
+      580,
+      285,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.center.4",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_operator_name_right_4": {
+    "recognition": "OCR",
+    "roi": [
+      1070,
+      580,
+      205,
+      43
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "operator.name.right.4",
+      "profileIds": [
+        "operatorsFull"
+      ],
+      "scale": 4
+    }
+  },
+  "RhodesOcrRegion_is5_age_detail_text": {
+    "recognition": "OCR",
+    "roi": [
+      360,
+      0,
+      560,
+      280
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "is5.age_detail_text",
+      "profileIds": [
+        "is5AgeFull"
+      ],
+      "scale": 3
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_idea_current": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      820,
+      620,
+      100,
+      90
+    ],
+    "template": "run/IdeaIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.idea.current",
+      "ocrOffset": {
+        "x": -2,
+        "y": 35,
+        "width": 44,
+        "height": 34
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_hope_current": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      820,
+      0,
+      190,
+      72
+    ],
+    "template": "run/HopeIcon.png",
+    "threshold": 0.74,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.hope.current",
+      "ocrOffset": {
+        "x": 70,
+        "y": -10,
+        "width": 26,
+        "height": 36
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_hope_current_full": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      820,
+      0,
+      190,
+      72
+    ],
+    "template": "run/HopeIcon.png",
+    "threshold": 0.74,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.hope.current.full",
+      "ocrOffset": {
+        "x": 124,
+        "y": -10,
+        "width": 22,
+        "height": 36
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_hope_max": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      820,
+      0,
+      190,
+      72
+    ],
+    "template": "run/HopeIcon.png",
+    "threshold": 0.74,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.hope.max",
+      "ocrOffset": {
+        "x": 126,
+        "y": -10,
+        "width": 26,
+        "height": 36
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_hope_max_full": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      820,
+      0,
+      190,
+      72
+    ],
+    "template": "run/HopeIcon.png",
+    "threshold": 0.74,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.hope.max.full",
+      "ocrOffset": {
+        "x": 150,
+        "y": -10,
+        "width": 22,
+        "height": 36
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_ingot": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      1040,
+      0,
+      160,
+      60
+    ],
+    "template": "run/IngotIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.ingot",
+      "ocrOffset": {
+        "x": 120,
+        "y": -5,
+        "width": 80,
+        "height": 38
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_life_points": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      140,
+      0,
+      90,
+      70
+    ],
+    "template": "run/LifeIcon.png",
+    "threshold": 0.86,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.life_points",
+      "ocrOffset": {
+        "x": 31,
+        "y": 25,
+        "width": 18,
+        "height": 35
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_runStatusFull_run_shield": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      245,
+      18,
+      80,
+      50
+    ],
+    "template": "run/ShieldIcon.png",
+    "threshold": 0.84,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "runStatusFull",
+      "idPrefix": "run.shield",
+      "ocrOffset": {
+        "x": 16,
+        "y": 0,
+        "width": 34,
+        "height": 30
+      },
+      "maxMatches": 1,
+      "numericFallback": true
+    }
+  },
+  "RhodesTemplate_operatorsFull_operator_recruit_name": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      525,
+      110,
+      640,
+      500
+    ],
+    "template": "third_party/maa/resource/template/Roguelike/base/RoguelikeRecruitOcrFlag.png",
+    "threshold": 0.86,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "operatorsFull",
+      "idPrefix": "operator.recruit.name",
+      "ocrOffset": {
+        "x": 0,
+        "y": 22,
+        "width": 240,
+        "height": 30
+      },
+      "maxMatches": 8,
+      "numericFallback": null
+    }
+  },
+  "RhodesTemplate_operatorsFull_operator_card_name": {
+    "recognition": "TemplateMatch",
+    "roi": [
+      380,
+      95,
+      850,
+      545
+    ],
+    "template": "run/OperatorCardCodeNameFlag.png",
+    "threshold": 0.7,
+    "method": 5,
+    "order_by": "Score",
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "scan-profiles.templateOcrRegions",
+      "profileId": "operatorsFull",
+      "idPrefix": "operator.card.name",
+      "ocrOffset": {
+        "x": -7,
+        "y": -9,
+        "width": 188,
+        "height": 29
+      },
+      "maxMatches": 16,
+      "numericFallback": null
+    }
+  }
+}

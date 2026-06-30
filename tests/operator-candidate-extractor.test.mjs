@@ -10,11 +10,21 @@ const operators = [
   { id: "silverash2", name: "凛御シルバーアッシュ", rarity: 6, class: "先鋒", branch: "策士" },
   { id: "lumen", name: "ルーメン", rarity: 6, class: "医療", branch: "療養師" },
   { id: "ines", name: "イネス", rarity: 6, class: "先鋒", branch: "偵察兵" },
+  { id: "siege", name: "シージ", rarity: 6, class: "先鋒", branch: "先駆兵" },
+  { id: "zima", name: "ズィマー", rarity: 5, class: "先鋒", branch: "先駆兵" },
+  { id: "fang2", name: "歴陣鋭槍フェン", rarity: 5, class: "先鋒", branch: "突撃兵" },
   { id: "myrtle", name: "テンニンカ", rarity: 4, class: "先鋒", branch: "旗手" },
   { id: "ray", name: "レイ", rarity: 6, class: "狙撃", branch: "狩人" },
   { id: "bluepoison", name: "アズリウス", rarity: 5, class: "狙撃", branch: "速射手" },
   { id: "w", name: "W", rarity: 6, class: "狙撃", branch: "榴弾射手" },
+  { id: "dusk", name: "シー", rarity: 6, class: "術師", branch: "拡散術師" },
   { id: "pozyomka", name: "パゼオンカ", rarity: 6, class: "狙撃", branch: "精密射手" },
+  { id: "schwarz", name: "シュヴァルツ", rarity: 6, class: "狙撃", branch: "精密射手" },
+  { id: "shu", name: "シュウ", rarity: 6, class: "重装", branch: "庇護衛士" },
+  { id: "executor", name: "イグゼキュター", rarity: 5, class: "狙撃", branch: "散弾射手" },
+  { id: "jessica", name: "ジェシカ", rarity: 4, class: "狙撃", branch: "速射手" },
+  { id: "insider", name: "インサイダー", rarity: 5, class: "狙撃", branch: "速射手" },
+  { id: "provence", name: "プロヴァンス", rarity: 5, class: "狙撃", branch: "精密射手" },
   { id: "rangers", name: "レンジャー", rarity: 2, class: "狙撃", branch: "速射手" },
   { id: "brigid", name: "ブリギッド", rarity: 5, class: "狙撃", branch: "旋輪射手" },
   { id: "jieyun", name: "ジエユン", rarity: 5, class: "狙撃", branch: "榴弾射手" },
@@ -45,8 +55,17 @@ const operatorOcrMap = {
     { pattern: "(凛|御).*シルバ.*", maaReplacement: "凛御银灰", localMatches: [{ id: "silverash2", name: "凛御シルバーアッシュ" }] },
     { pattern: "ルーメン", maaReplacement: "流明", localMatches: [{ id: "lumen", name: "ルーメン" }] },
     { pattern: "イネ(ス|ズ).*", maaReplacement: "伊内丝", localMatches: [{ id: "ines", name: "イネス" }] },
+    { pattern: "シージ", maaReplacement: "推进之王", localMatches: [{ id: "siege", name: "シージ" }] },
+    { pattern: "^ズィマー", maaReplacement: "凛冬", localMatches: [{ id: "zima", name: "ズィマー" }] },
+    { pattern: "(歴)?陣鋭.*フェ(ン)?", maaReplacement: "历阵锐枪芬", localMatches: [{ id: "fang2", name: "歴陣鋭槍フェン" }] },
     { pattern: "テンニンカ", maaReplacement: "桃金娘", localMatches: [{ id: "myrtle", name: "テンニンカ" }] },
     { pattern: "パゼオンカ", maaReplacement: "鸿雪", localMatches: [{ id: "pozyomka", name: "パゼオンカ" }] },
+    { pattern: "^シュウ", maaReplacement: "黍", localMatches: [{ id: "shu", name: "シュウ" }] },
+    { pattern: "シュヴァルツ", maaReplacement: "黑", localMatches: [{ id: "schwarz", name: "シュヴァルツ" }] },
+    { pattern: "イグゼキュター", maaReplacement: "送葬人", localMatches: [{ id: "executor", name: "イグゼキュター" }] },
+    { pattern: "ジェシカ", maaReplacement: "杰西卡", localMatches: [{ id: "jessica", name: "ジェシカ" }] },
+    { pattern: "インサイダー", maaReplacement: "隐现", localMatches: [{ id: "insider", name: "インサイダー" }] },
+    { pattern: "プロヴァンス", maaReplacement: "普罗旺斯", localMatches: [{ id: "provence", name: "プロヴァンス" }] },
     { pattern: "(レ|ノ)ンジャー", maaReplacement: "巡林者", localMatches: [{ id: "rangers", name: "レンジャー" }] },
     { pattern: "ジエユン", maaReplacement: "截云", localMatches: [{ id: "jieyun", name: "ジエユン" }] },
     { pattern: "^レイズ", maaReplacement: "惊蛰", localMatches: [{ id: "leizi", name: "レイズ" }] },
@@ -57,6 +76,7 @@ const operatorOcrMap = {
     { pattern: "^グ(ム|で|ン)", maaReplacement: "古米", localMatches: [{ id: "gummy", name: "グム" }] },
     { pattern: "^(ラ)?ップランド", maaReplacement: "拉普兰德", localMatches: [{ id: "lappland", name: "ラップランド" }] },
     { pattern: "(荒|蕪|蕉|葉|悪|慈|無|轟).*ラップラン[ドト]?", maaReplacement: "荒芜拉普兰德", localMatches: [{ id: "lappland2", name: "荒蕪ラップランド" }] },
+    { pattern: "^シー(?:$|[^ジシンソニ二ボホポル儿の]|トへ|ーた|ーの)|^(シ|ツ|ン)ー$", maaReplacement: "夕", localMatches: [{ id: "dusk", name: "シー" }] },
   ],
   equivalenceClasses: [["ン", "ソ"], ["-", "ー", "一"], ["フ", "ブ", "プ"]],
 };
@@ -134,6 +154,18 @@ test("operator candidate extractor strips card CODE-NAME labels before matching"
   assert.equal(candidates[0].source, "local-name-fallback");
 });
 
+test("operator candidate extractor strips observed CODE-NAME OCR drift before matching", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [
+      { text: "CORE-NAME W", regionId: "operator.card.name.0", roi: { x: 891, y: 291, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "COCHE-NAME W", regionId: "operator.card.name.1", roi: { x: 891, y: 391, width: 188, height: 29 }, confidence: 0.68 },
+    ],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 } });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["w"]);
+});
+
 test("operator candidate extractor maps observed Japanese sniper recruitment OCR drift", async () => {
   const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
   const candidates = await extractor({
@@ -150,6 +182,45 @@ test("operator candidate extractor maps observed Japanese sniper recruitment OCR
 
   assert.deepEqual(candidates.map((item) => item.operatorId), ["bluepoison", "wisadel", "ray", "brigid", "rangers", "pozyomka", "jieyun"]);
   assert.ok(candidates.every((item) => item.source === "local-ocr-drift"));
+});
+
+test("operator candidate extractor maps observed Windows OCR drifts from sniper recruitment", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [
+      { text: "シ ュ ウ ア ル ツ", regionId: "operator.card.name.0", roi: { x: 890, y: 291, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "イ ク セ キ ュ タ ー", regionId: "operator.card.name.1", roi: { x: 890, y: 565, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "シェシカ", regionId: "operator.card.name.2", roi: { x: 1720, y: 291, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "インサイター", regionId: "operator.card.name.3", roi: { x: 1720, y: 565, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "フロウアンス", regionId: "operator.card.name.4", roi: { x: 1272, y: 882, width: 376, height: 58 }, confidence: 0.7 },
+    ],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 }, operatorClasses: ["狙撃"] });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["schwarz", "jessica", "executor", "insider", "provence"]);
+  assert.ok(candidates.every((item) => item.source === "local-ocr-drift"));
+});
+
+test("operator candidate extractor applies MAA-style operator class constraints before matching", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [
+      { text: "シ ュ ウ ア ル ツ", regionId: "operator.card.name.0", roi: { x: 890, y: 291, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "ラ ッ プ ラ ン ド", regionId: "operator.card.name.1", roi: { x: 1000, y: 469, width: 120, height: 24 }, confidence: 0.7 },
+      { text: "ス ス ー ロ", regionId: "operator.card.name.2", roi: { x: 1100, y: 469, width: 120, height: 24 }, confidence: 0.7 },
+    ],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 }, operatorClasses: ["sniper"] });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["schwarz"]);
+  assert.equal(candidates[0].class, "狙撃");
+});
+
+test("operator candidate extractor does not map Schwarz OCR drift to Shu without class constraints", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "シ ュ ウ ア ル ツ", regionId: "operator.card.name.0", roi: { x: 890, y: 291, width: 188, height: 29 }, confidence: 0.7 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 } });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["schwarz"]);
 });
 
 
@@ -261,6 +332,29 @@ test("operator candidate extractor maps observed GLM OCR drift for Whisperain", 
 
   assert.deepEqual(candidates.map((item) => item.operatorId), ["whisperain"]);
   assert.equal(candidates[0].source, "local-ocr-drift");
+});
+
+test("operator candidate extractor maps observed GLM OCR drift from vanguard recruitment", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [
+      { text: "シーゴ", regionId: "operator.card.name.0", roi: { x: 970, y: 470, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "スイマー", regionId: "operator.card.name.1", roi: { x: 583, y: 295, width: 188, height: 29 }, confidence: 0.7 },
+      { text: "歴陣銳槍フェン", regionId: "operator.card.name.2", roi: { x: 1476, y: 880, width: 188, height: 29 }, confidence: 0.7 },
+    ],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 } });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["zima", "siege", "fang2"]);
+  assert.ok(candidates.every((item) => item.source === "local-ocr-drift"));
+});
+
+test("operator candidate extractor does not map Siege OCR drift to Dusk", async () => {
+  const extractor = createOperatorCandidateExtractor({ operators, operatorOcrMap });
+  const candidates = await extractor({
+    ocrResults: [{ text: "シーゴ", regionId: "operator.card.name.0", roi: { x: 970, y: 470, width: 188, height: 29 }, confidence: 0.7 }],
+  }, { profile: { id: "operatorsFull" }, region: { x: 350, y: 70, width: 1800, height: 1200 } });
+
+  assert.deepEqual(candidates.map((item) => item.operatorId), ["siege"]);
 });
 
 test("operator candidate extractor suppresses overlapping base-name fragments when alter name is visible", async () => {

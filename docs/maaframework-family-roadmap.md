@@ -1,0 +1,71 @@
+# MAAFramework Family Roadmap
+
+## Goal
+RHODES OBS COMMANDER3373 を MAAFramework ファミリーの外部協力を受けやすいツールへ移行する。上流に相談する対象は「Arknights の攻略データ」ではなく、MAAFramework の Controller/Resource/Tasker/Custom Recognition/Action の活用方法に絞る。
+
+基準解像度は 1280x720 とする。これは 16:9 解像度なので、ユーザー提供の基準点切り出しはこの座標系で受け取る。
+
+## Architecture
+```mermaid
+flowchart LR
+  Game["Android emulator / Google Play Games"] --> MAAController["MAAFramework Controller"]
+  MAAController --> MAATasker["MAAFramework Tasker"]
+  MAAResource["RHODES MAA Resource"] --> MAATasker
+  MAATasker --> Recognition["MAA-OCR / Template / Custom Recognition"]
+  Recognition --> RhodesDomain["RHODES candidate extraction"]
+  RhodesDomain --> SukiUI["Avalonia + SukiUI desktop"]
+  RhodesDomain --> OBS["OBS browser source"]
+  GLM["Optional GLM-OCR runtime"] --> RhodesDomain
+```
+
+## Workstreams
+
+### 1. SukiUI Shell
+- `apps/rhodes-suki` を主UI候補として育てる
+- 設定、ランタイム状態、ADB接続、認識結果レビューを移植する
+- Electron/Tauri 版は移行完了まで検証済み実装として残す
+
+### 2. MAAFramework Runtime
+- `Maa.Framework` NuGet で C# binding を導入する
+- Windows portable ZIP に MAAFramework runtime を含める
+- Visual C++ Redistributable が不足する環境向けの診断を用意する
+
+### 3. RHODES MAA Resource
+- 基本情報、オペレーター、秘宝、特殊値を MAA Resource の pipeline/task に分割する
+- 自前テンプレート検出は MAAFramework task へ移す
+- Custom Recognition は RHODES 固有の候補化に必要な最小単位だけ実装する
+- `data/recognition/maa-tasks.json` と `data/recognition/scan-profiles.json` を生成元にし、`tools/generate-maa-resource.mjs` で `resource/base/pipeline/rhodes-generated.json` を更新する
+- 既存の 1280x720 ROI / template 定義は、旧OCR adapterだけでなく MAA Resource 側にも反映する
+- MAA の recognition detail JSON は `maa-resource-results.js` / `maa-resource-scan-runner.js` で既存の RHODES frame/candidate 形式へ変換する
+
+### 4. OCR Strategy
+- 既定: MAA-OCR
+- 任意: GLM-OCR
+- 旧互換: Windows OCR / 単体 PaddleOCR
+
+### 5. Upstream Collaboration
+- Issue/Discussion では、再現スクリーンショット、Resource/task JSON、期待結果、実際の結果を添える
+- MAAFramework の一般化できる改善は上流へフィードバックする
+- RHODES 固有データやOBS表示仕様は本リポジトリ側で管理する
+
+### 6. MFAToolsPlus Usage
+- MFAToolsPlus は開発補助ツールとして使う
+- 取り込むのは `MaaTasker` セッション、`AppendRecognition` payload、認識結果可視化の考え方に限定する
+- 基準点切り出しが必要になった時は、1280x720 の切り出し対象を明示してユーザーへ依頼する
+
+## First Milestone
+- SukiUI shell が起動する
+- MAAFramework binding assembly を参照できる
+- MAAFramework runtime status をUIに表示できる
+- MAA ADB の path/serial/config JSON をUIから指定できる
+- MAA Controller で接続し、cached screenshot を debug logs に保存できる
+- 1280x720 基準の OCR/TemplateMatch probe payload をUIから実行できる
+- MAA Resource task をUIから `AppendTask` で実行し、recognition detail JSON を確認できる
+- 既存認識定義から MAA pipeline を生成し、publish 前に自動更新できる
+- 移行方針がADRとして残っている
+
+## References
+- https://github.com/MaaXYZ/MaaFramework
+- https://github.com/MaaXYZ/MaaFramework.Binding.CSharp
+- https://github.com/kikipoulet/SukiUI
+- https://github.com/SweetSmellFox/MFAToolsPlus

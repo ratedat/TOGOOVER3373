@@ -19,6 +19,7 @@ import { createThoughtCandidateExtractor } from "./domain/recognition/thought-ca
 import { createAgeCandidateExtractor } from "./domain/recognition/age-candidate-extractor.js";
 import { findScanProfile, findScanProfileByTriggerPath, normalizeScanProfiles, ocrEnginesFromScanProfiles, profileIdFromScanBody } from "./domain/recognition/profiles.js";
 import { runScanProfile } from "./domain/recognition/scan-runner.js";
+import { runMaaResourceRecognition } from "./domain/recognition/maa-resource-scan-runner.js";
 import { applyRecognitionScanCompletionToState } from "./domain/recognition/auto-apply.js";
 import { appendRecognitionSuggestionsToState } from "./domain/recognition/suggestions.js";
 import { createAdbAdapter, detectAdbConnections } from "./recognition/adapters/adb-adapter.js";
@@ -39,6 +40,7 @@ const EXAMPLE_STATE = path.join(DATA, "overlay-state.example.json");
 const SCAN_PROFILES = path.join(DATA, "recognition", "scan-profiles.json");
 const MAA_TASKS = path.join(DATA, "recognition", "maa-tasks.json");
 const MAA_OPERATOR_OCR_MAP = path.join(DATA, "recognition", "maa-operator-name-ocr.json");
+const MAA_GENERATED_PIPELINE = path.join(ROOT, "apps", "rhodes-suki", "resource", "base", "pipeline", "rhodes-generated.json");
 
 const argvPort = (() => {
   const index = process.argv.indexOf("--port");
@@ -150,6 +152,10 @@ async function recognitionTasks() {
   return readJson(MAA_TASKS).catch(() => ({ screens: [], candidates: [] }));
 }
 
+async function maaGeneratedPipeline() {
+  return readJson(MAA_GENERATED_PIPELINE).catch(() => ({}));
+}
+
 function httpError(status, message, details = {}) {
   return Object.assign(new Error(message), { status, details });
 }
@@ -165,7 +171,7 @@ async function resolveRecognitionAdbSettings(settings) {
   });
 }
 
-async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog, onCaptureFrame = null } = {}) {
+async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog, onCaptureFrame = null, recognitionContext = {} } = {}) {
   if (source !== "adb") throw httpError(400, `unsupported recognition source: ${source}`);
   const [profiles, tasks, state, master, operatorOcrMap] = await Promise.all([
     recognitionProfiles(),
@@ -174,31 +180,7 @@ async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog
     masterData(),
     readJson(MAA_OPERATOR_OCR_MAP).catch(() => ({ rules: [], equivalenceClasses: [] })),
   ]);
-  const runStatusExtractor = (frame, context) => context.profile?.id === "runStatusFull"
-    ? extractRunStatusCandidates(frame, {
-      campaignId: state.run?.campaignId,
-      squads: master.squads,
-      difficultyGrades: master.difficultyGrades,
-    })
-    : [];
-  const relicExtractor = createRelicCandidateExtractor({
-    relics: master.relics,
-    campaignId: state.run?.campaignId,
-  });
-  const operatorExtractor = createOperatorCandidateExtractor({
-    operators: master.operators,
-    operatorOcrMap,
-  });
-  const thoughtExtractor = createThoughtCandidateExtractor({
-    selectableEffects: master.selectableEffects,
-    campaignId: state.run?.campaignId,
-  });
-  const ageExtractor = createAgeCandidateExtractor({
-    selectableEffects: master.selectableEffects,
-    campaignId: state.run?.campaignId,
-    difficulty: state.run?.difficulty,
-    difficultyGrades: master.difficultyGrades,
-  });
+  const candidateExtractors = createRecognitionCandidateExtractors({ state, master, operatorOcrMap });
   const adbSettings = await resolveRecognitionAdbSettings(state.adb);
   onLog?.({
     event: "adb-resolve",
@@ -246,12 +228,64 @@ async function defaultRecognitionRunner({ profile, source = "adb", signal, onLog
         engine: classificationOcrEngine,
         ...mergedGlmOcrRuntimeOptions,
       }) : null,
-      candidateExtractors: [runStatusExtractor, relicExtractor, operatorExtractor, thoughtExtractor, ageExtractor],
+      candidateExtractors,
     }),
     source,
     signal,
     onLog,
     onCaptureFrame,
+    recognitionContext,
+  });
+}
+
+function createRecognitionCandidateExtractors({ state, master, operatorOcrMap }) {
+  const runStatusExtractor = (frame, context) => context.profile?.id === "runStatusFull"
+    ? extractRunStatusCandidates(frame, {
+      campaignId: state.run?.campaignId,
+      squads: master.squads,
+      difficultyGrades: master.difficultyGrades,
+    })
+    : [];
+  const relicExtractor = createRelicCandidateExtractor({
+    relics: master.relics,
+    campaignId: state.run?.campaignId,
+  });
+  const operatorExtractor = createOperatorCandidateExtractor({
+    operators: master.operators,
+    operatorOcrMap,
+  });
+  const thoughtExtractor = createThoughtCandidateExtractor({
+    selectableEffects: master.selectableEffects,
+    campaignId: state.run?.campaignId,
+  });
+  const ageExtractor = createAgeCandidateExtractor({
+    selectableEffects: master.selectableEffects,
+    campaignId: state.run?.campaignId,
+    difficulty: state.run?.difficulty,
+    difficultyGrades: master.difficultyGrades,
+  });
+  return [runStatusExtractor, relicExtractor, operatorExtractor, thoughtExtractor, ageExtractor];
+}
+
+async function runMaaResourceRecognitionRequest(body = {}) {
+  const [profiles, state, master, operatorOcrMap] = await Promise.all([
+    recognitionProfiles(),
+    ensureState(),
+    masterData(),
+    readJson(MAA_OPERATOR_OCR_MAP).catch(() => ({ rules: [], equivalenceClasses: [] })),
+  ]);
+  const profile = findScanProfile(profiles, profileIdFromScanBody(body));
+  const pipeline = body.pipeline && typeof body.pipeline === "object" && !Array.isArray(body.pipeline)
+    ? body.pipeline
+    : await maaGeneratedPipeline();
+  return runMaaResourceRecognition({
+    profile,
+    pipeline,
+    taskResults: Array.isArray(body.taskResults) ? body.taskResults : [],
+    candidateExtractors: createRecognitionCandidateExtractors({ state, master, operatorOcrMap }),
+    recognitionContext: recognitionContextFromScanBody(body),
+    source: body.source || "maa-framework",
+    scanId: body.scanId || randomUUID(),
   });
 }
 
@@ -281,6 +315,35 @@ function recognitionOcrRoutingFromState(state, profiles) {
 
 function recognitionClassificationOcrEngine(defaultEngine) {
   return normalizeOcrEngine(defaultEngine) === "glm-ocr" ? "windows-glm" : null;
+}
+
+function recognitionContextFromScanBody(body = {}) {
+  const context = {};
+  for (const key of [
+    "operatorClass",
+    "operatorClasses",
+    "allowedOperatorClass",
+    "allowedOperatorClasses",
+    "allowedClasses",
+    "expectedOperatorClass",
+    "expectedOperatorClasses",
+  ]) {
+    if (Object.hasOwn(body, key)) context[key] = body[key];
+  }
+  if (body.recognitionContext && typeof body.recognitionContext === "object" && !Array.isArray(body.recognitionContext)) {
+    for (const key of [
+      "operatorClass",
+      "operatorClasses",
+      "allowedOperatorClass",
+      "allowedOperatorClasses",
+      "allowedClasses",
+      "expectedOperatorClass",
+      "expectedOperatorClasses",
+    ]) {
+      if (Object.hasOwn(body.recognitionContext, key)) context[key] = body.recognitionContext[key];
+    }
+  }
+  return context;
 }
 
 function publicScanStatus(status) {
@@ -613,7 +676,7 @@ export function createAppServer({
     activeScanStatus.stage = normalized.event || activeScanStatus.stage;
   }
 
-  async function runRecognitionRequest({ profile, source = "adb" }) {
+  async function runRecognitionRequest({ profile, source = "adb", recognitionContext = {} }) {
     if (activeScanController) throw httpError(409, "recognition scan already running");
     const controller = new AbortController();
     const requestId = randomUUID();
@@ -638,6 +701,7 @@ export function createAppServer({
         signal: controller.signal,
         onLog: appendActiveScanLog,
         requestId,
+        recognitionContext,
         onCaptureFrame: adbCaptureDir
           ? (frame, meta) => saveRecognitionAdbCaptureFrame(frame, { baseDir: adbCaptureDir, ...meta })
           : null,
@@ -786,8 +850,15 @@ export function createAppServer({
       const body = bodyText ? JSON.parse(bodyText) : {};
       const profiles = await recognitionProfiles();
       const profile = findScanProfile(profiles, profileIdFromScanBody(body));
-      const payload = await runRecognitionRequest({ profile, source: body.source || "adb" });
+      const payload = await runRecognitionRequest({ profile, source: body.source || "adb", recognitionContext: recognitionContextFromScanBody(body) });
       return sendJson(res, responseStatusForScanResult(payload.result), payload);
+    }
+
+    if (req.method === "POST" && url.pathname === "/api/recognition/maa-resource") {
+      const bodyText = await readBody(req);
+      const body = bodyText ? JSON.parse(bodyText) : {};
+      const result = await runMaaResourceRecognitionRequest(body);
+      return sendJson(res, 200, { result });
     }
 
     if (req.method === "POST" && url.pathname === "/api/recognition/scan/cancel") {

@@ -6,6 +6,8 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+import { resolveTemplateOcrRegions } from "./template-ocr-regions.js";
+
 const BRIDGE_SCRIPT = fileURLToPath(new URL("./paddle-ocr-bridge.py", import.meta.url));
 
 export function resolvePaddlePythonExecutable(env = process.env, homeDir = os.homedir(), cwd = process.cwd()) {
@@ -28,7 +30,7 @@ async function bridgeSource() {
   return fs.readFile(BRIDGE_SCRIPT, "utf8");
 }
 
-function runPythonPaddleOcr({ imagePath, regions = [], timeoutMs = 90000, pythonPath = pythonExecutable() }) {
+function runPythonPaddleOcr({ imagePath, regions = [], templateOcrRegions = [], timeoutMs = 90000, pythonPath = pythonExecutable() }) {
   return new Promise(async (resolve, reject) => {
     let script;
     try {
@@ -48,6 +50,7 @@ function runPythonPaddleOcr({ imagePath, regions = [], timeoutMs = 90000, python
         RHODES_PADDLE_RECOGNITION_ONLY: process.env.RHODES_PADDLE_RECOGNITION_ONLY || "1",
         ARK_OCR_IMAGE: imagePath,
         ARK_OCR_REGIONS_JSON: JSON.stringify(regions),
+        ARK_OCR_TEMPLATE_REGIONS_JSON: JSON.stringify(templateOcrRegions),
       },
     }, (error, stdout, stderr) => {
       if (error) {
@@ -90,14 +93,15 @@ function isPaddleUnavailable(error) {
 export function createPaddleOcrTextExtractor({ enabled = true, required = false, timeoutMs = 90000, pythonPath = pythonExecutable() } = {}) {
   let unavailableError = null;
   return {
-    async extract(frame, { regions = [] } = {}) {
+    async extract(frame, context = {}) {
+      const regions = Array.isArray(context.regions) ? context.regions : [];
       if (!enabled || !Buffer.isBuffer(frame?.bytes)) return frame;
       if (unavailableError && !required) throw unavailableError;
       const dir = await fs.mkdtemp(path.join(os.tmpdir(), "rhodes-paddle-ocr-"));
       const imagePath = path.join(dir, `${randomUUID()}.png`);
       try {
         await fs.writeFile(imagePath, frame.bytes);
-        const stdout = await runPythonPaddleOcr({ imagePath, regions, timeoutMs, pythonPath });
+        const stdout = await runPythonPaddleOcr({ imagePath, regions, templateOcrRegions: resolveTemplateOcrRegions(context), timeoutMs, pythonPath });
         const payload = normalizePaddleOcrPayload(parsePaddleOcrStdout(stdout));
         return {
           ...frame,

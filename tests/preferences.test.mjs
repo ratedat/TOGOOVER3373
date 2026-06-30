@@ -15,6 +15,14 @@ test("OCR engine preference accepts GLM verification engines", () => {
   assert.ok(ocrEngineOptions.some((option) => option.id === "windows-glm"));
 });
 
+test("OCR engine preference exposes MAA-first engines", () => {
+  assert.equal(normalizeOcrEngine("hybrid"), "hybrid");
+  assert.equal(normalizeOcrEngine("maa-onnx"), "maa-onnx");
+  assert.equal(normalizeOcrEngine("paddle"), "paddle");
+  assert.ok(ocrEngineOptions.some((option) => option.id === "maa-onnx"));
+  assert.ok(ocrEngineOptions.some((option) => option.id === "paddle"));
+});
+
 test("choice list filter preferences are normalized", () => {
   const preferences = normalizePreferences({
     operatorShowSelectedFirst: "true",

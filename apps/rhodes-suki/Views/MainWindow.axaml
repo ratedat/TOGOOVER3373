@@ -1,0 +1,185 @@
+<suki:SukiWindow
+    x:Class="RhodesSuki.Views.MainWindow"
+    x:Name="Root"
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:suki="clr-namespace:SukiUI.Controls;assembly=SukiUI"
+    mc:Ignorable="d"
+    Width="1180"
+    Height="760"
+    MinWidth="960"
+    MinHeight="640"
+    Title="{Binding Title}">
+  <Grid RowDefinitions="Auto,*" Margin="28" RowSpacing="22">
+    <StackPanel Spacing="6">
+      <TextBlock Text="{Binding Title}" FontSize="28" FontWeight="SemiBold" />
+      <TextBlock Text="{Binding Subtitle}" FontSize="14" Opacity="0.72" />
+    </StackPanel>
+
+    <Grid Grid.Row="1" ColumnDefinitions="2*,3*" ColumnSpacing="22">
+      <Border CornerRadius="8" Padding="20" Background="#141A1B" BorderBrush="#2B3638" BorderThickness="1">
+        <StackPanel Spacing="18">
+          <StackPanel Spacing="4">
+            <TextBlock Text="ランタイム" FontSize="20" FontWeight="SemiBold" />
+            <TextBlock Text="MAAFrameworkを主軸にし、GLM-OCRは任意の高精度補助として残します。" TextWrapping="Wrap" Opacity="0.72" />
+          </StackPanel>
+
+          <ItemsControl ItemsSource="{Binding RuntimeStatuses}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border CornerRadius="8" Padding="14" Margin="0,0,0,10" Background="#1B2324" BorderBrush="#334143" BorderThickness="1">
+                  <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
+                    <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold" />
+                    <Border Grid.Column="1" CornerRadius="4" Padding="8,4" Background="#243233">
+                      <TextBlock Text="{Binding State}" FontSize="12" />
+                    </Border>
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" TextWrapping="Wrap" Opacity="0.72" Margin="0,8,0,0" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Border CornerRadius="8" Padding="14" Background="#101516" BorderBrush="#334143" BorderThickness="1">
+            <StackPanel Spacing="10">
+              <StackPanel Spacing="3">
+                <TextBlock Text="MAA ADB接続" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="Google Play Games / MuMu / 通常ADBをここから手動検証します。" TextWrapping="Wrap" Opacity="0.72" />
+              </StackPanel>
+
+              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="110,*" RowSpacing="8" ColumnSpacing="10">
+                <TextBlock Text="ADB" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Column="1" Text="{Binding AdbPath, Mode=TwoWay}" />
+                <TextBlock Grid.Row="1" Text="Serial" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AdbSerial, Mode=TwoWay}" PlaceholderText="127.0.0.1:16384 / emulator-5554 など" />
+                <TextBlock Grid.Row="2" Text="Config JSON" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AdbConfigJson, Mode=TwoWay}" />
+              </Grid>
+
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <Button Content="接続" Command="{Binding ConnectCommand}" />
+                <Button Content="スクリーンショット" Command="{Binding CaptureCommand}" />
+                <Button Content="全プローブ実行" Command="{Binding RunAllProbesCommand}" />
+              </StackPanel>
+
+              <Border CornerRadius="6" Padding="10" Background="#182021" BorderBrush="#2B3638" BorderThickness="1">
+                <StackPanel Spacing="4">
+                  <TextBlock Text="{Binding SessionState}" FontWeight="SemiBold" />
+                  <TextBlock Text="{Binding SessionDetail}" TextWrapping="Wrap" Opacity="0.72" />
+                  <TextBlock Text="{Binding CaptureState}" TextWrapping="Wrap" Opacity="0.72" />
+                  <TextBlock Text="{Binding StatusMessage}" TextWrapping="Wrap" Opacity="0.82" />
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </Border>
+
+      <Border Grid.Column="1" CornerRadius="8" Padding="20" Background="#121718" BorderBrush="#2B3638" BorderThickness="1">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="16">
+          <StackPanel Spacing="4">
+            <TextBlock Text="移行ロードマップ" FontSize="20" FontWeight="SemiBold" />
+            <TextBlock Text="{Binding BaseResolution.AspectRatioLabel}" FontSize="13" Opacity="0.72" />
+            <TextBlock Text="{Binding ResourceRoot}" FontSize="12" TextWrapping="Wrap" Opacity="0.55" />
+          </StackPanel>
+
+          <ItemsControl Grid.Row="1" ItemsSource="{Binding MigrationSteps}">
+            <ItemsControl.ItemTemplate>
+              <DataTemplate>
+                <Border CornerRadius="8" Padding="12" Margin="0,0,0,8" Background="#1B2324" BorderBrush="#334143" BorderThickness="1">
+                  <Grid ColumnDefinitions="Auto,*" ColumnSpacing="12">
+                    <TextBlock Text="•" FontSize="16" VerticalAlignment="Top" />
+                    <TextBlock Grid.Column="1" Text="{Binding}" TextWrapping="Wrap" FontSize="14" />
+                  </Grid>
+                </Border>
+              </DataTemplate>
+            </ItemsControl.ItemTemplate>
+          </ItemsControl>
+
+          <Border Grid.Row="2" CornerRadius="8" Padding="14" Background="#151D1E" BorderBrush="#334143" BorderThickness="1">
+            <Grid RowDefinitions="Auto,*" RowSpacing="10">
+              <StackPanel Spacing="3">
+                <TextBlock Text="MAA Resource移設" FontSize="18" FontWeight="SemiBold" />
+                <TextBlock Text="本命経路はResource taskです。下段のプローブは互換確認用として残します。" TextWrapping="Wrap" Opacity="0.72" />
+              </StackPanel>
+              <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="10">
+                  <StackPanel Spacing="8">
+                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                      <TextBlock Text="Resource task" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                      <Button Grid.Column="1" Content="全Resource task実行" Command="{Binding RunAllResourceTasksCommand}" />
+                    </Grid>
+                    <ItemsControl ItemsSource="{Binding ResourceTasks}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="5">
+                              <TextBlock Text="{Binding Label}" FontSize="14" FontWeight="SemiBold" />
+                              <Button Grid.Column="1" Grid.RowSpan="3" Content="実行" Command="{Binding DataContext.RunResourceTaskCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
+                              <TextBlock Grid.Row="1" Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.72" />
+                              <TextBlock Grid.Row="2" Text="{Binding Entry}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <ItemsControl ItemsSource="{Binding ResourceTaskResults}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                              <TextBlock Text="{Binding Entry}" FontSize="14" FontWeight="SemiBold" />
+                              <TextBlock Grid.Column="1" Text="{Binding Status}" FontFamily="Consolas" />
+                              <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.72" />
+                              <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding RecognitionDetailJson}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+
+                  <ItemsControl ItemsSource="{Binding ProbePayloads}">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                          <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="5">
+                            <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
+                            <Button Grid.Column="1" Grid.RowSpan="3" Content="実行" Command="{Binding DataContext.RunProbeCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
+                            <TextBlock Grid.Row="1" Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.72" />
+                            <TextBlock Grid.Row="2" Text="{Binding Payload}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                          </Grid>
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+
+                  <StackPanel Spacing="8">
+                    <TextBlock Text="プローブ結果" FontSize="16" FontWeight="SemiBold" />
+                    <ItemsControl ItemsSource="{Binding ProbeResults}">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                          <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                              <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold" />
+                              <TextBlock Grid.Column="1" Text="{Binding Status}" FontFamily="Consolas" />
+                              <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.72" />
+                              <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding RecognitionDetailJson}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
+                            </Grid>
+                          </Border>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </StackPanel>
+              </ScrollViewer>
+            </Grid>
+          </Border>
+        </Grid>
+      </Border>
+    </Grid>
+  </Grid>
+</suki:SukiWindow>
