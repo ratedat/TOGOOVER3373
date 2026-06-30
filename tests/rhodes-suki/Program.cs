@@ -11,6 +11,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
+    ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
 };
 
 var failures = new List<string>();
@@ -208,6 +209,22 @@ static void TaskDiagnostics()
     Equal(1, diagnostics.TemplateCandidateCount, "template candidates");
     Equal(true, diagnostics.Lines.Any(line => line.Contains("グム", StringComparison.Ordinal)), "ocr line");
     Equal(true, diagnostics.Lines.Any(line => line.Contains("RhodesBrokenTask", StringComparison.Ordinal)), "failed line");
+}
+
+static void ResourceTaskSummary()
+{
+    var manual = new MaaResourceTaskPreview("ManualTask", "Manual", "manual purpose");
+    var generated = new MaaResourceTaskPreview(
+        "GeneratedTask",
+        "Generated",
+        "generated purpose",
+        ["runStatusFull", "operatorsFull"],
+        "maa-tasks.ocrRegions");
+
+    Equal("source: manual", manual.SourceSummary, "manual source");
+    Equal("profiles: manual", manual.ProfileSummary, "manual profiles");
+    Equal("source: maa-tasks.ocrRegions", generated.SourceSummary, "generated source");
+    Equal("profiles: runStatusFull, operatorsFull", generated.ProfileSummary, "generated profiles");
 }
 
 static void Equal<T>(T expected, T actual, string label)

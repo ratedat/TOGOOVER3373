@@ -89,7 +89,9 @@ public sealed record MaaResourceTaskPreview(
     IReadOnlyList<string>? ProfileIds = null,
     string Source = "")
 {
-    public string ProfileSummary => ProfileIds is { Count: > 0 } ? string.Join(", ", ProfileIds) : "manual";
+    public string ProfileSummary => ProfileIds is { Count: > 0 } ? $"profiles: {string.Join(", ", ProfileIds)}" : "profiles: manual";
+
+    public string SourceSummary => string.IsNullOrWhiteSpace(Source) ? "source: manual" : $"source: {Source}";
 }
 
 public sealed record MaaResourceProfilePreview(

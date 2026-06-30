@@ -173,18 +173,22 @@
                         </ItemsControl>
                       </StackPanel>
                     </Border>
-                    <ItemsControl ItemsSource="{Binding ResourceTasks}">
-                      <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                          <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
-                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="5">
-                              <TextBlock Text="{Binding Label}" FontSize="14" FontWeight="SemiBold" />
-                              <Button Grid.Column="1" Grid.RowSpan="3" Content="実行" Command="{Binding DataContext.RunResourceTaskCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
-                              <TextBlock Grid.Row="1" Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.72" />
-                              <TextBlock Grid.Row="2" Text="{Binding Entry}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
-                            </Grid>
-                          </Border>
-                        </DataTemplate>
+                        <ItemsControl ItemsSource="{Binding ResourceTasks}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                                <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="5">
+                                  <TextBlock Text="{Binding Label}" FontSize="14" FontWeight="SemiBold" />
+                                  <Button Grid.Column="1" Grid.RowSpan="4" Content="実行" Command="{Binding DataContext.RunResourceTaskCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
+                                  <TextBlock Grid.Row="1" Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.72" />
+                                  <TextBlock Grid.Row="2" Text="{Binding Entry}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                                  <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="10">
+                                    <TextBlock Text="{Binding SourceSummary}" FontFamily="Consolas" FontSize="11" Opacity="0.58" />
+                                    <TextBlock Text="{Binding ProfileSummary}" FontFamily="Consolas" FontSize="11" Opacity="0.58" />
+                                  </StackPanel>
+                                </Grid>
+                              </Border>
+                            </DataTemplate>
                       </ItemsControl.ItemTemplate>
                     </ItemsControl>
 
