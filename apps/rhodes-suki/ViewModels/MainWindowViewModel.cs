@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Text.Json;
 using System.Windows.Input;
 using RhodesSuki.Models;
 using RhodesSuki.Services;
@@ -59,6 +60,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
+        ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         RunProbeCommand = new AsyncRelayCommand(parameter => RunProbeAsync(parameter as MaaProbePayloadPreview));
         RunResourceTaskCommand = new AsyncRelayCommand(parameter => RunResourceTaskAsync(parameter as MaaResourceTaskPreview));
     }
@@ -149,6 +151,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RunAllResourceTasksCommand { get; }
 
+    public ICommand ExportResourceTaskResultsCommand { get; }
+
     public ICommand RunProbeCommand { get; }
 
     public ICommand RunResourceTaskCommand { get; }
@@ -208,6 +212,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ResourceTaskResults.Add(result);
                 StatusMessage = $"{task.Entry}: {result.Status}";
             }
+        });
+    }
+
+    private async Task ExportResourceTaskResultsAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            var path = await SaveResourceTaskResultsAsync(ResourceTaskResults);
+            StatusMessage = $"MAA task結果を保存しました: {path}";
         });
     }
 
@@ -294,6 +307,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         Directory.CreateDirectory(directory);
         var path = Path.Combine(directory, $"suki-maa-capture-{DateTimeOffset.Now:yyyyMMdd-HHmmss-fff}.png");
         await File.WriteAllBytesAsync(path, encodedImage);
+        return path;
+    }
+
+    private static async Task<string> SaveResourceTaskResultsAsync(IEnumerable<MaaTaskRunResult> taskResults)
+    {
+        var directory = Path.Combine(AppContext.BaseDirectory, "RHODES OBS COMMANDER3373 Debug Logs", "maa-resource-results");
+        Directory.CreateDirectory(directory);
+        var path = Path.Combine(directory, $"suki-maa-resource-results-{DateTimeOffset.Now:yyyyMMdd-HHmmss-fff}.json");
+        var payload = new
+        {
+            schemaVersion = 1,
+            createdAt = DateTimeOffset.Now,
+            taskResults = taskResults.ToArray(),
+        };
+        var json = JsonSerializer.Serialize(payload, new JsonSerializerOptions { WriteIndented = true });
+        await File.WriteAllTextAsync(path, $"{json}{Environment.NewLine}");
         return path;
     }
 

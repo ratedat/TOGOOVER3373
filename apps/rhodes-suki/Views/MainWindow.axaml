@@ -107,9 +107,10 @@
               <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                 <StackPanel Spacing="10">
                   <StackPanel Spacing="8">
-                    <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <Grid ColumnDefinitions="*,Auto,Auto" ColumnSpacing="10">
                       <TextBlock Text="Resource task" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
                       <Button Grid.Column="1" Content="全Resource task実行" Command="{Binding RunAllResourceTasksCommand}" />
+                      <Button Grid.Column="2" Content="結果JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
                     </Grid>
                     <ItemsControl ItemsSource="{Binding ResourceTasks}">
                       <ItemsControl.ItemTemplate>
