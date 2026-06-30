@@ -66,6 +66,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ConnectCommand = new AsyncRelayCommand(ConnectAsync);
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
+        RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
@@ -179,6 +180,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RunAllProbesCommand { get; }
 
+    public ICommand RunSelectedProfileRecognitionCommand { get; }
+
     public ICommand RunAllResourceTasksCommand { get; }
 
     public ICommand ExportResourceTaskResultsCommand { get; }
@@ -235,16 +238,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task RunAllResourceTasksAsync()
     {
-        await RunBusyAsync(async () =>
-        {
-            ResourceTaskResults.Clear();
-            foreach (var task in ResourceTasks)
-            {
-                var result = await _session.RunResourceTaskAsync(task.Entry);
-                ResourceTaskResults.Add(result);
-                StatusMessage = $"{task.Entry}: {result.Status}";
-            }
-        });
+        await RunBusyAsync(RunAllResourceTasksCoreAsync);
     }
 
     private async Task ExportResourceTaskResultsAsync()
@@ -258,70 +252,104 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task ConvertResourceTaskResultsAsync()
     {
+        await RunBusyAsync(ConvertResourceTaskResultsCoreAsync);
+    }
+
+    private async Task RunSelectedProfileRecognitionAsync()
+    {
         await RunBusyAsync(async () =>
         {
-            if (!ResourceTaskResults.Any())
-            {
-                StatusMessage = "先にResource taskを実行してください。";
+            StatusMessage = "選択プロファイルの認識を開始します。";
+            var capture = await CaptureCoreAsync();
+            if (capture?.Succeeded != true)
                 return;
-            }
 
-            CandidateResults.Clear();
-            var apiError = "";
-            IReadOnlyList<MaaCandidatePreview> apiCandidates = [];
-            try
-            {
-                using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
-                var response = await client.PostAsJsonAsync(
-                    $"{RhodesApiUrl}/api/recognition/maa-resource",
-                    new
-                    {
-                        profile = SelectedResourceProfile?.Id == "all" ? "runStatusFull" : SelectedResourceProfile?.Id,
-                        source = "maa-framework",
-                        taskResults = ResourceTaskResults.ToArray(),
-                    });
-                var json = await response.Content.ReadAsStringAsync();
-                if (response.IsSuccessStatusCode)
-                {
-                    apiCandidates = ExtractCandidatePreviews(json);
-                }
-                else
-                {
-                    apiError = $"{(int)response.StatusCode} {Shorten(json, 160)}";
-                }
-            }
-            catch (Exception ex)
-            {
-                apiError = Shorten(ex.Message, 160);
-            }
+            await RunAllResourceTasksCoreAsync();
+            await ConvertResourceTaskResultsCoreAsync();
+        });
+    }
 
-            if (apiCandidates.Count > 0)
-            {
-                foreach (var candidate in apiCandidates)
-                {
-                    CandidateResults.Add(candidate);
-                }
-                StatusMessage = $"候補化しました: {CandidateResults.Count}件";
-                return;
-            }
+    private async Task RunAllResourceTasksCoreAsync()
+    {
+        ResourceTaskResults.Clear();
+        CandidateResults.Clear();
+        if (!ResourceTasks.Any())
+        {
+            StatusMessage = "選択プロファイルにResource taskがありません。";
+            return;
+        }
 
-            foreach (var candidate in RhodesMaaResultPreview.FromTaskResults(ResourceTaskResults))
+        foreach (var task in ResourceTasks)
+        {
+            var result = await _session.RunResourceTaskAsync(task.Entry);
+            ResourceTaskResults.Add(result);
+            StatusMessage = $"{task.Entry}: {result.Status}";
+        }
+    }
+
+    private async Task ConvertResourceTaskResultsCoreAsync()
+    {
+        if (!ResourceTaskResults.Any())
+        {
+            StatusMessage = "先にResource taskを実行してください。";
+            return;
+        }
+
+        CandidateResults.Clear();
+        var apiError = "";
+        IReadOnlyList<MaaCandidatePreview> apiCandidates = [];
+        try
+        {
+            using var client = new HttpClient { Timeout = TimeSpan.FromSeconds(5) };
+            var response = await client.PostAsJsonAsync(
+                $"{RhodesApiUrl}/api/recognition/maa-resource",
+                new
+                {
+                    profile = SelectedResourceProfile?.Id == "all" ? "runStatusFull" : SelectedResourceProfile?.Id,
+                    source = "maa-framework",
+                    taskResults = ResourceTaskResults.ToArray(),
+                });
+            var json = await response.Content.ReadAsStringAsync();
+            if (response.IsSuccessStatusCode)
+            {
+                apiCandidates = ExtractCandidatePreviews(json);
+            }
+            else
+            {
+                apiError = $"{(int)response.StatusCode} {Shorten(json, 160)}";
+            }
+        }
+        catch (Exception ex)
+        {
+            apiError = Shorten(ex.Message, 160);
+        }
+
+        if (apiCandidates.Count > 0)
+        {
+            foreach (var candidate in apiCandidates)
             {
                 CandidateResults.Add(candidate);
             }
+            StatusMessage = $"候補化しました: {CandidateResults.Count}件";
+            return;
+        }
 
-            if (CandidateResults.Count > 0)
-            {
-                StatusMessage = string.IsNullOrWhiteSpace(apiError)
-                    ? $"候補化APIは0件だったためローカルMAAプレビューを表示しました: {CandidateResults.Count}件"
-                    : $"候補化APIに接続できないためローカルMAAプレビューを表示しました: {CandidateResults.Count}件";
-                return;
-            }
+        foreach (var candidate in RhodesMaaResultPreview.FromTaskResults(ResourceTaskResults))
+        {
+            CandidateResults.Add(candidate);
+        }
 
+        if (CandidateResults.Count > 0)
+        {
             StatusMessage = string.IsNullOrWhiteSpace(apiError)
-                ? "候補は0件です。"
-                : $"候補化API失敗: {apiError}";
-        });
+                ? $"候補化APIは0件だったためローカルMAAプレビューを表示しました: {CandidateResults.Count}件"
+                : $"候補化APIに接続できないためローカルMAAプレビューを表示しました: {CandidateResults.Count}件";
+            return;
+        }
+
+        StatusMessage = string.IsNullOrWhiteSpace(apiError)
+            ? "候補は0件です。"
+            : $"候補化API失敗: {apiError}";
     }
 
     private async Task RunProbeAsync(MaaProbePayloadPreview? payload)
