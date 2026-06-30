@@ -25,6 +25,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _statusMessage = "MAAFramework の検証準備ができています。";
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
+    private MaaTaskDiagnosticsSnapshot _resourceTaskDiagnostics = MaaTaskDiagnosticsSnapshot.Empty;
     private bool _isBusy;
 
     public MainWindowViewModel(
@@ -109,6 +110,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaTaskRunResult> ResourceTaskResults { get; }
 
     public ObservableCollection<MaaCandidatePreview> CandidateResults { get; }
+
+    public MaaTaskDiagnosticsSnapshot ResourceTaskDiagnostics
+    {
+        get => _resourceTaskDiagnostics;
+        private set => SetProperty(ref _resourceTaskDiagnostics, value);
+    }
 
     public MaaBaseResolution BaseResolution { get; }
 
@@ -372,6 +379,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         ResourceTaskResults.Clear();
         CandidateResults.Clear();
+        RefreshResourceTaskDiagnostics();
         if (!ResourceTasks.Any())
         {
             StatusMessage = "選択プロファイルにResource taskがありません。";
@@ -382,6 +390,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             var result = await _session.RunResourceTaskAsync(task.Entry);
             ResourceTaskResults.Add(result);
+            RefreshResourceTaskDiagnostics();
             StatusMessage = $"{task.Entry}: {result.Status}";
         }
     }
@@ -474,8 +483,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             var result = await _session.RunResourceTaskAsync(task.Entry);
             ResourceTaskResults.Add(result);
+            RefreshResourceTaskDiagnostics();
             StatusMessage = $"{task.Entry}: {result.Status}";
         });
+    }
+
+    private void RefreshResourceTaskDiagnostics()
+    {
+        ResourceTaskDiagnostics = RhodesMaaTaskDiagnostics.Summarize(ResourceTaskResults);
     }
 
     private void RefreshResourceTasks()

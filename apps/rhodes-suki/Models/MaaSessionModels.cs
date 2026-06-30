@@ -115,6 +115,27 @@ public sealed record MaaTaskDetailSnapshot(
     string Algorithm,
     bool Hit);
 
+public sealed record MaaTaskDiagnosticsSnapshot(
+    int Total,
+    int Succeeded,
+    int Hit,
+    int Failed,
+    int OcrCandidateCount,
+    int TemplateCandidateCount,
+    string Summary,
+    IReadOnlyList<string> Lines)
+{
+    public static MaaTaskDiagnosticsSnapshot Empty { get; } = new(
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        "MAA task未実行",
+        ["MAA Resource taskを実行すると診断サマリを表示します。"]);
+}
+
 public sealed record MaaCandidatePreview(
     string Kind,
     string Label,

@@ -10,6 +10,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
+    ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
 };
 
 var failures = new List<string>();
@@ -167,6 +168,46 @@ static void SukiSettingsStore()
     {
         Directory.Delete(directory, true);
     }
+}
+
+static void TaskDiagnostics()
+{
+    var diagnostics = RhodesMaaTaskDiagnostics.Summarize(
+    [
+        new MaaTaskRunResult(
+            "RhodesOcrRegion_operator_name",
+            "Succeeded",
+            true,
+            "ocr detail",
+            """{"filtered_results":[{"text":"グム","score":0.88}]}""",
+            "OCR",
+            true),
+        new MaaTaskRunResult(
+            "RhodesTemplate_run_status_ingot",
+            "Succeeded",
+            true,
+            "template detail",
+            """{"filtered_results":[{"score":0.91}]}""",
+            "TemplateMatch",
+            true),
+        new MaaTaskRunResult(
+            "RhodesBrokenTask",
+            "Failed",
+            false,
+            "missing task",
+            "",
+            "",
+            false),
+    ]);
+
+    Equal(3, diagnostics.Total, "total");
+    Equal(2, diagnostics.Succeeded, "succeeded");
+    Equal(2, diagnostics.Hit, "hit");
+    Equal(1, diagnostics.Failed, "failed");
+    Equal(1, diagnostics.OcrCandidateCount, "ocr candidates");
+    Equal(1, diagnostics.TemplateCandidateCount, "template candidates");
+    Equal(true, diagnostics.Lines.Any(line => line.Contains("グム", StringComparison.Ordinal)), "ocr line");
+    Equal(true, diagnostics.Lines.Any(line => line.Contains("RhodesBrokenTask", StringComparison.Ordinal)), "failed line");
 }
 
 static void Equal<T>(T expected, T actual, string label)

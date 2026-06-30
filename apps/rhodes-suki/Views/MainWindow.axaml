@@ -158,6 +158,18 @@
                       <TextBox Grid.Column="1" Text="{Binding RhodesApiUrl, Mode=TwoWay}" />
                       <Button Grid.Column="2" Content="候補化" Command="{Binding ConvertResourceTaskResultsCommand}" />
                     </Grid>
+                    <Border CornerRadius="6" Padding="10" Background="#101516" BorderBrush="#2B3638" BorderThickness="1">
+                      <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding ResourceTaskDiagnostics.Summary}" FontSize="13" FontWeight="SemiBold" />
+                        <ItemsControl ItemsSource="{Binding ResourceTaskDiagnostics.Lines}">
+                          <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                              <TextBlock Text="{Binding}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.7" />
+                            </DataTemplate>
+                          </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                      </StackPanel>
+                    </Border>
                     <ItemsControl ItemsSource="{Binding ResourceTasks}">
                       <ItemsControl.ItemTemplate>
                         <DataTemplate>

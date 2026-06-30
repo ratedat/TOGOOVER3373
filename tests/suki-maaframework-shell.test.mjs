@@ -40,6 +40,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const adbPresets = await fs.readFile("apps/rhodes-suki/Services/RhodesAdbPresetCatalog.cs", "utf8");
   const adbDeviceProbe = await fs.readFile("apps/rhodes-suki/Services/RhodesAdbDeviceProbe.cs", "utf8");
   const settingsStore = await fs.readFile("apps/rhodes-suki/Services/RhodesSukiSettingsStore.cs", "utf8");
+  const diagnostics = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaTaskDiagnostics.cs", "utf8");
   const resultPreview = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaResultPreview.cs", "utf8");
   const models = await fs.readFile("apps/rhodes-suki/Models/MaaSessionModels.cs", "utf8");
   const viewModel = await fs.readFile("apps/rhodes-suki/ViewModels/MainWindowViewModel.cs", "utf8");
@@ -68,6 +69,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(adbDeviceProbe, /ParseDevices/);
   assert.match(settingsStore, /suki-settings\.json/);
   assert.match(settingsStore, /RhodesSukiSettings/);
+  assert.match(diagnostics, /RhodesMaaTaskDiagnostics/);
+  assert.match(diagnostics, /RhodesMaaResultPreview\.FromTaskResults/);
   assert.match(resultPreview, /FromTaskResults/);
   assert.match(resultPreview, /best_result/);
   assert.match(resultPreview, /filtered_results/);
@@ -86,6 +89,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /ApplyAdbDeviceCommand/);
   assert.match(viewModel, /SaveSettingsCommand/);
   assert.match(viewModel, /LoadSettings/);
+  assert.match(viewModel, /ResourceTaskDiagnostics/);
   assert.match(viewModel, /RunAllProbesCommand/);
   assert.match(viewModel, /RunSelectedProfileRecognitionCommand/);
   assert.match(viewModel, /RunAllResourceTasksCommand/);
@@ -146,6 +150,7 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /ResourceProfiles/);
   assert.match(xaml, /ConvertResourceTaskResultsCommand/);
   assert.match(xaml, /CandidateResults/);
+  assert.match(xaml, /ResourceTaskDiagnostics/);
   assert.match(xaml, /RhodesApiUrl/);
   assert.match(xaml, /RunProbeCommand/);
   assert.match(xaml, /ResourceTaskResults/);
