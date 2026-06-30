@@ -49,13 +49,25 @@
                 <TextBlock Text="Google Play Games / MuMu / 通常ADBをここから手動検証します。" TextWrapping="Wrap" Opacity="0.72" />
               </StackPanel>
 
-              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="110,*" RowSpacing="8" ColumnSpacing="10">
-                <TextBlock Text="ADB" VerticalAlignment="Center" Opacity="0.72" />
-                <TextBox Grid.Column="1" Text="{Binding AdbPath, Mode=TwoWay}" />
-                <TextBlock Grid.Row="1" Text="Serial" VerticalAlignment="Center" Opacity="0.72" />
-                <TextBox Grid.Row="1" Grid.Column="1" Text="{Binding AdbSerial, Mode=TwoWay}" PlaceholderText="127.0.0.1:16384 / emulator-5554 など" />
-                <TextBlock Grid.Row="2" Text="Config JSON" VerticalAlignment="Center" Opacity="0.72" />
-                <TextBox Grid.Row="2" Grid.Column="1" Text="{Binding AdbConfigJson, Mode=TwoWay}" />
+              <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="110,*,Auto" RowSpacing="8" ColumnSpacing="10">
+                <TextBlock Text="プリセット" VerticalAlignment="Center" Opacity="0.72" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding AdbPresets}" SelectedItem="{Binding SelectedAdbPreset, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding DisplayName}" />
+                        <TextBlock Text="{Binding PathSummary}" FontSize="11" Opacity="0.58" />
+                      </StackPanel>
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <Button Grid.Column="2" Content="適用" Command="{Binding ApplyAdbPresetCommand}" CommandParameter="{Binding SelectedAdbPreset}" />
+                <TextBlock Grid.Row="1" Text="ADB" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AdbPath, Mode=TwoWay}" />
+                <TextBlock Grid.Row="2" Text="Serial" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AdbSerial, Mode=TwoWay}" PlaceholderText="127.0.0.1:16384 / emulator-5554 など" />
+                <TextBlock Grid.Row="3" Text="Config JSON" VerticalAlignment="Center" Opacity="0.72" />
+                <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AdbConfigJson, Mode=TwoWay}" />
               </Grid>
 
               <StackPanel Orientation="Horizontal" Spacing="8">

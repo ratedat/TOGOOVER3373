@@ -7,6 +7,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA OCR filtered_results are preferred over all_results", OcrFilteredResults),
     ("MAA TemplateMatch count becomes a template candidate", TemplateCount),
     ("MAA hit without detail falls back to a simple candidate", HitFallback),
+    ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
 };
 
 var failures = new List<string>();
@@ -109,6 +110,16 @@ static void HitFallback()
     Equal(1, previews.Count, "preview count");
     Equal("maa", previews[0].Kind, "kind");
     Equal("hit", previews[0].Value, "value");
+}
+
+static void AdbPresets()
+{
+    var presets = RhodesAdbPresetCatalog.DefaultPresets();
+    var mumu = presets.Single(preset => preset.Id == "mumu");
+    var googlePlay = presets.Single(preset => preset.Id == "google-play-games-dev");
+
+    Equal("127.0.0.1:16384", mumu.Serial, "MuMu serial");
+    Equal("127.0.0.1:6520", googlePlay.Serial, "Google Play Games developer serial");
 }
 
 static void Equal<T>(T expected, T actual, string label)

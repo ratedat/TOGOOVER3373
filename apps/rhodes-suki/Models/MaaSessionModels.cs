@@ -16,6 +16,18 @@ public sealed record MaaSessionOptions(
     AdbInputMethods InputMethod,
     AdbScreencapMethods ScreencapMethod);
 
+public sealed record MaaAdbPresetPreview(
+    string Id,
+    string Label,
+    string Description,
+    string AdbPath,
+    string Serial)
+{
+    public string DisplayName => string.IsNullOrWhiteSpace(Serial) ? Label : $"{Label} ({Serial})";
+
+    public string PathSummary => string.IsNullOrWhiteSpace(AdbPath) ? "adb" : AdbPath;
+}
+
 public sealed record MaaSessionSnapshot(
     string State,
     string Detail,

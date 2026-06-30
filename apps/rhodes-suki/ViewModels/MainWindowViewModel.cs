@@ -23,6 +23,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _lastCapturePath = "";
     private string _rhodesApiUrl = "http://127.0.0.1:5173";
     private string _statusMessage = "MAAFramework の検証準備ができています。";
+    private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
     private bool _isBusy;
 
@@ -54,6 +55,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         ProbePayloads = new ObservableCollection<MaaProbePayloadPreview>(Services.RhodesRecognitionProbe.DefaultPayloads());
         ProbeResults = [];
+        AdbPresets = new ObservableCollection<MaaAdbPresetPreview>(RhodesAdbPresetCatalog.DefaultPresets());
+        SelectedAdbPreset = AdbPresets.FirstOrDefault(preset => preset.Id == "auto") ?? AdbPresets.FirstOrDefault();
         _allResourceTasks = RhodesMaaResourceCatalog.DefaultTasks();
         ResourceProfiles = new ObservableCollection<MaaResourceProfilePreview>(RhodesMaaResourceCatalog.ProfileGroups(_allResourceTasks));
         ResourceTasks = [];
@@ -64,6 +67,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         AgentBinaryRoot = sessionSnapshot.AgentBinaryRoot;
 
         ConnectCommand = new AsyncRelayCommand(ConnectAsync);
+        ApplyAdbPresetCommand = new AsyncRelayCommand(parameter => ApplyAdbPresetAsync(parameter as MaaAdbPresetPreview));
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
         RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
@@ -88,6 +92,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaProbePayloadPreview> ProbePayloads { get; }
 
     public ObservableCollection<MaaProbeResult> ProbeResults { get; }
+
+    public ObservableCollection<MaaAdbPresetPreview> AdbPresets { get; }
 
     public ObservableCollection<MaaResourceProfilePreview> ResourceProfiles { get; }
 
@@ -157,6 +163,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         private set => SetProperty(ref _statusMessage, value);
     }
 
+    public MaaAdbPresetPreview? SelectedAdbPreset
+    {
+        get => _selectedAdbPreset;
+        set => SetProperty(ref _selectedAdbPreset, value);
+    }
+
     public MaaResourceProfilePreview? SelectedResourceProfile
     {
         get => _selectedResourceProfile;
@@ -175,6 +187,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     }
 
     public ICommand ConnectCommand { get; }
+
+    public ICommand ApplyAdbPresetCommand { get; }
 
     public ICommand CaptureCommand { get; }
 
@@ -207,6 +221,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             SessionDetail = snapshot.Detail;
             StatusMessage = snapshot.IsReady ? "接続しました。" : "接続できませんでした。設定を確認してください。";
         });
+    }
+
+    private Task ApplyAdbPresetAsync(MaaAdbPresetPreview? preset)
+    {
+        if (preset is null)
+        {
+            StatusMessage = "ADBプリセットが選択されていません。";
+            return Task.CompletedTask;
+        }
+
+        if (!string.IsNullOrWhiteSpace(preset.AdbPath))
+            AdbPath = preset.AdbPath;
+
+        AdbSerial = preset.Serial;
+        StatusMessage = $"ADBプリセットを適用しました: {preset.DisplayName}";
+        return Task.CompletedTask;
     }
 
     private async Task CaptureAsync()
