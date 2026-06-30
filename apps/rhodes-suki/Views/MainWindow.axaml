@@ -19,6 +19,13 @@
         <TextBlock Text="{Binding Subtitle}" FontSize="13" Opacity="0.68" />
       </StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+        <ComboBox Width="280" ItemsSource="{Binding Campaigns}" SelectedItem="{Binding SelectedCampaign, Mode=TwoWay}">
+          <ComboBox.ItemTemplate>
+            <DataTemplate>
+              <TextBlock Text="{Binding DisplayName}" />
+            </DataTemplate>
+          </ComboBox.ItemTemplate>
+        </ComboBox>
         <Border CornerRadius="5" Padding="10,6" Background="#121A1B" BorderBrush="#2B3638" BorderThickness="1">
           <TextBlock Text="{Binding BaseResolution.AspectRatioLabel}" FontSize="12" />
         </Border>
@@ -124,62 +131,155 @@
       </Border>
 
       <Border Grid.Column="1" CornerRadius="8" Padding="14" Background="#111718" BorderBrush="#2B3638" BorderThickness="1">
-        <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10">
-          <Grid ColumnDefinitions="Auto,230,*,Auto" ColumnSpacing="10">
-            <TextBlock Text="認識タスク" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
-            <ComboBox Grid.Column="1" ItemsSource="{Binding ResourceProfiles}" SelectedItem="{Binding SelectedResourceProfile, Mode=TwoWay}">
-              <ComboBox.ItemTemplate>
-                <DataTemplate>
-                  <TextBlock Text="{Binding DisplayName}" />
-                </DataTemplate>
-              </ComboBox.ItemTemplate>
-            </ComboBox>
-            <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
-              <Button Content="認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
-              <Button Content="全実行" Command="{Binding RunAllResourceTasksCommand}" />
-              <Button Content="JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
-            </StackPanel>
-          </Grid>
-
-          <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
-            <TextBlock Text="候補化API" FontSize="12" VerticalAlignment="Center" Opacity="0.66" />
-            <TextBox Grid.Column="1" Text="{Binding RhodesApiUrl, Mode=TwoWay}" />
-            <Button Grid.Column="2" Content="候補化" Command="{Binding ConvertResourceTaskResultsCommand}" />
-          </Grid>
-
-          <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+        <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12">
+          <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
             <StackPanel Spacing="2">
-              <TextBlock Text="プロファイル" FontSize="11" Opacity="0.58" />
-              <TextBlock Text="{Binding SelectedResourceProfile.ProfileSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
+              <TextBlock Text="ラン作業" FontSize="18" FontWeight="SemiBold" />
+              <TextBlock Text="{Binding RunContextSummary}" FontSize="12" Opacity="0.68" />
             </StackPanel>
-            <StackPanel Grid.Column="1" Spacing="2">
-              <TextBlock Text="定義元" FontSize="11" Opacity="0.58" />
-              <TextBlock Text="{Binding SelectedResourceProfile.SourceSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+              <Button Content="オペレーター" Command="{Binding SetChoiceTabCommand}" CommandParameter="operators" />
+              <Button Content="秘宝" Command="{Binding SetChoiceTabCommand}" CommandParameter="relics" />
+              <Button Content="認識タスク" Command="{Binding SetChoiceTabCommand}" CommandParameter="recognition" />
+              <Button Content="表示中の選択解除" Command="{Binding ClearVisibleChoicesCommand}" />
             </StackPanel>
           </Grid>
 
-          <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
-            <ItemsControl ItemsSource="{Binding ResourceTasks}">
-              <ItemsControl.ItemTemplate>
-                <DataTemplate>
-                  <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
-                    <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="12" RowSpacing="5">
-                      <StackPanel Spacing="2">
-                        <TextBlock Text="{Binding Label}" FontSize="14" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.66" />
-                      </StackPanel>
-                      <Button Grid.Column="1" Grid.RowSpan="3" Content="実行" Command="{Binding DataContext.RunResourceTaskCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
-                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Entry}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
-                      <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
-                        <TextBlock Text="{Binding SourceSummary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.56" />
-                        <TextBlock Grid.Column="1" Text="{Binding ProfileSummary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.56" />
-                      </Grid>
-                    </Grid>
-                  </Border>
-                </DataTemplate>
-              </ItemsControl.ItemTemplate>
-            </ItemsControl>
-          </ScrollViewer>
+          <Border Grid.Row="1" CornerRadius="6" Padding="10,8" Background="#121A1B" BorderBrush="#2B3638" BorderThickness="1">
+            <TextBlock Text="{Binding ChoicePanelTitle}" FontSize="13" FontWeight="SemiBold" />
+          </Border>
+
+          <Grid Grid.Row="2">
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10" IsVisible="{Binding IsOperatorsPanelVisible}">
+              <Grid ColumnDefinitions="*,110,145,145" ColumnSpacing="8">
+                <TextBox Text="{Binding OperatorSearch, Mode=TwoWay}" PlaceholderText="名前、職業、職分、タグで検索" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding OperatorRarityOptions}" SelectedItem="{Binding OperatorRarityFilter, Mode=TwoWay}" />
+                <ComboBox Grid.Column="2" ItemsSource="{Binding OperatorClassOptions}" SelectedItem="{Binding OperatorClassFilter, Mode=TwoWay}" />
+                <ComboBox Grid.Column="3" ItemsSource="{Binding OperatorBranchOptions}" SelectedItem="{Binding OperatorBranchFilter, Mode=TwoWay}" />
+              </Grid>
+
+              <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="14">
+                <TextBlock Text="{Binding OperatorListSummary}" FontSize="12" VerticalAlignment="Center" Opacity="0.72" />
+                <CheckBox Grid.Column="1" Content="優先表示" IsChecked="{Binding OperatorShowSelectedFirst, Mode=TwoWay}" />
+                <CheckBox Grid.Column="2" Content="除外を隠す" IsChecked="{Binding OperatorHideExcluded, Mode=TwoWay}" />
+                <CheckBox Grid.Column="3" Content="選択のみ" IsChecked="{Binding OperatorSelectedOnly, Mode=TwoWay}" />
+              </Grid>
+
+              <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding FilteredOperators}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,82,88" ColumnSpacing="8">
+                          <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Heading}" FontSize="12" Opacity="0.66" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Content="{Binding SelectionButtonLabel}" Command="{Binding DataContext.ToggleChoiceSelectedCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                          <Button Grid.Column="2" Content="{Binding ExclusionButtonLabel}" Command="{Binding DataContext.ToggleChoiceExcludedCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                          <TextBlock Grid.Row="1" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
+                          <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding StateLabel}" FontSize="11" HorizontalAlignment="Right" Opacity="0.7" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+
+            <Grid RowDefinitions="Auto,Auto,*" RowSpacing="10" IsVisible="{Binding IsRelicsPanelVisible}">
+              <Grid ColumnDefinitions="*,260" ColumnSpacing="8">
+                <TextBox Text="{Binding RelicSearch, Mode=TwoWay}" PlaceholderText="秘宝名、番号、効果で検索" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding RelicCategoryOptions}" SelectedItem="{Binding RelicCategoryFilter, Mode=TwoWay}" />
+              </Grid>
+
+              <Grid Grid.Row="1" ColumnDefinitions="*,Auto,Auto,Auto" ColumnSpacing="14">
+                <TextBlock Text="{Binding RelicListSummary}" FontSize="12" VerticalAlignment="Center" Opacity="0.72" />
+                <CheckBox Grid.Column="1" Content="優先表示" IsChecked="{Binding RelicShowSelectedFirst, Mode=TwoWay}" />
+                <CheckBox Grid.Column="2" Content="除外を隠す" IsChecked="{Binding RelicHideExcluded, Mode=TwoWay}" />
+                <CheckBox Grid.Column="3" Content="選択のみ" IsChecked="{Binding RelicSelectedOnly, Mode=TwoWay}" />
+              </Grid>
+
+              <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding FilteredRelics}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,82,88" ColumnSpacing="8">
+                          <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Heading}" FontSize="12" Opacity="0.66" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Content="{Binding SelectionButtonLabel}" Command="{Binding DataContext.ToggleChoiceSelectedCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                          <Button Grid.Column="2" Content="{Binding ExclusionButtonLabel}" Command="{Binding DataContext.ToggleChoiceExcludedCommand, ElementName=Root}" CommandParameter="{Binding}" />
+                          <TextBlock Grid.Row="1" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
+                          <TextBlock Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding StateLabel}" FontSize="11" HorizontalAlignment="Right" Opacity="0.7" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+
+            <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10" IsVisible="{Binding IsRecognitionPanelVisible}">
+              <Grid ColumnDefinitions="Auto,230,*,Auto" ColumnSpacing="10">
+                <TextBlock Text="認識タスク" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                <ComboBox Grid.Column="1" ItemsSource="{Binding ResourceProfiles}" SelectedItem="{Binding SelectedResourceProfile, Mode=TwoWay}">
+                  <ComboBox.ItemTemplate>
+                    <DataTemplate>
+                      <TextBlock Text="{Binding DisplayName}" />
+                    </DataTemplate>
+                  </ComboBox.ItemTemplate>
+                </ComboBox>
+                <StackPanel Grid.Column="3" Orientation="Horizontal" Spacing="8">
+                  <Button Content="認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
+                  <Button Content="全実行" Command="{Binding RunAllResourceTasksCommand}" />
+                  <Button Content="JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
+                </StackPanel>
+              </Grid>
+
+              <Grid Grid.Row="1" ColumnDefinitions="Auto,*,Auto" ColumnSpacing="8">
+                <TextBlock Text="候補化API" FontSize="12" VerticalAlignment="Center" Opacity="0.66" />
+                <TextBox Grid.Column="1" Text="{Binding RhodesApiUrl, Mode=TwoWay}" />
+                <Button Grid.Column="2" Content="候補化" Command="{Binding ConvertResourceTaskResultsCommand}" />
+              </Grid>
+
+              <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="10">
+                <StackPanel Spacing="2">
+                  <TextBlock Text="プロファイル" FontSize="11" Opacity="0.58" />
+                  <TextBlock Text="{Binding SelectedResourceProfile.ProfileSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Spacing="2">
+                  <TextBlock Text="定義元" FontSize="11" Opacity="0.58" />
+                  <TextBlock Text="{Binding SelectedResourceProfile.SourceSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
+                </StackPanel>
+              </Grid>
+
+              <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding ResourceTasks}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border CornerRadius="6" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="12" RowSpacing="5">
+                          <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding Label}" FontSize="14" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Purpose}" FontSize="12" TextWrapping="Wrap" Opacity="0.66" />
+                          </StackPanel>
+                          <Button Grid.Column="1" Grid.RowSpan="3" Content="実行" Command="{Binding DataContext.RunResourceTaskCommand, ElementName=Root}" CommandParameter="{Binding}" VerticalAlignment="Center" />
+                          <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Entry}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.58" />
+                          <Grid Grid.Row="2" Grid.ColumnSpan="2" ColumnDefinitions="*,*" ColumnSpacing="8">
+                            <TextBlock Text="{Binding SourceSummary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.56" />
+                            <TextBlock Grid.Column="1" Text="{Binding ProfileSummary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.56" />
+                          </Grid>
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+          </Grid>
         </Grid>
       </Border>
 

@@ -14,10 +14,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 {
     private readonly RhodesMaaSession _session;
     private readonly IReadOnlyList<MaaResourceTaskPreview> _allResourceTasks;
+    private readonly IReadOnlyList<SukiChoiceItem> _allOperators;
+    private readonly IReadOnlyList<SukiChoiceItem> _allRelics;
     private byte[] _lastCapture = [];
     private string _adbPath = "adb";
     private string _adbSerial = "";
     private string _adbConfigJson = "{}";
+    private string _choiceTab = "operators";
+    private string _operatorSearch = "";
+    private string _operatorRarityFilter = "すべて";
+    private string _operatorClassFilter = "すべて";
+    private string _operatorBranchFilter = "すべて";
+    private string _relicSearch = "";
+    private string _relicCategoryFilter = "すべて";
     private string _sessionState;
     private string _sessionDetail;
     private string _captureState = "未取得";
@@ -27,7 +36,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private Bitmap? _lastCaptureImage;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
+    private SukiCampaignPreview? _selectedCampaign;
     private MaaTaskDiagnosticsSnapshot _resourceTaskDiagnostics = MaaTaskDiagnosticsSnapshot.Empty;
+    private bool _operatorShowSelectedFirst;
+    private bool _operatorHideExcluded;
+    private bool _operatorSelectedOnly;
+    private bool _relicShowSelectedFirst;
+    private bool _relicHideExcluded;
+    private bool _relicSelectedOnly;
     private bool _isBusy;
 
     public MainWindowViewModel(
@@ -56,11 +72,28 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             "Electron/Tauri版の機能をSukiUI版へ順次移植",
         ];
 
+        var runCatalog = RhodesRunCatalog.LoadDefault();
         ProbePayloads = new ObservableCollection<MaaProbePayloadPreview>(Services.RhodesRecognitionProbe.DefaultPayloads());
         ProbeResults = [];
         AdbPresets = new ObservableCollection<MaaAdbPresetPreview>(RhodesAdbPresetCatalog.DefaultPresets());
         AdbDevices = [];
         SelectedAdbPreset = AdbPresets.FirstOrDefault(preset => preset.Id == "auto") ?? AdbPresets.FirstOrDefault();
+        Campaigns = new ObservableCollection<SukiCampaignPreview>(runCatalog.Campaigns);
+        _allOperators = runCatalog.Operators;
+        _allRelics = runCatalog.Relics;
+        FilteredOperators = [];
+        FilteredRelics = [];
+        OperatorRarityOptions = [];
+        OperatorClassOptions = [];
+        OperatorBranchOptions = [];
+        RelicCategoryOptions = [];
+        _operatorShowSelectedFirst = runCatalog.Current.OperatorShowSelectedFirst;
+        _operatorHideExcluded = runCatalog.Current.OperatorHideExcluded;
+        _operatorSelectedOnly = runCatalog.Current.OperatorSelectedOnly;
+        _relicShowSelectedFirst = runCatalog.Current.RelicShowSelectedFirst;
+        _relicHideExcluded = runCatalog.Current.RelicHideExcluded;
+        _relicSelectedOnly = runCatalog.Current.RelicSelectedOnly;
+        _selectedCampaign = Campaigns.FirstOrDefault(campaign => campaign.Id == runCatalog.Current.CampaignId) ?? Campaigns.FirstOrDefault();
         _allResourceTasks = RhodesMaaResourceCatalog.DefaultTasks();
         ResourceProfiles = new ObservableCollection<MaaResourceProfilePreview>(RhodesMaaResourceCatalog.ProfileGroups(_allResourceTasks));
         ResourceTasks = [];
@@ -83,7 +116,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
         RunProbeCommand = new AsyncRelayCommand(parameter => RunProbeAsync(parameter as MaaProbePayloadPreview));
         RunResourceTaskCommand = new AsyncRelayCommand(parameter => RunResourceTaskAsync(parameter as MaaResourceTaskPreview));
+        SetChoiceTabCommand = new AsyncRelayCommand(SetChoiceTabAsync);
+        ToggleChoiceSelectedCommand = new AsyncRelayCommand(ToggleChoiceSelectedAsync);
+        ToggleChoiceExcludedCommand = new AsyncRelayCommand(ToggleChoiceExcludedAsync);
+        ClearVisibleChoicesCommand = new AsyncRelayCommand(ClearVisibleChoicesAsync);
         SelectedResourceProfile = ResourceProfiles.FirstOrDefault(profile => profile.Id == "runStatusFull") ?? ResourceProfiles.FirstOrDefault();
+        RefreshOperatorFilterOptions();
+        RefreshRelicFilterOptions();
+        RefreshChoiceLists();
         LoadSettings();
     }
 
@@ -104,6 +144,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaAdbPresetPreview> AdbPresets { get; }
 
     public ObservableCollection<MaaAdbDevicePreview> AdbDevices { get; }
+
+    public ObservableCollection<SukiCampaignPreview> Campaigns { get; }
+
+    public ObservableCollection<SukiChoiceItem> FilteredOperators { get; }
+
+    public ObservableCollection<SukiChoiceItem> FilteredRelics { get; }
+
+    public ObservableCollection<string> OperatorRarityOptions { get; }
+
+    public ObservableCollection<string> OperatorClassOptions { get; }
+
+    public ObservableCollection<string> OperatorBranchOptions { get; }
+
+    public ObservableCollection<string> RelicCategoryOptions { get; }
 
     public ObservableCollection<MaaResourceProfilePreview> ResourceProfiles { get; }
 
@@ -141,6 +195,202 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _adbConfigJson;
         set => SetProperty(ref _adbConfigJson, string.IsNullOrWhiteSpace(value) ? "{}" : value);
+    }
+
+    public SukiCampaignPreview? SelectedCampaign
+    {
+        get => _selectedCampaign;
+        set
+        {
+            if (!SetProperty(ref _selectedCampaign, value))
+                return;
+            RefreshRelicFilterOptions();
+            RefreshChoiceLists();
+            OnPropertyChanged(nameof(RunContextSummary));
+        }
+    }
+
+    public string ChoiceTab
+    {
+        get => _choiceTab;
+        private set
+        {
+            if (!SetProperty(ref _choiceTab, value))
+                return;
+            OnPropertyChanged(nameof(IsOperatorsPanelVisible));
+            OnPropertyChanged(nameof(IsRelicsPanelVisible));
+            OnPropertyChanged(nameof(IsRecognitionPanelVisible));
+            OnPropertyChanged(nameof(ChoicePanelTitle));
+        }
+    }
+
+    public bool IsOperatorsPanelVisible => ChoiceTab == "operators";
+
+    public bool IsRelicsPanelVisible => ChoiceTab == "relics";
+
+    public bool IsRecognitionPanelVisible => ChoiceTab == "recognition";
+
+    public string ChoicePanelTitle => ChoiceTab switch
+    {
+        "relics" => "秘宝",
+        "recognition" => "認識タスク",
+        _ => "オペレーター",
+    };
+
+    public string RunContextSummary
+    {
+        get
+        {
+            var selectedOperators = _allOperators.Count(item => item.IsSelected);
+            var selectedRelics = _allRelics.Count(item => item.CampaignId == SelectedCampaign?.Id && item.IsSelected);
+            return $"{SelectedCampaign?.DisplayName ?? "IS未選択"} / 招集{selectedOperators}名 / 秘宝{selectedRelics}件";
+        }
+    }
+
+    public string OperatorListSummary => $"{FilteredOperators.Count}件 / 招集{_allOperators.Count(item => item.IsSelected)}名";
+
+    public string RelicListSummary
+    {
+        get
+        {
+            var selected = _allRelics.Count(item => item.CampaignId == SelectedCampaign?.Id && item.IsSelected);
+            var total = _allRelics.Count(item => item.CampaignId == SelectedCampaign?.Id);
+            return $"{FilteredRelics.Count}件 / 所持{selected}件 / IS内{total}件";
+        }
+    }
+
+    public string OperatorSearch
+    {
+        get => _operatorSearch;
+        set
+        {
+            if (!SetProperty(ref _operatorSearch, value ?? ""))
+                return;
+            RefreshOperatorChoices();
+        }
+    }
+
+    public string OperatorRarityFilter
+    {
+        get => _operatorRarityFilter;
+        set
+        {
+            if (!SetProperty(ref _operatorRarityFilter, string.IsNullOrWhiteSpace(value) ? "すべて" : value))
+                return;
+            RefreshOperatorFilterOptions();
+            RefreshOperatorChoices();
+        }
+    }
+
+    public string OperatorClassFilter
+    {
+        get => _operatorClassFilter;
+        set
+        {
+            if (!SetProperty(ref _operatorClassFilter, string.IsNullOrWhiteSpace(value) ? "すべて" : value))
+                return;
+            RefreshOperatorFilterOptions();
+            RefreshOperatorChoices();
+        }
+    }
+
+    public string OperatorBranchFilter
+    {
+        get => _operatorBranchFilter;
+        set
+        {
+            if (!SetProperty(ref _operatorBranchFilter, string.IsNullOrWhiteSpace(value) ? "すべて" : value))
+                return;
+            RefreshOperatorChoices();
+        }
+    }
+
+    public bool OperatorShowSelectedFirst
+    {
+        get => _operatorShowSelectedFirst;
+        set
+        {
+            if (!SetProperty(ref _operatorShowSelectedFirst, value))
+                return;
+            RefreshOperatorChoices();
+        }
+    }
+
+    public bool OperatorHideExcluded
+    {
+        get => _operatorHideExcluded;
+        set
+        {
+            if (!SetProperty(ref _operatorHideExcluded, value))
+                return;
+            RefreshOperatorChoices();
+        }
+    }
+
+    public bool OperatorSelectedOnly
+    {
+        get => _operatorSelectedOnly;
+        set
+        {
+            if (!SetProperty(ref _operatorSelectedOnly, value))
+                return;
+            RefreshOperatorChoices();
+        }
+    }
+
+    public string RelicSearch
+    {
+        get => _relicSearch;
+        set
+        {
+            if (!SetProperty(ref _relicSearch, value ?? ""))
+                return;
+            RefreshRelicChoices();
+        }
+    }
+
+    public string RelicCategoryFilter
+    {
+        get => _relicCategoryFilter;
+        set
+        {
+            if (!SetProperty(ref _relicCategoryFilter, string.IsNullOrWhiteSpace(value) ? "すべて" : value))
+                return;
+            RefreshRelicChoices();
+        }
+    }
+
+    public bool RelicShowSelectedFirst
+    {
+        get => _relicShowSelectedFirst;
+        set
+        {
+            if (!SetProperty(ref _relicShowSelectedFirst, value))
+                return;
+            RefreshRelicChoices();
+        }
+    }
+
+    public bool RelicHideExcluded
+    {
+        get => _relicHideExcluded;
+        set
+        {
+            if (!SetProperty(ref _relicHideExcluded, value))
+                return;
+            RefreshRelicChoices();
+        }
+    }
+
+    public bool RelicSelectedOnly
+    {
+        get => _relicSelectedOnly;
+        set
+        {
+            if (!SetProperty(ref _relicSelectedOnly, value))
+                return;
+            RefreshRelicChoices();
+        }
     }
 
     public string SessionState
@@ -234,6 +484,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RunResourceTaskCommand { get; }
 
+    public ICommand SetChoiceTabCommand { get; }
+
+    public ICommand ToggleChoiceSelectedCommand { get; }
+
+    public ICommand ToggleChoiceExcludedCommand { get; }
+
+    public ICommand ClearVisibleChoicesCommand { get; }
+
     public void Dispose()
     {
         _lastCaptureImage?.Dispose();
@@ -276,6 +534,59 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 SelectedResourceProfile?.Id ?? "runStatusFull"));
             StatusMessage = $"Suki設定を保存しました: {RhodesSukiSettingsStore.DefaultPath}";
         });
+    }
+
+    private Task SetChoiceTabAsync(object? parameter)
+    {
+        var tab = parameter as string;
+        ChoiceTab = tab is "operators" or "relics" or "recognition" ? tab : "operators";
+        StatusMessage = $"{ChoicePanelTitle}を表示しています。";
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleChoiceSelectedAsync(object? parameter)
+    {
+        if (parameter is not SukiChoiceItem item)
+            return Task.CompletedTask;
+
+        item.IsSelected = !item.IsSelected;
+        if (item.IsSelected)
+            item.IsExcluded = false;
+        RefreshChoiceLists();
+        StatusMessage = $"{item.Name}: {(item.IsSelected ? "選択しました。" : "選択を解除しました。")}";
+        return Task.CompletedTask;
+    }
+
+    private Task ToggleChoiceExcludedAsync(object? parameter)
+    {
+        if (parameter is not SukiChoiceItem item)
+            return Task.CompletedTask;
+
+        item.IsExcluded = !item.IsExcluded;
+        if (item.IsExcluded)
+            item.IsSelected = false;
+        RefreshChoiceLists();
+        StatusMessage = $"{item.Name}: {(item.IsExcluded ? "表示除外にしました。" : "表示除外を解除しました。")}";
+        return Task.CompletedTask;
+    }
+
+    private Task ClearVisibleChoicesAsync()
+    {
+        if (ChoiceTab == "recognition")
+        {
+            StatusMessage = "認識タスクには手動選択がありません。";
+            return Task.CompletedTask;
+        }
+
+        var target = ChoiceTab == "relics" ? FilteredRelics : FilteredOperators;
+        foreach (var item in target)
+        {
+            item.IsSelected = false;
+        }
+
+        RefreshChoiceLists();
+        StatusMessage = $"{ChoicePanelTitle}の表示中選択を解除しました。";
+        return Task.CompletedTask;
     }
 
     private Task ApplyAdbPresetAsync(MaaAdbPresetPreview? preset)
@@ -522,6 +833,110 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         foreach (var task in _allResourceTasks.Where(task => RhodesMaaResourceCatalog.TaskAppliesToProfile(task, SelectedResourceProfile?.Id)))
         {
             ResourceTasks.Add(task);
+        }
+    }
+
+    private void RefreshChoiceLists()
+    {
+        RefreshOperatorChoices();
+        RefreshRelicChoices();
+        OnPropertyChanged(nameof(RunContextSummary));
+    }
+
+    private void RefreshOperatorChoices()
+    {
+        ReplaceCollection(
+            FilteredOperators,
+            RhodesChoiceFilter.Apply(
+                _allOperators,
+                new SukiChoiceFilterOptions(
+                    SearchText: OperatorSearch,
+                    OperatorClass: OperatorClassFilter,
+                    OperatorBranch: OperatorBranchFilter,
+                    Rarity: OperatorRarityFilter,
+                    ShowSelectedFirst: OperatorShowSelectedFirst,
+                    HideExcluded: OperatorHideExcluded,
+                    SelectedOnly: OperatorSelectedOnly)));
+        OnPropertyChanged(nameof(OperatorListSummary));
+        OnPropertyChanged(nameof(RunContextSummary));
+    }
+
+    private void RefreshRelicChoices()
+    {
+        ReplaceCollection(
+            FilteredRelics,
+            RhodesChoiceFilter.Apply(
+                _allRelics,
+                new SukiChoiceFilterOptions(
+                    SearchText: RelicSearch,
+                    Category: RelicCategoryFilter,
+                    CampaignId: SelectedCampaign?.Id ?? "",
+                    ShowSelectedFirst: RelicShowSelectedFirst,
+                    HideExcluded: RelicHideExcluded,
+                    SelectedOnly: RelicSelectedOnly)));
+        OnPropertyChanged(nameof(RelicListSummary));
+        OnPropertyChanged(nameof(RunContextSummary));
+    }
+
+    private void RefreshOperatorFilterOptions()
+    {
+        var rarityBase = _allOperators.Where(item => !item.HiddenByDefault);
+        ReplaceCollection(OperatorRarityOptions, new[] { "すべて" }.Concat(
+            rarityBase.Select(item => item.Rarity)
+                .Where(item => item > 0)
+                .Distinct()
+                .OrderByDescending(item => item)
+                .Select(item => $"★{item}")));
+        EnsureFilterValue(ref _operatorRarityFilter, OperatorRarityOptions, nameof(OperatorRarityFilter));
+
+        var classBase = _allOperators.Where(item => !item.HiddenByDefault && RarityMatches(item));
+        ReplaceCollection(OperatorClassOptions, new[] { "すべて" }.Concat(
+            classBase.Select(item => item.OperatorClass)
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Distinct()
+                .Order(StringComparer.Ordinal)));
+        EnsureFilterValue(ref _operatorClassFilter, OperatorClassOptions, nameof(OperatorClassFilter));
+
+        var branchBase = classBase.Where(item => OperatorClassFilter == "すべて" || item.OperatorClass == OperatorClassFilter);
+        ReplaceCollection(OperatorBranchOptions, new[] { "すべて" }.Concat(
+            branchBase.Select(item => item.OperatorBranch)
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Distinct()
+                .Order(StringComparer.Ordinal)));
+        EnsureFilterValue(ref _operatorBranchFilter, OperatorBranchOptions, nameof(OperatorBranchFilter));
+    }
+
+    private void RefreshRelicFilterOptions()
+    {
+        ReplaceCollection(RelicCategoryOptions, new[] { "すべて" }.Concat(
+            _allRelics.Where(item => item.CampaignId == SelectedCampaign?.Id)
+                .Select(item => item.Category)
+                .Where(item => !string.IsNullOrWhiteSpace(item))
+                .Distinct()
+                .Order(StringComparer.Ordinal)));
+        EnsureFilterValue(ref _relicCategoryFilter, RelicCategoryOptions, nameof(RelicCategoryFilter));
+    }
+
+    private bool RarityMatches(SukiChoiceItem item)
+    {
+        return OperatorRarityFilter == "すべて" || item.Rarity.ToString() == OperatorRarityFilter.TrimStart('★');
+    }
+
+    private void EnsureFilterValue(ref string value, IEnumerable<string> options, string propertyName)
+    {
+        if (options.Contains(value))
+            return;
+
+        value = "すべて";
+        OnPropertyChanged(propertyName);
+    }
+
+    private static void ReplaceCollection<T>(ObservableCollection<T> target, IEnumerable<T> source)
+    {
+        target.Clear();
+        foreach (var item in source)
+        {
+            target.Add(item);
         }
     }
 

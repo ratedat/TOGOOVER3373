@@ -12,6 +12,8 @@ var tests = new (string Name, Action Run)[]
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
+    ("Run catalog loads campaigns, operators, relics, and current selections", RunCatalogLoadsChoices),
+    ("Choice filters support selected-first, hidden exclusions, and selected-only", ChoiceFilters),
 };
 
 var failures = new List<string>();
@@ -225,6 +227,45 @@ static void ResourceTaskSummary()
     Equal("profiles: manual", manual.ProfileSummary, "manual profiles");
     Equal("source: maa-tasks.ocrRegions", generated.SourceSummary, "generated source");
     Equal("profiles: runStatusFull, operatorsFull", generated.ProfileSummary, "generated profiles");
+}
+
+static void RunCatalogLoadsChoices()
+{
+    var catalog = RhodesRunCatalog.LoadDefault();
+    var is5 = catalog.Campaigns.Single(campaign => campaign.Id == "is5_sarkaz");
+    var is5Relics = catalog.Relics.Where(relic => relic.CampaignId == is5.Id).ToArray();
+
+    Equal(5, catalog.Campaigns.Count, "campaign count");
+    Equal("IS#5 サルカズの炉辺奇談", is5.DisplayName, "campaign label");
+    Equal(true, catalog.Operators.Any(item => item.Name == "グム" && item.OperatorClass == "重装"), "operator data");
+    Equal(296, is5Relics.Length, "is5 relic count");
+    Equal(true, catalog.Current.SelectedRelicIds.Contains("is5_sarkaz_relic_254"), "current relic selection");
+    Equal("is5_sarkaz", catalog.Current.CampaignId, "current campaign");
+}
+
+static void ChoiceFilters()
+{
+    var items = new[]
+    {
+        new SukiChoiceItem("operator", "a", "テンニンカ", "★4 先鋒 / 旗手", "先鋒", "", "", "", 4, 0, false),
+        new SukiChoiceItem("operator", "b", "グム", "★4 重装 / 庇護衛士", "重装", "", "", "", 4, 1, false),
+        new SukiChoiceItem("operator", "c", "チューリップ", "★5 先鋒 / 先駆兵", "先鋒", "", "", "", 5, 2, true),
+    };
+    items[1].IsSelected = true;
+    items[2].IsExcluded = true;
+
+    var selectedFirst = RhodesChoiceFilter.Apply(items, new SukiChoiceFilterOptions(ShowSelectedFirst: true)).ToArray();
+    Equal("グム", selectedFirst[0].Name, "selected first");
+
+    var hiddenExcluded = RhodesChoiceFilter.Apply(items, new SukiChoiceFilterOptions(HideExcluded: true)).ToArray();
+    Equal(false, hiddenExcluded.Any(item => item.Name == "チューリップ"), "hide excluded");
+
+    var selectedOnly = RhodesChoiceFilter.Apply(items, new SukiChoiceFilterOptions(SelectedOnly: true)).ToArray();
+    Equal(1, selectedOnly.Length, "selected only count");
+    Equal("グム", selectedOnly[0].Name, "selected only item");
+
+    var searched = RhodesChoiceFilter.Apply(items, new SukiChoiceFilterOptions(SearchText: "旗手")).ToArray();
+    Equal("テンニンカ", searched.Single().Name, "search by detail");
 }
 
 static void Equal<T>(T expected, T actual, string label)

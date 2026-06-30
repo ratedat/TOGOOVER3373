@@ -13,6 +13,10 @@ test("Suki shell references SukiUI and Maa.Framework as the replacement desktop 
   assert.match(csproj, /resource\\base\\pipeline\\rhodes-generated\.json/);
   assert.match(csproj, /interface\.json/);
   assert.match(csproj, /assets\\recognition\\templates\\run\\\*\.png/);
+  assert.match(csproj, /data\\campaigns\.json/);
+  assert.match(csproj, /data\\operators\.json/);
+  assert.match(csproj, /data\\relics\.json/);
+  assert.match(csproj, /data\\current-state\.json/);
   assert.match(packageJson, /"maa:resource:generate": "node tools\/generate-maa-resource\.mjs"/);
   assert.match(packageJson, /"maa:resource:check": "node tools\/generate-maa-resource\.mjs --check"/);
   assert.match(packageJson, /"suki:test": "dotnet run --project tests\/rhodes-suki\/RhodesSuki\.ServiceTests\.csproj"/);
@@ -44,7 +48,10 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const settingsStore = await fs.readFile("apps/rhodes-suki/Services/RhodesSukiSettingsStore.cs", "utf8");
   const diagnostics = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaTaskDiagnostics.cs", "utf8");
   const resultPreview = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaResultPreview.cs", "utf8");
+  const runCatalog = await fs.readFile("apps/rhodes-suki/Services/RhodesRunCatalog.cs", "utf8");
+  const choiceFilter = await fs.readFile("apps/rhodes-suki/Services/RhodesChoiceFilter.cs", "utf8");
   const models = await fs.readFile("apps/rhodes-suki/Models/MaaSessionModels.cs", "utf8");
+  const runModels = await fs.readFile("apps/rhodes-suki/Models/RunCatalogModels.cs", "utf8");
   const viewModel = await fs.readFile("apps/rhodes-suki/ViewModels/MainWindowViewModel.cs", "utf8");
   const resource = await fs.readFile("apps/rhodes-suki/resource/base/pipeline/rhodes.json", "utf8");
   const generatedResource = await fs.readFile("apps/rhodes-suki/resource/base/pipeline/rhodes-generated.json", "utf8");
@@ -77,12 +84,24 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(resultPreview, /best_result/);
   assert.match(resultPreview, /filtered_results/);
   assert.match(resultPreview, /MaaCandidatePreview/);
+  assert.match(runCatalog, /campaigns\.json/);
+  assert.match(runCatalog, /operators\.json/);
+  assert.match(runCatalog, /relics\.json/);
+  assert.match(runCatalog, /current-state\.json/);
+  assert.match(runCatalog, /SukiRunStateSnapshot/);
+  assert.match(choiceFilter, /ShowSelectedFirst/);
+  assert.match(choiceFilter, /HideExcluded/);
+  assert.match(choiceFilter, /SelectedOnly/);
   assert.match(models, /MaaTaskDetailSnapshot/);
   assert.match(models, /MaaResourceProfilePreview/);
   assert.match(models, /MaaCandidatePreview/);
   assert.match(models, /ProfileIds/);
   assert.match(models, /SourceSummary/);
   assert.match(models, /RecognitionDetailJson/);
+  assert.match(runModels, /SukiCampaignPreview/);
+  assert.match(runModels, /SukiChoiceItem/);
+  assert.match(runModels, /SelectionButtonLabel/);
+  assert.match(runModels, /ExclusionButtonLabel/);
   assert.match(viewModel, /ConnectCommand/);
   assert.match(viewModel, /CaptureCommand/);
   assert.match(viewModel, /Bitmap/);
@@ -110,6 +129,12 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RunResourceTaskCommand/);
   assert.match(viewModel, /maa-resource-results/);
   assert.match(viewModel, /JsonSerializer\.Serialize/);
+  assert.match(viewModel, /Campaigns/);
+  assert.match(viewModel, /SelectedCampaign/);
+  assert.match(viewModel, /FilteredOperators/);
+  assert.match(viewModel, /FilteredRelics/);
+  assert.match(viewModel, /ToggleChoiceSelectedCommand/);
+  assert.match(viewModel, /ToggleChoiceExcludedCommand/);
   assert.match(resource, /RhodesRunStatusTopBarOcr/);
   assert.match(resource, /RhodesOperatorCodenameFlag/);
   assert.match(resource, /OperatorCardCodeNameFlag\.png/);
@@ -173,6 +198,20 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /ResourceTaskResults/);
   assert.match(xaml, /ProbeResults/);
   assert.match(xaml, /RecognitionDetailJson/);
+  assert.match(xaml, /Campaigns/);
+  assert.match(xaml, /SelectedCampaign/);
+  assert.match(xaml, /ラン作業/);
+  assert.match(xaml, /オペレーター/);
+  assert.match(xaml, /秘宝/);
+  assert.match(xaml, /認識タスク/);
+  assert.match(xaml, /FilteredOperators/);
+  assert.match(xaml, /FilteredRelics/);
+  assert.match(xaml, /OperatorSearch/);
+  assert.match(xaml, /RelicSearch/);
+  assert.match(xaml, /OperatorShowSelectedFirst/);
+  assert.match(xaml, /RelicShowSelectedFirst/);
+  assert.match(xaml, /ToggleChoiceSelectedCommand/);
+  assert.match(xaml, /ToggleChoiceExcludedCommand/);
 });
 
 test("MAAFramework roadmap records 1280x720 as a 16:9 base coordinate system", async () => {
@@ -184,4 +223,16 @@ test("MAAFramework roadmap records 1280x720 as a 16:9 base coordinate system", a
   assert.match(roadmap, /maa-resource-scan-runner\.js/);
   assert.match(roadmap, /MFAToolsPlus/);
   assert.match(notice, /SweetSmellFox\/MFAToolsPlus/);
+});
+
+test("Suki design docs require operational operator and relic UI", async () => {
+  const principles = await fs.readFile("docs/suki-workbench-design-principles.md", "utf8");
+  const stitch = await fs.readFile("docs/stitch-suki-workbench-brief.md", "utf8");
+
+  assert.match(principles, /Operational selection first/);
+  assert.match(principles, /Operator and relic tabs/);
+  assert.match(principles, /RhodesRunCatalog/);
+  assert.match(stitch, /Operator tab/);
+  assert.match(stitch, /Relic tab/);
+  assert.match(stitch, /IS campaign selected and switchable/);
 });
