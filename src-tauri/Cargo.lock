@@ -2400,6 +2400,7 @@ dependencies = [
 name = "rhodes-obs-commander3373-tauri"
 version = "0.1.0"
 dependencies = [
+ "serde",
  "tauri",
  "tauri-build",
  "url",

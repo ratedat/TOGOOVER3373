@@ -3,6 +3,8 @@ use std::{
     path::{Path, PathBuf},
 };
 
+use serde::Serialize;
+
 pub const PORTABLE_STORAGE_DIRNAME: &str = "RHODES OBS COMMANDER3373 Data";
 pub const DEV_STORAGE_DIRNAME: &str = "user-data";
 
@@ -20,6 +22,15 @@ pub struct StorageContext {
 pub struct StorageTarget {
     pub storage_dir: PathBuf,
     pub state_dir: PathBuf,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct StorageTargetInfo {
+    pub app_root: String,
+    pub storage_dir: String,
+    pub state_dir: String,
+    pub is_packaged: bool,
 }
 
 impl StorageContext {
@@ -81,6 +92,16 @@ pub fn storage_target(context: &StorageContext) -> StorageTarget {
     StorageTarget {
         storage_dir,
         state_dir,
+    }
+}
+
+pub fn storage_target_info(context: &StorageContext) -> StorageTargetInfo {
+    let target = storage_target(context);
+    StorageTargetInfo {
+        app_root: context.app_root.to_string_lossy().into_owned(),
+        storage_dir: target.storage_dir.to_string_lossy().into_owned(),
+        state_dir: target.state_dir.to_string_lossy().into_owned(),
+        is_packaged: context.is_packaged,
     }
 }
 
@@ -151,5 +172,19 @@ mod tests {
             storage_target(&context).state_dir,
             PathBuf::from("O:/Arknights_Rogue_OBSTool/data")
         );
+    }
+
+    #[test]
+    fn storage_target_info_exposes_paths_for_tauri_ipc() {
+        let context = context("D:/Apps/RHODES/RHODES OBS COMMANDER3373.exe", true);
+        let info = storage_target_info(&context);
+        assert_eq!(info.app_root, "O:/Arknights_Rogue_OBSTool");
+        assert_eq!(
+            info.storage_dir,
+            PathBuf::from("D:/Apps/RHODES")
+                .join(PORTABLE_STORAGE_DIRNAME)
+                .to_string_lossy()
+        );
+        assert!(info.is_packaged);
     }
 }

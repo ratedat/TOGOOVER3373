@@ -27,6 +27,9 @@ test("Tauri Rust shell starts the existing local server before opening the main 
   assert.match(source, /app[\\"]\)\.join\("server\.mjs"\)/);
   assert.match(source, /wait_for_server\(port, Duration::from_secs\(12\)\)/);
   assert.match(source, /WebviewWindowBuilder::new\(app, "main", WebviewUrl::External\(url\)\)/);
+  assert.match(source, /#\[tauri::command\]/);
+  assert.match(source, /rhodes_storage_target/);
+  assert.match(source, /generate_handler!\[rhodes_storage_target\]/);
   assert.match(source, /runtime_storage_target/);
   assert.match(source, /resource_dir\(\)/);
   assert.match(source, /node-\{triple\}/);
@@ -38,6 +41,8 @@ test("Tauri storage module mirrors the portable storage contract", async () => {
   assert.match(source, /DEV_STORAGE_DIRNAME: &str = "user-data"/);
   assert.match(source, /PORTABLE_EXECUTABLE_FILE/);
   assert.match(source, /ARKNIGHTS_STATE_DIR/);
+  assert.match(source, /StorageTargetInfo/);
+  assert.match(source, /serde\(rename_all = "camelCase"\)/);
   assert.match(source, /win-unpacked/);
   assert.match(source, /storage_target/);
 });

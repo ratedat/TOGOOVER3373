@@ -60,17 +60,24 @@ fn development_app_root() -> PathBuf {
         .unwrap_or_else(executable_dir)
 }
 
-fn app_root(app: &tauri::App) -> PathBuf {
+fn app_root_from_resource_dir(resource_dir: Option<PathBuf>) -> PathBuf {
     if let Ok(root) = env::var("RHODES_APP_ROOT") {
         return PathBuf::from(root);
     }
     if cfg!(debug_assertions) {
         return development_app_root();
     }
-    app.path()
-        .resource_dir()
+    resource_dir
         .map(|dir| dir.join("rhodes-app"))
-        .unwrap_or_else(|_| executable_dir())
+        .unwrap_or_else(executable_dir)
+}
+
+fn app_root(app: &tauri::App) -> PathBuf {
+    app_root_from_resource_dir(app.path().resource_dir().ok())
+}
+
+fn app_handle_root(app: &tauri::AppHandle) -> PathBuf {
+    app_root_from_resource_dir(app.path().resource_dir().ok())
 }
 
 fn runtime_storage_target(app_root: &Path) -> storage::StorageTarget {
@@ -167,11 +174,19 @@ fn open_main_window(app: &tauri::App, port: u16) -> Result<(), DynError> {
     Ok(())
 }
 
+#[tauri::command]
+fn rhodes_storage_target(app: tauri::AppHandle) -> storage::StorageTargetInfo {
+    let app_root = app_handle_root(&app);
+    let context = storage::StorageContext::from_runtime(app_root, !cfg!(debug_assertions));
+    storage::storage_target_info(&context)
+}
+
 fn main() {
     tauri::Builder::default()
         .manage(LocalServer {
             child: Mutex::new(None),
         })
+        .invoke_handler(tauri::generate_handler![rhodes_storage_target])
         .setup(|app| {
             let port = startup_port();
             let app_root = app_root(app);
