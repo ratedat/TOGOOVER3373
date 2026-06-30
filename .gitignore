@@ -11,6 +11,8 @@ out/
 coverage/
 apps/**/bin/
 apps/**/obj/
+tests/**/bin/
+tests/**/obj/
 src-tauri/target/
 src-tauri/gen/
 src-tauri/resources/
