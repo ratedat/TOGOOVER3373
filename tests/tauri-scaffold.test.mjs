@@ -8,13 +8,14 @@ test("package exposes Tauri development and build scripts", async () => {
   assert.equal(pkg.scripts["tauri:dev"], "tauri dev");
   assert.equal(pkg.scripts["tauri:build"], "npm run tauri:prepare && tauri build");
   assert.equal(pkg.scripts["tauri:test"], "cargo test --manifest-path src-tauri/Cargo.toml");
+  assert.equal(pkg.scripts["tauri:smoke:installer"], "node tools/smoke-tauri-installer.mjs");
   assert.match(pkg.devDependencies["@tauri-apps/cli"], /^\^2\./);
 });
 
 test("Tauri config keeps the existing localhost control surface", async () => {
   const config = JSON.parse(await readFile(new URL("../src-tauri/tauri.conf.json", import.meta.url), "utf8"));
   assert.equal(config.identifier, "com.ratedat.rhodes.obs.commander3373");
-  assert.equal(config.build.devUrl, "http://127.0.0.1:5173/control-v2");
+  assert.equal(config.build.devUrl, "http://localhost:5173/control-v2");
   assert.equal(config.build.frontendDist, "../app");
   assert.deepEqual(config.app.windows, []);
   assert.equal(config.app.withGlobalTauri, true);
@@ -26,7 +27,8 @@ test("Tauri Rust shell starts the existing local server before opening the main 
   assert.match(source, /mod storage;/);
   assert.match(source, /start_node_server/);
   assert.match(source, /app[\\"]\)\.join\("server\.mjs"\)/);
-  assert.match(source, /wait_for_server\(port, Duration::from_secs\(12\)\)/);
+  assert.match(source, /LOCAL_HOST: &str = "localhost"/);
+  assert.match(source, /wait_for_server\(LOCAL_HOST, port, Duration::from_secs\(12\)\)/);
   assert.match(source, /WebviewWindowBuilder::new\(app, "main", WebviewUrl::External\(url\)\)/);
   assert.match(source, /#\[tauri::command\]/);
   assert.match(source, /rhodes_storage_target/);
@@ -66,4 +68,15 @@ test("Tauri resource preparation copies runtime assets without user state", asyn
   assert.match(source, /overlay-state\.example\.json/);
   assert.doesNotMatch(source, /current-state\.json/);
   assert.doesNotMatch(source, /dataFiles = \[[\s\S]*electron/);
+});
+
+test("Tauri installer smoke script installs only under agent work", async () => {
+  const source = await readFile(new URL("../tools/smoke-tauri-installer.mjs", import.meta.url), "utf8");
+  assert.match(source, /tauri-installed-smoke/);
+  assert.match(source, /rhodes-obs-commander3373-tauri\.exe/);
+  assert.match(source, /assertChildPath\(agentWork, installDir\)/);
+  assert.match(source, /taskkill\.exe/);
+  assert.match(source, /RHODES_TAURI_SMOKE_HOST/);
+  assert.match(source, /\/api\/master/);
+  assert.match(source, /uninstall\.exe/);
 });

@@ -22,6 +22,7 @@
     "tauri:dev": "tauri dev",
     "tauri:build": "npm run tauri:prepare && tauri build",
     "tauri:test": "cargo test --manifest-path src-tauri/Cargo.toml",
+    "tauri:smoke:installer": "node tools/smoke-tauri-installer.mjs",
     "data:update": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1",
     "data:update:plan": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/update-data.ps1 -PlanOnly",
     "data:diff": "node tools/compare-data-update.mjs --before data --after data --out review/update-runs/manual-compare",

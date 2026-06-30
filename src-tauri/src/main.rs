@@ -14,6 +14,7 @@ use tauri::{Manager, WebviewUrl, WebviewWindowBuilder};
 mod storage;
 
 const DEFAULT_PORT: u16 = 5173;
+const LOCAL_HOST: &str = "localhost";
 
 type DynError = Box<dyn Error>;
 
@@ -60,6 +61,24 @@ fn development_app_root() -> PathBuf {
         .unwrap_or_else(executable_dir)
 }
 
+fn has_server_script(app_root: &Path) -> bool {
+    app_root.join("app").join("server.mjs").exists()
+}
+
+fn packaged_app_root_from_dirs(resource_dir: Option<PathBuf>, exe_dir: PathBuf) -> PathBuf {
+    let mut candidates = Vec::new();
+    if let Some(dir) = resource_dir {
+        candidates.push(dir.join("rhodes-app"));
+        candidates.push(dir.join("resources").join("rhodes-app"));
+    }
+    candidates.push(exe_dir.join("resources").join("rhodes-app"));
+    candidates
+        .iter()
+        .find(|candidate| has_server_script(candidate))
+        .cloned()
+        .unwrap_or_else(|| candidates.into_iter().next().unwrap_or(exe_dir))
+}
+
 fn app_root_from_resource_dir(resource_dir: Option<PathBuf>) -> PathBuf {
     if let Ok(root) = env::var("RHODES_APP_ROOT") {
         return PathBuf::from(root);
@@ -67,9 +86,7 @@ fn app_root_from_resource_dir(resource_dir: Option<PathBuf>) -> PathBuf {
     if cfg!(debug_assertions) {
         return development_app_root();
     }
-    resource_dir
-        .map(|dir| dir.join("rhodes-app"))
-        .unwrap_or_else(executable_dir)
+    packaged_app_root_from_dirs(resource_dir, executable_dir())
 }
 
 fn app_root(app: &tauri::App) -> PathBuf {
@@ -86,15 +103,28 @@ fn runtime_storage_target(app_root: &Path) -> storage::StorageTarget {
     storage::storage_target(&context)
 }
 
-fn bundled_node_path(app: &tauri::App) -> Option<PathBuf> {
-    let triple = option_env!("TAURI_ENV_TARGET_TRIPLE").unwrap_or("x86_64-pc-windows-msvc");
+fn bundled_node_path_from_dirs(
+    resource_dir: Option<PathBuf>,
+    exe_dir: PathBuf,
+    triple: &str,
+) -> Option<PathBuf> {
     let name = if cfg!(windows) {
         format!("node-{triple}.exe")
     } else {
         format!("node-{triple}")
     };
-    let path = app.path().resource_dir().ok()?.join("bin").join(name);
-    path.exists().then_some(path)
+    let mut candidates = Vec::new();
+    if let Some(dir) = resource_dir {
+        candidates.push(dir.join("bin").join(&name));
+        candidates.push(dir.join("resources").join("bin").join(&name));
+    }
+    candidates.push(exe_dir.join("resources").join("bin").join(&name));
+    candidates.into_iter().find(|path| path.exists())
+}
+
+fn bundled_node_path(app: &tauri::App) -> Option<PathBuf> {
+    let triple = option_env!("TAURI_ENV_TARGET_TRIPLE").unwrap_or("x86_64-pc-windows-msvc");
+    bundled_node_path_from_dirs(app.path().resource_dir().ok(), executable_dir(), triple)
 }
 
 fn node_bin(app: &tauri::App) -> PathBuf {
@@ -136,16 +166,16 @@ fn start_node_server(
     Ok(child)
 }
 
-fn wait_for_server(port: u16, timeout: Duration) -> Result<(), DynError> {
+fn wait_for_server(host: &str, port: u16, timeout: Duration) -> Result<(), DynError> {
     let started = Instant::now();
     while started.elapsed() < timeout {
-        if TcpStream::connect(("127.0.0.1", port)).is_ok() {
+        if TcpStream::connect((host, port)).is_ok() {
             return Ok(());
         }
         thread::sleep(Duration::from_millis(150));
     }
     Err(boxed_error(format!(
-        "timed out waiting for local server on 127.0.0.1:{port}"
+        "timed out waiting for local server on {host}:{port}"
     )))
 }
 
@@ -163,7 +193,7 @@ fn stop_server(app_handle: &tauri::AppHandle) {
 }
 
 fn open_main_window(app: &tauri::App, port: u16) -> Result<(), DynError> {
-    let url: url::Url = format!("http://127.0.0.1:{port}/control-v2")
+    let url: url::Url = format!("http://{LOCAL_HOST}:{port}/control-v2")
         .parse()
         .map_err(|error| boxed_error(format!("invalid app URL: {error}")))?;
     WebviewWindowBuilder::new(app, "main", WebviewUrl::External(url))
@@ -197,7 +227,7 @@ fn main() {
                 .child
                 .lock()
                 .map_err(|_| boxed_error("failed to lock local server state"))? = Some(child);
-            wait_for_server(port, Duration::from_secs(12))?;
+            wait_for_server(LOCAL_HOST, port, Duration::from_secs(12))?;
             open_main_window(app, port)?;
             Ok(())
         })
@@ -215,4 +245,46 @@ fn main() {
                 stop_server(app_handle);
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn temp_dir(name: &str) -> PathBuf {
+        let dir = env::temp_dir().join(format!("rhodes-tauri-{name}-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&dir);
+        fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn packaged_app_root_uses_installed_resources_directory() {
+        let dir = temp_dir("installed-resources");
+        let app_root = dir.join("resources").join("rhodes-app");
+        fs::create_dir_all(app_root.join("app")).unwrap();
+        fs::write(app_root.join("app").join("server.mjs"), "").unwrap();
+        assert_eq!(
+            packaged_app_root_from_dirs(Some(dir.clone()), dir.clone()),
+            app_root
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
+
+    #[test]
+    fn bundled_node_path_uses_installed_resources_directory() {
+        let dir = temp_dir("installed-node");
+        let node = dir
+            .join("resources")
+            .join("bin")
+            .join("node-x86_64-pc-windows-msvc.exe");
+        fs::create_dir_all(node.parent().unwrap()).unwrap();
+        fs::write(&node, "").unwrap();
+        assert_eq!(
+            bundled_node_path_from_dirs(Some(dir.clone()), dir.clone(), "x86_64-pc-windows-msvc"),
+            Some(node)
+        );
+        let _ = fs::remove_dir_all(dir);
+    }
 }

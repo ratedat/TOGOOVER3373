@@ -1,9 +1,9 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import path from "node:path";
-import { startServer } from "../app/server.mjs";
+import { isDirectServerRun, startServer } from "../app/server.mjs";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -40,4 +40,10 @@ test("web launcher reuses an already running local server", async () => {
   } finally {
     await close(controller.server);
   }
+});
+
+test("server direct run accepts Windows namespace paths from packaged Tauri", () => {
+  const serverPath = path.join(ROOT, "app", "server.mjs");
+  const argvPath = process.platform === "win32" ? `\\\\?\\${serverPath}` : serverPath;
+  assert.equal(isDirectServerRun(argvPath, pathToFileURL(serverPath).href), true);
 });

@@ -849,8 +849,21 @@ export function startServer({ port = PORT, host = "127.0.0.1", recognitionRunner
   });
 }
 
-const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
-if (isDirectRun) {
+function normalizeWindowsNamespacePath(value) {
+  if (typeof value !== "string") return "";
+  if (value.startsWith("\\\\?\\UNC\\")) return `\\\\${value.slice(8)}`;
+  if (value.startsWith("\\\\?\\")) return value.slice(4);
+  return value;
+}
+
+export function isDirectServerRun(argvEntry = process.argv[1], moduleUrl = import.meta.url) {
+  if (!argvEntry) return false;
+  const argvPath = path.normalize(normalizeWindowsNamespacePath(path.resolve(argvEntry)));
+  const modulePath = path.normalize(normalizeWindowsNamespacePath(fileURLToPath(moduleUrl)));
+  return argvPath === modulePath;
+}
+
+if (isDirectServerRun()) {
   startServer().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exit(1);

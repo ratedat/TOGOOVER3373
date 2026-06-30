@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "identifier": "com.ratedat.rhodes.obs.commander3373",
   "build": {
-    "devUrl": "http://127.0.0.1:5173/control-v2",
+    "devUrl": "http://localhost:5173/control-v2",
     "frontendDist": "../app"
   },
   "app": {
