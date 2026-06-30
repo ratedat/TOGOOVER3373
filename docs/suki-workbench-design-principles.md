@@ -2,6 +2,8 @@
 
 This document records the current UI direction for the Suki/Avalonia verification shell and keeps it aligned with the Figma summary and Stitch brief.
 
+For the full product surface and information architecture, see `docs/suki-product-ui-information-architecture.md`. This document describes the current screen direction; the information architecture document defines the larger UI scope that the Suki shell still needs to cover.
+
 ## Product Role
 
 The Suki shell is a maintainer/debugger workbench for validating and correcting Integrated Strategies run state: IS selection, recruited operators, owned relics, ADB connection, MAAFramework resource tasks, OCR candidates, screenshots, and diagnostics. It is not a public landing page, a consumer dashboard, or a tutorial-first setup wizard.
@@ -53,4 +55,5 @@ The design must make these states legible:
 - Production UI lives in `apps/rhodes-suki/Views/MainWindow.axaml`.
 - Run catalog and choice filtering live in `apps/rhodes-suki/Services/RhodesRunCatalog.cs` and `apps/rhodes-suki/Services/RhodesChoiceFilter.cs`.
 - Stitch prompt lives in `docs/stitch-suki-workbench-brief.md`.
+- Full product UI coverage is tracked in `docs/suki-product-ui-information-architecture.md`.
 - Figma summary file should mirror these decisions and stay as a design/reference artifact, not the runtime source of truth.

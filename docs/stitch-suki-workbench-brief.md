@@ -2,6 +2,8 @@
 
 This brief is the shared source for redesigning the Suki/Avalonia verification shell with Google Stitch (`https://stitch.withgoogle.com/create`) and then reflecting the result back into `apps/rhodes-suki/Views/MainWindow.axaml`.
 
+Before expanding this prompt, use `docs/suki-product-ui-information-architecture.md` as the scope reference. The screen below is the current operational foundation; the final app must also cover run base values, campaign-specific special values, recognition review, OBS/sidecar output, and runtime settings without mixing those jobs into one list.
+
 ## Stitch Prompt
 
 Design a desktop application screen for RHODES OBS COMMANDER3373, an Arknights Integrated Strategies OCR and ADB verification workbench.
