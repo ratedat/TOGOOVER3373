@@ -13,6 +13,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA candidate merger supplements missing local candidates safely", CandidateMergerSupplementsLocalCandidates),
     ("Local MAA candidate converter extracts run status candidates", LocalCandidateConverterRunStatus),
     ("Local MAA candidate converter keeps the best duplicate run status field", LocalCandidateConverterRunStatusBestDuplicate),
+    ("Local MAA candidate converter extracts random squad effect candidates", LocalCandidateConverterRunStatusSquadRandomEffect),
     ("Local MAA candidate converter extracts exact operator name candidates", LocalCandidateConverterOperators),
     ("Local MAA candidate converter extracts current campaign relic candidates", LocalCandidateConverterRelics),
     ("Local MAA candidate converter preserves duplicate IS5 thought candidates", LocalCandidateConverterThoughts),
@@ -317,6 +318,32 @@ static void LocalCandidateConverterRunStatusBestDuplicate()
 
     Equal("hope|maxHope", string.Join("|", candidates.Select(item => item.Field)), "best duplicate fields");
     Equal("5|8", string.Join("|", candidates.Select(item => item.Value)), "best duplicate values");
+
+    static MaaTaskRunResult M(string entry, string text, double score)
+    {
+        return new MaaTaskRunResult(
+            entry,
+            "Succeeded",
+            true,
+            "detail",
+            $"TaskId=1; detail={{\"best\":{{\"text\":\"{text}\",\"score\":{score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}}}",
+            "OCR",
+            true);
+    }
+}
+
+static void LocalCandidateConverterRunStatusSquadRandomEffect()
+{
+    var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+        "runStatusFull",
+        [
+            M("RhodesCandidate_is5_sarkaz_map_select_campaign", "サルカズの炉辺奇談", 0.98),
+            M("RhodesOcrRegion_run_squad_name", "奇 想 天 外 分 隊", 0.92),
+            M("RhodesOcrRegion_run_squad_card", "★4以上の【術師】を招集時に消費する希望-2、昇進時に消費する希望-1、【術師】を初めて招集する際、昇進済の状態で招集できる。初めから「生還者の契約」を所持", 0.90),
+        ]);
+
+    Equal("campaignId|squadId|squadRandomEffectOptionId", string.Join("|", candidates.Select(item => item.Field)), "local squad random fields");
+    Equal("is5_sarkaz|is5_sarkaz_squad_16|is5_sarkaz_mimic_02", string.Join("|", candidates.Select(item => item.Value)), "local squad random values");
 
     static MaaTaskRunResult M(string entry, string text, double score)
     {

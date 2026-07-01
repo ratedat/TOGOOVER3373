@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using RhodesSuki.Models;
 
 namespace RhodesSuki.Services;
@@ -136,6 +137,11 @@ public static class RhodesMaaLocalCandidateConverter
                 CampaignId: RunStatusFieldCampaignId(field.Field, campaignId),
                 RecognitionKey: $"maa-local:{field.Field}:{regionId}");
         }
+
+        foreach (var candidate in SquadRandomEffectCandidates(results, campaignId))
+        {
+            yield return candidate;
+        }
     }
 
     private static string RunStatusCampaignId(IReadOnlyList<MaaTaskRunResult> taskResults)
@@ -219,6 +225,45 @@ public static class RhodesMaaLocalCandidateConverter
                     RecognitionKey: $"maa-local:squad:{squad.Id}");
             }
         }
+    }
+
+    private static IEnumerable<MaaCandidatePreview> SquadRandomEffectCandidates(
+        IReadOnlyList<MaaTaskRunResult> taskResults,
+        string campaignId)
+    {
+        if (string.IsNullOrWhiteSpace(campaignId))
+            yield break;
+
+        var textResults = taskResults
+            .Where(taskResult => taskResult.Succeeded && (IsSquadNameEntry(taskResult.Entry) || IsSquadCardEntry(taskResult.Entry)))
+            .SelectMany(taskResult => PrimaryTextResults(taskResult.RecognitionDetailJson))
+            .Where(result => !string.IsNullOrWhiteSpace(result.Text))
+            .ToArray();
+        if (textResults.Length == 0)
+            yield break;
+
+        var rawText = string.Join(" ", textResults.Select(result => result.Text));
+        var normalizedChoiceText = NormalizeChoiceName(rawText);
+        var squad = LoadSquads()
+            .Where(item => string.Equals(item.CampaignId, campaignId, StringComparison.Ordinal))
+            .Where(item => item.RandomEffectOptions.Count > 0)
+            .FirstOrDefault(item => normalizedChoiceText.Contains(NormalizeChoiceName(item.Name), StringComparison.Ordinal));
+        if (squad is null)
+            yield break;
+
+        var match = FindRandomEffectOption(NormalizeSquadEffectText(rawText), squad.RandomEffectOptions);
+        if (match is not { } resolved || string.IsNullOrWhiteSpace(resolved.Option.Id))
+            yield break;
+
+        yield return new MaaCandidatePreview(
+            "runStatus",
+            string.IsNullOrWhiteSpace(resolved.Option.Label) ? "ランダム分隊効果" : resolved.Option.Label,
+            resolved.Option.Id,
+            FirstNonEmpty(resolved.Option.Effect, resolved.Option.Label, resolved.Option.Id),
+            Math.Min(0.93, 0.68 + (resolved.Score / 500.0)),
+            Field: "squadRandomEffectOptionId",
+            CampaignId: squad.CampaignId,
+            RecognitionKey: $"maa-local:squad-option:{resolved.Option.Id}");
     }
 
     private static IEnumerable<MaaCandidatePreview> StaticCandidates(MaaTaskRunResult taskResult)
@@ -549,6 +594,12 @@ public static class RhodesMaaLocalCandidateConverter
             || entry.Contains("run.squad_name", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsSquadCardEntry(string entry)
+    {
+        return entry.Equals("RhodesOcrRegion_run_squad_card", StringComparison.Ordinal)
+            || entry.Contains("run.squad_card", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string RevelationSlotKind(string groupLabel)
     {
         if (groupLabel.Contains("本因", StringComparison.Ordinal))
@@ -618,6 +669,116 @@ public static class RhodesMaaLocalCandidateConverter
             chars.Add(ch);
         }
         return new string(chars.ToArray());
+    }
+
+    private static string NormalizeSquadEffectText(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        var normalized = value.Trim().Normalize(NormalizationForm.FormKC);
+        var chars = new List<char>();
+        foreach (var ch in normalized)
+        {
+            if (char.IsWhiteSpace(ch))
+                continue;
+
+            if (ch is '「' or '」' or '『' or '』' or '【' or '】' or '[' or ']' or '(' or ')' or '（' or '）'
+                or '・' or '･' or '：' or ':' or '．' or '.' or ',' or '，' or '、' or '。' or ';' or '；')
+            {
+                continue;
+            }
+
+            chars.Add(ch switch
+            {
+                '＋' => '+',
+                '−' or '－' or '–' or '—' => '-',
+                _ => char.ToLowerInvariant(ch),
+            });
+        }
+
+        return new string(chars.ToArray());
+    }
+
+    private static IReadOnlyList<string> OptionEffectPhrases(string effect)
+    {
+        return effect
+            .Split(['。', '、', '，', ',', '；', ';'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(NormalizeSquadEffectText)
+            .Where(part => part.Length >= 6)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static IReadOnlyList<string> OptionEffectTokens(string effect)
+    {
+        var bracketTokens = Regex.Matches(effect, "[【「]([^】」]+)[】」]")
+            .Select(match => NormalizeSquadEffectText(match.Groups[1].Value))
+            .Where(part => part.Length >= 2);
+        var normalized = NormalizeSquadEffectText(effect);
+        var numericTokens = Regex.Matches(normalized, "[★]?[0-9]+%?|[+-][0-9]+")
+            .Select(match => match.Value)
+            .Where(part => part.Length >= 2);
+
+        return bracketTokens.Concat(numericTokens)
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+    }
+
+    private static (RunSquadRandomEffectOption Option, int Score, int Matches)? ScoreRandomEffectOption(
+        string normalizedText,
+        RunSquadRandomEffectOption option)
+    {
+        var normalizedEffect = NormalizeSquadEffectText(option.Effect);
+        if (string.IsNullOrWhiteSpace(normalizedEffect))
+            return null;
+
+        var score = 0;
+        var matches = 0;
+        if (normalizedText.Contains(normalizedEffect, StringComparison.Ordinal))
+        {
+            score += 120;
+            matches += 3;
+        }
+
+        foreach (var phrase in OptionEffectPhrases(option.Effect))
+        {
+            if (!normalizedText.Contains(phrase, StringComparison.Ordinal))
+                continue;
+
+            score += Math.Min(32, Math.Max(10, phrase.Length / 2));
+            matches += 1;
+        }
+
+        foreach (var token in OptionEffectTokens(option.Effect))
+        {
+            if (!normalizedText.Contains(token, StringComparison.Ordinal))
+                continue;
+
+            score += token.Length >= 4 ? 18 : 8;
+            matches += 1;
+        }
+
+        return matches == 0 || score < 20 ? null : (option, score, matches);
+    }
+
+    private static (RunSquadRandomEffectOption Option, int Score, int Matches)? FindRandomEffectOption(
+        string normalizedText,
+        IReadOnlyList<RunSquadRandomEffectOption> options)
+    {
+        var scored = options
+            .Select(option => ScoreRandomEffectOption(normalizedText, option))
+            .Where(item => item is not null)
+            .Select(item => item!.Value)
+            .OrderByDescending(item => item.Score)
+            .ThenByDescending(item => item.Matches)
+            .ToArray();
+        if (scored.Length == 0)
+            return null;
+        if (scored.Length > 1 && scored[0].Score == scored[1].Score && scored[0].Matches == scored[1].Matches)
+            return null;
+
+        return scored[0];
     }
 
     private static (string Text, double? Confidence) PrimaryTextResult(string value)
@@ -975,8 +1136,27 @@ public static class RhodesMaaLocalCandidateConverter
             .Select(item => new RunSquadCandidate(
                 JsonString(item, "id"),
                 JsonString(item, "campaignId"),
-                JsonString(item, "name")))
+                JsonString(item, "name"),
+                ReadRandomEffectOptions(item)))
             .Where(item => !string.IsNullOrWhiteSpace(item.Id) && !string.IsNullOrWhiteSpace(item.Name))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<RunSquadRandomEffectOption> ReadRandomEffectOptions(JsonElement squad)
+    {
+        if (squad.ValueKind != JsonValueKind.Object
+            || !squad.TryGetProperty("randomEffectOptions", out var options)
+            || options.ValueKind != JsonValueKind.Array)
+        {
+            return [];
+        }
+
+        return options.EnumerateArray()
+            .Select(item => new RunSquadRandomEffectOption(
+                JsonString(item, "id"),
+                JsonString(item, "label"),
+                JsonString(item, "effect")))
+            .Where(item => !string.IsNullOrWhiteSpace(item.Id))
             .ToArray();
     }
 
@@ -1015,5 +1195,11 @@ public static class RhodesMaaLocalCandidateConverter
     private sealed record RunSquadCandidate(
         string Id,
         string CampaignId,
-        string Name);
+        string Name,
+        IReadOnlyList<RunSquadRandomEffectOption> RandomEffectOptions);
+
+    private sealed record RunSquadRandomEffectOption(
+        string Id,
+        string Label,
+        string Effect);
 }
