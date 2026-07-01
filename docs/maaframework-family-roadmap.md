@@ -84,7 +84,8 @@ flowchart LR
 - 接続済み: 表示中のResource ROI候補を一括プレビューし、`maa-tasks.json` / `scan-profiles.json` を各1回バックアップして一括適用できる。
 - 接続済み: 一括プレビュー/適用結果のtargetとbefore/afterをUI内の差分一覧で確認できる。
 - 接続済み: 表示中のResource ROI候補をチェックリスト化し、一括プレビュー/適用対象をUI上で絞れる。
-- 残作業: チェックリストの全選択/全解除、適用済み候補の視覚的な状態表示を追加する。
+- 接続済み: 表示中ROI候補チェックリストを全選択/全解除できる。
+- 残作業: 適用済み候補の視覚的な状態表示を追加する。
 
 ## First Milestone
 - SukiUI shell が起動する

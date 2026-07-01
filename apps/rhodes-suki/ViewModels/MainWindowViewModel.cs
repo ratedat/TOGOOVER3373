@@ -215,6 +215,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ApplySelectedRoiDraftCommand = new AsyncRelayCommand(ApplySelectedRoiDraftAsync);
         PreviewVisibleRoiDraftsApplyCommand = new AsyncRelayCommand(PreviewVisibleRoiDraftsApplyAsync);
         ApplyVisibleRoiDraftsCommand = new AsyncRelayCommand(ApplyVisibleRoiDraftsAsync);
+        IncludeAllRoiBatchDraftsCommand = new AsyncRelayCommand(_ => SetAllRoiBatchDraftsIncludedAsync(true));
+        ExcludeAllRoiBatchDraftsCommand = new AsyncRelayCommand(_ => SetAllRoiBatchDraftsIncludedAsync(false));
         RegenerateMaaResourceCommand = new AsyncRelayCommand(RegenerateMaaResourceAsync);
         SyncRunStateFromApiCommand = new AsyncRelayCommand(SyncRunStateFromApiAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
@@ -1016,6 +1018,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand PreviewVisibleRoiDraftsApplyCommand { get; }
 
     public ICommand ApplyVisibleRoiDraftsCommand { get; }
+
+    public ICommand IncludeAllRoiBatchDraftsCommand { get; }
+
+    public ICommand ExcludeAllRoiBatchDraftsCommand { get; }
 
     public ICommand RegenerateMaaResourceCommand { get; }
 
@@ -1904,6 +1910,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ? $"ROIを一括適用しました: {result.AppliedCount}件 / {result.BackupSummary}"
                 : $"ROI一括適用失敗: {result.Message}";
         });
+    }
+
+    private Task SetAllRoiBatchDraftsIncludedAsync(bool isIncluded)
+    {
+        var next = RoiBatchDrafts
+            .Select(item => new MaaRoiBatchDraftPreview(item.Draft, isIncluded))
+            .ToArray();
+        ReplaceCollection(RoiBatchDrafts, next);
+        RoiBatchApplyResult = MaaRoiBatchApplyResult.Failed("未確認");
+        StatusMessage = isIncluded
+            ? $"表示中ROI候補を全選択しました: {next.Length}件"
+            : $"表示中ROI候補を全解除しました: {next.Length}件";
+        return Task.CompletedTask;
     }
 
     private async Task RegenerateMaaResourceAsync()
