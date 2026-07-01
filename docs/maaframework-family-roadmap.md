@@ -72,7 +72,8 @@ flowchart LR
 - 接続済み: 抽出したROI detail行を1280x720基準のスクリーンショットプレビュー上へ重ね描きする。
 - 接続済み: ROI overlayのON/OFFをプレビュー操作から切り替えられる。
 - 接続済み: 読み込んだスクリーンショットの実ピクセルサイズを保持し、ROI overlayを1280x720プレビュー座標へ変換する。
-- 残作業: ROI overlayの選択中行だけ強調する。
+- 接続済み: ROI一覧で選択した行だけをプレビュー上で強調表示する。
+- 残作業: ROI overlayの選択状態をOCR/detail行の選択とも連動する。
 
 ## First Milestone
 - SukiUI shell が起動する

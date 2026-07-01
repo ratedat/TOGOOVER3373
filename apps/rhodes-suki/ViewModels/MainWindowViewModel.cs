@@ -48,6 +48,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private Bitmap? _lastCaptureImage;
     private int _capturePixelWidth;
     private int _capturePixelHeight;
+    private string _selectedRoiPreviewKey = "";
+    private MaaRoiPreviewRow? _selectedRoiPreviewRow;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
     private SukiOcrEngineOption? _selectedOcrEngine;
@@ -169,6 +171,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         OcrDetailRows = [];
         RoiDetailRows = [];
         RoiPreviewRows = [];
+        SelectedRoiPreviewRows = [];
         RecognitionScanHistory = [];
         RecognitionScanLogRows = [];
         BaseResolution = Services.RhodesMaaPaths.BaseResolution;
@@ -292,6 +295,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaRoiDetailRow> RoiDetailRows { get; }
 
     public ObservableCollection<MaaRoiPreviewRow> RoiPreviewRows { get; }
+
+    public ObservableCollection<MaaRoiPreviewRow> SelectedRoiPreviewRows { get; }
 
     public ObservableCollection<RhodesRecognitionScanHistoryItem> RecognitionScanHistory { get; }
 
@@ -786,6 +791,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _showRoiOverlay;
         set => SetProperty(ref _showRoiOverlay, value);
+    }
+
+    public MaaRoiPreviewRow? SelectedRoiPreviewRow
+    {
+        get => _selectedRoiPreviewRow;
+        set
+        {
+            var nextKey = value?.Key ?? "";
+            if (_selectedRoiPreviewKey == nextKey && Equals(_selectedRoiPreviewRow, value))
+                return;
+
+            _selectedRoiPreviewKey = nextKey;
+            _selectedRoiPreviewRow = value;
+            OnPropertyChanged();
+            RefreshSelectedRoiPreviewRows();
+        }
     }
 
     public MaaAdbPresetPreview? SelectedAdbPreset
@@ -2091,7 +2112,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 BaseResolution,
                 _capturePixelWidth,
                 _capturePixelHeight));
+        var selected = string.IsNullOrWhiteSpace(_selectedRoiPreviewKey)
+            ? null
+            : RoiPreviewRows.FirstOrDefault(row => row.Key == _selectedRoiPreviewKey);
+        if (!Equals(_selectedRoiPreviewRow, selected))
+        {
+            _selectedRoiPreviewRow = selected;
+            OnPropertyChanged(nameof(SelectedRoiPreviewRow));
+        }
+        RefreshSelectedRoiPreviewRows();
         OnPropertyChanged(nameof(RoiProjectionLabel));
+    }
+
+    private void RefreshSelectedRoiPreviewRows()
+    {
+        ReplaceCollection(
+            SelectedRoiPreviewRows,
+            _selectedRoiPreviewRow is null ? [] : [_selectedRoiPreviewRow]);
     }
 
     private void RefreshResourceTasks()

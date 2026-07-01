@@ -1122,6 +1122,7 @@ static void RoiPreviewProjectorScalesImageCoordinates()
     Equal(128.0, projected[0].Width, "projected width");
     Equal(72.0, projected[0].Height, "projected height");
     Equal("1600x900->1280x720", projected[0].ScaleLabel, "projected scale label");
+    Equal("entry|filtered.roi|[800,450,160,90]|640,360,128,72", projected[0].Key, "projected key");
 
     var oneToOne = RhodesMaaRoiPreviewProjector.Project(sourceRows, new MaaBaseResolution(1280, 720), 0, 0);
     Equal(800.0, oneToOne[0].X, "one-to-one x");

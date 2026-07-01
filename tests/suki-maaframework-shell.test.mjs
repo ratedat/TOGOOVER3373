@@ -238,6 +238,9 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(roiDetailRows, /rect/);
   assert.match(viewModel, /RoiDetailRows/);
   assert.match(viewModel, /RoiPreviewRows/);
+  assert.match(viewModel, /SelectedRoiPreviewRow/);
+  assert.match(viewModel, /SelectedRoiPreviewRows/);
+  assert.match(viewModel, /RefreshSelectedRoiPreviewRows/);
   assert.match(viewModel, /CapturePixelSizeLabel/);
   assert.match(viewModel, /RoiProjectionLabel/);
   assert.match(viewModel, /PixelSize/);
@@ -355,6 +358,9 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /RecognitionScanLogRows/);
   assert.match(xaml, /OcrDetailRows/);
   assert.match(xaml, /RoiPreviewRows/);
+  assert.match(xaml, /SelectedRoiPreviewRows/);
+  assert.match(xaml, /SelectedItem="\{Binding SelectedRoiPreviewRow, Mode=TwoWay\}"/);
+  assert.match(xaml, /BorderBrush="#FFD447"/);
   assert.match(xaml, /ShowRoiOverlay/);
   assert.match(xaml, /CapturePixelSizeLabel/);
   assert.match(xaml, /RoiProjectionLabel/);

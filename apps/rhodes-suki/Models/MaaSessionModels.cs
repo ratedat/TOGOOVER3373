@@ -223,6 +223,8 @@ public sealed record MaaRoiPreviewRow(
     string ScaleLabel)
 {
     public string BoundsLabel => $"{X:0.#},{Y:0.#} {Width:0.#}x{Height:0.#}";
+
+    public string Key => $"{Entry}|{Source}|{Raw}|{X:0.###},{Y:0.###},{Width:0.###},{Height:0.###}";
 }
 
 public sealed record MaaTaskDetailSnapshot(

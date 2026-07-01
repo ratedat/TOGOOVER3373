@@ -765,6 +765,26 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
+                  <ItemsControl ItemsSource="{Binding SelectedRoiPreviewRows}" IsVisible="{Binding ShowRoiOverlay}" IsHitTestVisible="False" Width="1280" Height="720">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas Width="1280" Height="720" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Canvas.Left="{Binding X}"
+                                Canvas.Top="{Binding Y}"
+                                Width="{Binding Width}"
+                                Height="{Binding Height}"
+                                BorderBrush="#FFD447"
+                                BorderThickness="5"
+                                Background="#22FFD447">
+                          <TextBlock Text="{Binding Source}" FontSize="18" Foreground="#111100" Background="#EEFFD447" Padding="5,2" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </Canvas>
               </Viewbox>
             </Border>
@@ -823,8 +843,8 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <ItemsControl ItemsSource="{Binding RoiDetailRows}">
-                  <ItemsControl.ItemTemplate>
+                <ListBox ItemsSource="{Binding RoiPreviewRows}" SelectedItem="{Binding SelectedRoiPreviewRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
+                  <ListBox.ItemTemplate>
                     <DataTemplate>
                       <Border CornerRadius="7" Padding="9" Background="#171B22" BorderBrush="#354052" BorderThickness="1" Margin="0,0,0,8">
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -835,8 +855,8 @@
                         </Grid>
                       </Border>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </ListBox.ItemTemplate>
+                </ListBox>
 
                 <ItemsControl ItemsSource="{Binding ResourceTaskResults}">
                   <ItemsControl.ItemTemplate>
