@@ -76,7 +76,8 @@ flowchart LR
 - 接続済み: OCR detail行の選択から同じentry/sourceのROI overlayを自動選択して強調する。
 - 接続済み: Resource task結果とMAA taskログイベント行の選択から同じentryのROI overlayを自動選択して強調する。
 - 接続済み: 選択ROIから1280x720基準の編集ドラフトを生成し、`RHODES OBS COMMANDER3373 Debug Logs/ROI Drafts` へJSON書き出しできる。
-- 残作業: ROI編集ドラフトをMAA Resource定義へ安全に反映するレビュー/適用フローを実装する。
+- 接続済み: ROI編集ドラフトを `data/recognition/maa-tasks.json` の生成元ROIへ対応付け、適用確認、バックアップ付き適用、Suki内Resource再生成まで実行できる。
+- 残作業: 生成後のResource再読込と、`scan-profiles.json` のtemplate/search ROI系ドラフト適用にも拡張する。
 
 ## First Milestone
 - SukiUI shell が起動する
