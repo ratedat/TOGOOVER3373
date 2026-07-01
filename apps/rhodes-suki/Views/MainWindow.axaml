@@ -91,11 +91,11 @@
       <Setter Property="BorderBrush" Value="Transparent" />
     </Style>
     <Style Selector="Button.choiceCard">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
-      <Setter Property="BorderThickness" Value="0" />
-      <Setter Property="Padding" Value="0" />
-      <Setter Property="Margin" Value="0" />
+      <Setter Property="Background" Value="#151D1E" />
+      <Setter Property="BorderBrush" Value="#2B3638" />
+      <Setter Property="BorderThickness" Value="1" />
+      <Setter Property="Padding" Value="9" />
+      <Setter Property="Margin" Value="0,0,8,8" />
       <Setter Property="MinWidth" Value="0" />
       <Setter Property="MinHeight" Value="0" />
       <Setter Property="HorizontalAlignment" Value="Stretch" />
@@ -103,21 +103,29 @@
       <Setter Property="VerticalContentAlignment" Value="Stretch" />
       <Setter Property="Template">
         <ControlTemplate>
-          <ContentPresenter
-              Content="{TemplateBinding Content}"
-              ContentTemplate="{TemplateBinding ContentTemplate}"
-              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+          <Border
+              Background="{TemplateBinding Background}"
+              BorderBrush="{TemplateBinding BorderBrush}"
+              BorderThickness="{TemplateBinding BorderThickness}"
+              CornerRadius="7"
+              Padding="{TemplateBinding Padding}"
+              MinHeight="{TemplateBinding MinHeight}">
+            <ContentPresenter
+                Content="{TemplateBinding Content}"
+                ContentTemplate="{TemplateBinding ContentTemplate}"
+                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+          </Border>
         </ControlTemplate>
       </Setter>
     </Style>
     <Style Selector="Button.choiceCard:pointerover">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="#1A2426" />
+      <Setter Property="BorderBrush" Value="#3A5559" />
     </Style>
     <Style Selector="Button.choiceCard:pressed">
-      <Setter Property="Background" Value="Transparent" />
-      <Setter Property="BorderBrush" Value="Transparent" />
+      <Setter Property="Background" Value="#203236" />
+      <Setter Property="BorderBrush" Value="#4C6C72" />
     </Style>
   </suki:SukiWindow.Styles>
   <Grid RowDefinitions="Auto,*,Auto" Margin="18" RowSpacing="12">
@@ -348,19 +356,17 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
-                            <Button Classes="choiceCard" Command="{Binding DataContext.ToggleChoiceSelectedCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                              <Border CornerRadius="7" Padding="9" Margin="0,0,8,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1" MinHeight="70" HorizontalAlignment="Stretch">
-                                <Grid ColumnDefinitions="48,*" ColumnSpacing="8">
-                                  <Border Width="42" Height="42" CornerRadius="6" Background="#0C1011" BorderBrush="#2B3638" BorderThickness="1" VerticalAlignment="Top">
-                                    <Image Source="{Binding ImagePath, Converter={StaticResource BitmapPathConverter}}" Stretch="UniformToFill" />
-                                  </Border>
-                                  <StackPanel Grid.Column="1" Spacing="2">
-                                    <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding Heading}" FontSize="11" Opacity="0.72" TextTrimming="CharacterEllipsis" />
-                                    <TextBlock Text="{Binding StateLabel}" FontSize="10" Opacity="0.72" TextTrimming="CharacterEllipsis" />
-                                  </StackPanel>
-                                </Grid>
-                              </Border>
+                            <Button Classes="choiceCard" Command="{Binding DataContext.ToggleChoiceSelectedCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinHeight="70">
+                              <Grid ColumnDefinitions="48,*" ColumnSpacing="8">
+                                <Border Width="42" Height="42" CornerRadius="6" Background="#0C1011" BorderBrush="#2B3638" BorderThickness="1" VerticalAlignment="Top">
+                                  <Image Source="{Binding ImagePath, Converter={StaticResource BitmapPathConverter}}" Stretch="UniformToFill" />
+                                </Border>
+                                <StackPanel Grid.Column="1" Spacing="2">
+                                  <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                  <TextBlock Text="{Binding Heading}" FontSize="11" Opacity="0.72" TextTrimming="CharacterEllipsis" />
+                                  <TextBlock Text="{Binding StateLabel}" FontSize="10" Opacity="0.72" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                              </Grid>
                             </Button>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>
@@ -396,22 +402,20 @@
                         </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                           <DataTemplate>
-                            <Button Classes="choiceCard" Command="{Binding DataContext.ToggleChoiceSelectedCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}">
-                              <Border CornerRadius="7" Padding="9" Margin="0,0,8,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1" MinHeight="118" HorizontalAlignment="Stretch">
-                                <Grid RowDefinitions="Auto,*" RowSpacing="7">
-                                  <Grid ColumnDefinitions="48,*" ColumnSpacing="8">
-                                    <Border Width="42" Height="42" CornerRadius="6" Background="#0C1011" BorderBrush="#2B3638" BorderThickness="1" VerticalAlignment="Top">
-                                      <Image Source="{Binding ImagePath, Converter={StaticResource BitmapPathConverter}}" Stretch="Uniform" />
-                                    </Border>
-                                    <StackPanel Grid.Column="1" Spacing="2">
-                                      <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                      <TextBlock Text="{Binding Heading}" FontSize="11" Opacity="0.72" TextTrimming="CharacterEllipsis" />
-                                      <TextBlock Text="{Binding StateLabel}" FontSize="10" Opacity="0.72" TextTrimming="CharacterEllipsis" />
-                                    </StackPanel>
-                                  </Grid>
-                                  <TextBlock Grid.Row="1" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" MaxLines="3" Opacity="0.58" />
+                            <Button Classes="choiceCard" Command="{Binding DataContext.ToggleChoiceSelectedCommand, RelativeSource={RelativeSource AncestorType=Window}}" CommandParameter="{Binding}" MinHeight="118">
+                              <Grid RowDefinitions="Auto,*" RowSpacing="7">
+                                <Grid ColumnDefinitions="48,*" ColumnSpacing="8">
+                                  <Border Width="42" Height="42" CornerRadius="6" Background="#0C1011" BorderBrush="#2B3638" BorderThickness="1" VerticalAlignment="Top">
+                                    <Image Source="{Binding ImagePath, Converter={StaticResource BitmapPathConverter}}" Stretch="Uniform" />
+                                  </Border>
+                                  <StackPanel Grid.Column="1" Spacing="2">
+                                    <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding Heading}" FontSize="11" Opacity="0.72" TextTrimming="CharacterEllipsis" />
+                                    <TextBlock Text="{Binding StateLabel}" FontSize="10" Opacity="0.72" TextTrimming="CharacterEllipsis" />
+                                  </StackPanel>
                                 </Grid>
-                              </Border>
+                                <TextBlock Grid.Row="1" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" MaxLines="3" Opacity="0.58" />
+                              </Grid>
                             </Button>
                           </DataTemplate>
                         </ItemsControl.ItemTemplate>

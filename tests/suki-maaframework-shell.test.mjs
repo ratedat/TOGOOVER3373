@@ -376,7 +376,10 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /RelativeSource=\{RelativeSource AncestorType=Window\}/);
   assert.match(xaml, /Selector="Button\.choiceCard"/);
   assert.match(xaml, /Classes="choiceCard"/);
+  assert.match(xaml, /Background="\{TemplateBinding Background\}"/);
+  assert.match(xaml, /MinHeight="\{TemplateBinding MinHeight\}"/);
   assert.match(xaml, /<Button Classes="choiceCard" Command="\{Binding DataContext\.ToggleChoiceSelectedCommand, RelativeSource=\{RelativeSource AncestorType=Window\}\}"/);
+  assert.doesNotMatch(xaml, /<Button Classes="choiceCard"[^>]*>\s*<Border CornerRadius="7" Padding="9"/);
   assert.doesNotMatch(xaml, /SelectionButtonLabel/);
   assert.doesNotMatch(xaml, /ExclusionButtonLabel/);
   assert.doesNotMatch(xaml, /ToggleChoiceExcludedCommand/);
