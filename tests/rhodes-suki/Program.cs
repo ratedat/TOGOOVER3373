@@ -573,10 +573,12 @@ static void ResourceProfileOrder()
         new MaaResourceTaskPreview("unknown", "将来追加", "", ["futureProfile"]),
         new MaaResourceTaskPreview("run", "基礎情報", "", ["runStatusFull"]),
         new MaaResourceTaskPreview("thought", "思案", "", ["is5ThoughtFull"]),
+        new MaaResourceTaskPreview("revelation", "啓示", "", ["is4RevelationFull"]),
+        new MaaResourceTaskPreview("coins", "通宝", "", ["is6CoinsFull"]),
     };
 
     var profiles = RhodesMaaResourceCatalog.ProfileGroups(tasks).Select(profile => profile.Id).ToArray();
-    Equal("all|runStatusFull|operatorsFull|relicsFull|is5ThoughtFull|is5AgeFull|futureProfile", string.Join("|", profiles), "profile order");
+    Equal("all|runStatusFull|operatorsFull|relicsFull|is4RevelationFull|is5ThoughtFull|is5AgeFull|is6CoinsFull|futureProfile", string.Join("|", profiles), "profile order");
 }
 
 static void RunCatalogLoadsChoices()
@@ -609,6 +611,11 @@ static void RunCatalogLoadsChoices()
     Equal("時代", is5SpecialFields.Single(field => field.FieldId == "age").Label, "age label");
     Equal("未選択", is5SpecialFields.Single(field => field.FieldId == "age").Value, "age value");
     Equal(false, is5SpecialFields.Any(field => field.Label == "想念"), "obsolete idea label");
+
+    var is4SpecialFields = (catalog.Current.SpecialFields ?? []).Where(field => field.CampaignId == "is4_sami").ToArray();
+    Equal("is4RevelationFull", is4SpecialFields.Single(field => field.FieldId == "revelation").ProfileId, "is4 revelation profile");
+    var is6SpecialFields = (catalog.Current.SpecialFields ?? []).Where(field => field.CampaignId == "is6_sui").ToArray();
+    Equal("is6CoinsFull", is6SpecialFields.Single(field => field.FieldId == "coins").ProfileId, "is6 coins profile");
 }
 
 static void ChoiceFilters()

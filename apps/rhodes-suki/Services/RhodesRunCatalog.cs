@@ -423,7 +423,7 @@ public static class RhodesRunCatalog
             ("is4_sami", "collapseValue") => "is4CollapseValue",
             ("is4_sami", "paradigmLost") => "is4ParadigmLost",
             ("is4_sami", "revelation") => "is4RevelationFull",
-            ("is6_sui", "coins") => "is6CoinFull",
+            ("is6_sui", "coins") => "is6CoinsFull",
             ("is6_sui", "seasonalHours") => "is6SeasonalHours",
             _ => $"{campaignId}.{fieldId}"
         };
