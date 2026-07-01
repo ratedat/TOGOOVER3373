@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Windows.Input;
@@ -185,6 +186,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunSelectedProfileRecognitionAndApplyCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAndApplyAsync);
         RunSelectedProfileAdbScanCommand = new AsyncRelayCommand(RunSelectedProfileAdbScanAsync);
         RefreshRecognitionScanStatusCommand = new AsyncRelayCommand(RefreshRecognitionScanStatusAsync);
+        OpenPreviewUrlCommand = new AsyncRelayCommand(OpenPreviewUrlAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         SyncRunStateFromApiCommand = new AsyncRelayCommand(SyncRunStateFromApiAsync);
@@ -832,6 +834,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand RunSelectedProfileAdbScanCommand { get; }
 
     public ICommand RefreshRecognitionScanStatusCommand { get; }
+
+    public ICommand OpenPreviewUrlCommand { get; }
 
     public ICommand RunAllResourceTasksCommand { get; }
 
@@ -1759,6 +1763,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ? $"認識スキャン進捗: {RecognitionScanStatus.Summary}"
                 : $"認識スキャン進捗取得失敗: {RecognitionScanStatus.Error}";
         });
+    }
+
+    private Task OpenPreviewUrlAsync(object? parameter)
+    {
+        var path = parameter as string;
+        var url = RhodesPreviewUrlBuilder.Build(RhodesApiUrl, path ?? "/control-v2");
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = url,
+                UseShellExecute = true,
+            });
+            StatusMessage = $"プレビューを開きました: {url}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"プレビューを開けませんでした: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task<string> SyncRunStateFromApiCoreAsync()

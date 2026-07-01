@@ -504,15 +504,20 @@
             </StackPanel>
 
             <Border Grid.Row="1" CornerRadius="8" Padding="12" Background="#101617" BorderBrush="#2B3638" BorderThickness="1">
-              <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,120" RowSpacing="8" ColumnSpacing="10">
+              <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto,120" RowSpacing="8" ColumnSpacing="10">
                 <StackPanel Orientation="Horizontal" Spacing="14">
                   <CheckBox Content="別ウィンドウ" IsChecked="{Binding OutputSeparateWindow, Mode=TwoWay}" />
                   <CheckBox Content="大会向け" IsChecked="{Binding OutputTournamentMode, Mode=TwoWay}" />
                   <CheckBox Content="透過背景" IsChecked="{Binding OutputTransparentBackground, Mode=TwoWay}" />
                 </StackPanel>
-                <TextBox Grid.Column="1" Text="{Binding OutputScrollSpeed, Mode=TwoWay}" HorizontalContentAlignment="Right" />
-                <TextBlock Grid.Row="1" Text="OBSプレビュー、ブラウザソース、サイドカー表示で共通の表示部品を管理します。" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="px/s" FontSize="11" HorizontalAlignment="Right" Opacity="0.58" />
+                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                  <Button Content="Control" Command="{Binding OpenPreviewUrlCommand}" CommandParameter="/control-v2?screen=obs" />
+                  <Button Content="Sidecar" Command="{Binding OpenPreviewUrlCommand}" CommandParameter="/sidecar" />
+                  <Button Content="Overlay" Command="{Binding OpenPreviewUrlCommand}" CommandParameter="/overlay" />
+                </StackPanel>
+                <TextBox Grid.Column="2" Text="{Binding OutputScrollSpeed, Mode=TwoWay}" HorizontalContentAlignment="Right" />
+                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="OBSプレビュー、ブラウザソース、サイドカー表示で共通の表示部品を管理します。" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                <TextBlock Grid.Row="1" Grid.Column="2" Text="px/s" FontSize="11" HorizontalAlignment="Right" Opacity="0.58" />
               </Grid>
             </Border>
 

@@ -27,6 +27,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("ADB detect API client parses runtime, candidates, and devices", AdbApiDetectionParsing),
     ("ADB test API client parses resolution and screenshot details", AdbApiTestParsing),
+    ("Preview URL builder normalizes RHODES app routes", PreviewUrlBuilder),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("RHODES API status probe parses health and state payloads", RhodesApiStatusParsing),
     ("Optional runtime probe parses GLM and Ollama status payloads", OptionalRuntimeStatusParsing),
@@ -849,6 +850,13 @@ static void OptionalRuntimeStatusParsing()
         "Ollama");
     Equal("導入中", actionStatus.State, "action status installing");
     Equal(true, actionStatus.Installed, "action status installed");
+}
+
+static void PreviewUrlBuilder()
+{
+    Equal("http://127.0.0.1:5173/control-v2", RhodesPreviewUrlBuilder.Build("", ""), "default preview url");
+    Equal("http://127.0.0.1:5173/sidecar", RhodesPreviewUrlBuilder.Build("http://127.0.0.1:5173/", "sidecar"), "sidecar url");
+    Equal("http://localhost:8080/overlay?layout=compact", RhodesPreviewUrlBuilder.Build("http://localhost:8080", "/overlay?layout=compact"), "overlay url");
 }
 
 static void RhodesApiStatusParsing()
