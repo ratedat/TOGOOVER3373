@@ -34,6 +34,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _sessionDetail;
     private string _captureState = "未取得";
     private string _lastCapturePath = "";
+    private string _lastResourceTaskResultsPath = "";
     private string _rhodesApiUrl = "http://127.0.0.1:5173";
     private string _statusMessage = "MAAFramework の検証準備ができています。";
     private string _lastCandidateApplySummary = "候補未反映";
@@ -683,6 +684,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public string LastResourceTaskResultsPath
+    {
+        get => _lastResourceTaskResultsPath;
+        private set
+        {
+            if (!SetProperty(ref _lastResourceTaskResultsPath, value ?? ""))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
     public Bitmap? LastCaptureImage
     {
         get => _lastCaptureImage;
@@ -976,6 +988,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             yield return new SukiInspectorRow("認識プロファイル", SelectedResourceProfile?.DisplayName ?? "-", SelectedResourceProfile?.ProfileSummary ?? "");
             yield return new SukiInspectorRow("候補", $"{CandidateResults.Count}件", ResourceTaskDiagnostics.Summary);
             yield return new SukiInspectorRow("適用", LastCandidateApplySummary, "data/current-state.json");
+            yield return new SukiInspectorRow(
+                "結果JSON",
+                string.IsNullOrWhiteSpace(LastResourceTaskResultsPath) ? "-" : LastResourceTaskResultsPath,
+                "RHODES OBS COMMANDER3373 Debug Logs");
             yield break;
         }
 
@@ -1237,6 +1253,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         await RunBusyAsync(async () =>
         {
             var path = await SaveResourceTaskResultsAsync(ResourceTaskResults, SelectedResourceProfile?.Id);
+            LastResourceTaskResultsPath = path;
             StatusMessage = $"MAA task結果を保存しました: {path}";
         });
     }
@@ -1326,6 +1343,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = $"{task.Entry}: {result.Status}";
         }
         RefreshInspectorRows();
+        if (ResourceTaskResults.Any())
+        {
+            LastResourceTaskResultsPath = await SaveResourceTaskResultsAsync(ResourceTaskResults, SelectedResourceProfile?.Id);
+            StatusMessage = $"MAA task結果を保存しました: {LastResourceTaskResultsPath}";
+        }
     }
 
     private async Task ConvertResourceTaskResultsCoreAsync()

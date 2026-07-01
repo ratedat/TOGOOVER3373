@@ -168,6 +168,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /ConvertResourceTaskResultsCommand/);
   assert.match(viewModel, /ApplyCandidateResultsCommand/);
   assert.match(viewModel, /LastCandidateApplySummary/);
+  assert.match(viewModel, /LastResourceTaskResultsPath/);
   assert.match(viewModel, /RefreshChoicesFromRunState/);
   assert.match(viewModel, /RhodesMaaCandidateApiClient\.ConvertAsync/);
   assert.match(viewModel, /RhodesMaaLocalCandidateConverter\.FromTaskResults/);
