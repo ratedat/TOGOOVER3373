@@ -63,7 +63,8 @@ flowchart LR
 - 接続済み: Suki 側の保存操作からオペレーター/秘宝の選択、表示列、選択/除外フィルター、overlay scroll speed、Suki出力部品設定、OCR engine を既存 state/preference スキーマへ同期する。
 - 接続済み: Suki 側の現在ランIS切替と認識候補適用を API 優先で同期し、API不可時はローカル state へfallbackする。
 - 接続済み: Suki の出力画面から Control/Sidecar/Overlay プレビューを既定ブラウザで開く。
-- 残作業: MAAFramework native `Tasker` 実行と Node API 経由の候補化を、同一のスキャン履歴/証跡モデルへ統合する。
+- 接続済み: MAAFramework native `Tasker` 結果を既存 recognition scan 形状の証跡JSONとして保存し、候補化後の candidate も同じ証跡へ含める。
+- 残作業: MAAFramework native `Tasker` 実行履歴と Node API 経由スキャン履歴を、UI上の同一スキャン履歴ビューへ統合する。
 
 ## First Milestone
 - SukiUI shell が起動する
