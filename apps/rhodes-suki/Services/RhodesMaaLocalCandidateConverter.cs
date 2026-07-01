@@ -23,6 +23,7 @@ public static class RhodesMaaLocalCandidateConverter
             ["run.command_level"] = ("commandLevel", "指揮Lv", 1, 99, 0.75),
             ["run.idea"] = ("idea", "構想", 0, 999, 0.70),
             ["run.idea.current"] = ("idea", "構想", 0, 999, 0.82),
+            ["run.difficulty_grade"] = ("difficulty", "等級", 1, 99, 0.78),
         };
 
     public static IReadOnlyList<MaaCandidatePreview> FromTaskResults(
@@ -95,7 +96,9 @@ public static class RhodesMaaLocalCandidateConverter
 
     private static IEnumerable<MaaCandidatePreview> RunStatusCandidates(IEnumerable<MaaTaskRunResult> taskResults)
     {
-        foreach (var taskResult in taskResults)
+        var results = taskResults as MaaTaskRunResult[] ?? taskResults.ToArray();
+        var campaignId = RunStatusCampaignId(results);
+        foreach (var taskResult in results)
         {
             if (!taskResult.Succeeded)
                 continue;
@@ -103,6 +106,11 @@ public static class RhodesMaaLocalCandidateConverter
             foreach (var staticCandidate in StaticCandidates(taskResult))
             {
                 yield return staticCandidate;
+            }
+
+            foreach (var squadCandidate in SquadCandidates(taskResult, campaignId))
+            {
+                yield return squadCandidate;
             }
 
             var regionId = RunStatusRegionId(taskResult.Entry);
@@ -125,9 +133,36 @@ public static class RhodesMaaLocalCandidateConverter
                 textResult.Text,
                 confidence,
                 Field: field.Field,
-                CampaignId: field.Field == "idea" ? "is5_sarkaz" : "",
+                CampaignId: RunStatusFieldCampaignId(field.Field, campaignId),
                 RecognitionKey: $"maa-local:{field.Field}:{regionId}");
         }
+    }
+
+    private static string RunStatusCampaignId(IReadOnlyList<MaaTaskRunResult> taskResults)
+    {
+        foreach (var taskResult in taskResults)
+        {
+            if (!taskResult.Succeeded)
+                continue;
+
+            foreach (var candidate in StaticCandidates(taskResult))
+            {
+                if (candidate.Field.Equals("campaignId", StringComparison.Ordinal))
+                    return FirstNonEmpty(candidate.Value, candidate.CampaignId);
+            }
+        }
+
+        return RhodesRunCatalog.LoadDefault().Current.CampaignId;
+    }
+
+    private static string RunStatusFieldCampaignId(string field, string campaignId)
+    {
+        return field switch
+        {
+            "idea" => "is5_sarkaz",
+            "difficulty" => campaignId,
+            _ => "",
+        };
     }
 
     private static string RunStatusRegionId(string entry)
@@ -144,8 +179,46 @@ public static class RhodesMaaLocalCandidateConverter
             "RhodesOcrRegion_run_command_level" => "run.command_level",
             "RhodesOcrRegion_run_idea" => "run.idea",
             "RhodesOcrRegion_run_idea_current" or "RhodesTemplate_runStatusFull_run_idea_current" => "run.idea.current",
+            "RhodesOcrRegion_run_difficulty_grade" => "run.difficulty_grade",
             _ => "",
         };
+    }
+
+    private static IEnumerable<MaaCandidatePreview> SquadCandidates(MaaTaskRunResult taskResult, string campaignId)
+    {
+        if (!IsSquadNameEntry(taskResult.Entry))
+            yield break;
+
+        if (string.IsNullOrWhiteSpace(campaignId))
+            yield break;
+
+        var squads = LoadSquads()
+            .Where(item => string.Equals(item.CampaignId, campaignId, StringComparison.Ordinal))
+            .Where(item => !string.IsNullOrWhiteSpace(item.Id) && !string.IsNullOrWhiteSpace(item.Name))
+            .ToArray();
+        var byNormalizedName = squads
+            .GroupBy(item => NormalizeChoiceName(item.Name), StringComparer.Ordinal)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key) && group.Count() == 1)
+            .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
+
+        foreach (var textResult in PrimaryTextResults(taskResult.RecognitionDetailJson))
+        {
+            foreach (var token in ChoiceNameTokens(textResult.Text))
+            {
+                if (!byNormalizedName.TryGetValue(token.Normalized, out var squad))
+                    continue;
+
+                yield return new MaaCandidatePreview(
+                    "runStatus",
+                    squad.Name,
+                    squad.Id,
+                    token.Raw,
+                    Math.Max(0.70, textResult.Confidence ?? 0),
+                    Field: "squadId",
+                    CampaignId: squad.CampaignId,
+                    RecognitionKey: $"maa-local:squad:{squad.Id}");
+            }
+        }
     }
 
     private static IEnumerable<MaaCandidatePreview> StaticCandidates(MaaTaskRunResult taskResult)
@@ -470,6 +543,12 @@ public static class RhodesMaaLocalCandidateConverter
             || entry.Contains("is6.coin_list_text", StringComparison.OrdinalIgnoreCase);
     }
 
+    private static bool IsSquadNameEntry(string entry)
+    {
+        return entry.Equals("RhodesOcrRegion_run_squad_name", StringComparison.Ordinal)
+            || entry.Contains("run.squad_name", StringComparison.OrdinalIgnoreCase);
+    }
+
     private static string RevelationSlotKind(string groupLabel)
     {
         if (groupLabel.Contains("本因", StringComparison.Ordinal))
@@ -731,6 +810,16 @@ public static class RhodesMaaLocalCandidateConverter
         return null;
     }
 
+    private static string FirstNonEmpty(params string[] values)
+    {
+        foreach (var value in values)
+        {
+            if (!string.IsNullOrWhiteSpace(value))
+                return value.Trim();
+        }
+        return "";
+    }
+
     private static string JsonValueText(JsonElement element, string propertyName)
     {
         if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out var property))
@@ -871,6 +960,26 @@ public static class RhodesMaaLocalCandidateConverter
             .ToArray();
     }
 
+    private static IReadOnlyList<RunSquadCandidate> LoadSquads()
+    {
+        var path = ResolveDataPath("squads.json");
+        if (string.IsNullOrWhiteSpace(path))
+            return [];
+
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var root = document.RootElement;
+        if (!root.TryGetProperty("squads", out var squads) || squads.ValueKind != JsonValueKind.Array)
+            return [];
+
+        return squads.EnumerateArray()
+            .Select(item => new RunSquadCandidate(
+                JsonString(item, "id"),
+                JsonString(item, "campaignId"),
+                JsonString(item, "name")))
+            .Where(item => !string.IsNullOrWhiteSpace(item.Id) && !string.IsNullOrWhiteSpace(item.Name))
+            .ToArray();
+    }
+
     private static string ResolveDataPath(params string[] segments)
     {
         foreach (var dataRoot in DataRootCandidates().Distinct(StringComparer.OrdinalIgnoreCase))
@@ -902,4 +1011,9 @@ public static class RhodesMaaLocalCandidateConverter
         string GroupLabel,
         string ParentName,
         string VariantLabel);
+
+    private sealed record RunSquadCandidate(
+        string Id,
+        string CampaignId,
+        string Name);
 }

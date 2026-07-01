@@ -280,12 +280,15 @@ static void LocalCandidateConverterRunStatus()
             M("RhodesOcrRegion_run_shield", "図", 0.89),
             M("RhodesOcrRegion_run_command_level", "I", 0.88),
             M("RhodesTemplate_runStatusFull_run_idea_current", "7", 0.90),
+            M("RhodesOcrRegion_run_difficulty_grade", "18", 0.93),
+            M("RhodesOcrRegion_run_squad_name", "指揮分隊", 0.92),
             M("RhodesOcrRegion_operator_name", "グム", 0.99),
         ]);
 
-    Equal("campaignId|hope|maxHope|ingot|lifePoints|shield|commandLevel|idea", string.Join("|", candidates.Select(item => item.Field)), "local run fields");
-    Equal("is5_sarkaz|3|8|20|4|2|1|7", string.Join("|", candidates.Select(item => item.Value)), "local run values");
+    Equal("campaignId|hope|maxHope|ingot|lifePoints|shield|commandLevel|idea|difficulty|squadId", string.Join("|", candidates.Select(item => item.Field)), "local run fields");
+    Equal("is5_sarkaz|3|8|20|4|2|1|7|18|is5_sarkaz_squad_04", string.Join("|", candidates.Select(item => item.Value)), "local run values");
     Equal("is5_sarkaz", candidates.Single(item => item.Field == "idea").CampaignId, "idea campaign id");
+    Equal("is5_sarkaz", candidates.Single(item => item.Field == "squadId").CampaignId, "squad campaign id");
     Equal("maa-local:static:is5.sarkaz.map_select.campaign", candidates.Single(item => item.Field == "campaignId").RecognitionKey, "campaign recognition key");
     Equal("maa-local:ingot:run.ingot", candidates.Single(item => item.Field == "ingot").RecognitionKey, "local recognition key");
 
