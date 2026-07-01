@@ -71,7 +71,8 @@ flowchart LR
 - 接続済み: MAA `RecognitionDetailJson` の `roi` / `rect` / `box` をROI detail行として抽出表示する。
 - 接続済み: 抽出したROI detail行を1280x720基準のスクリーンショットプレビュー上へ重ね描きする。
 - 接続済み: ROI overlayのON/OFFをプレビュー操作から切り替えられる。
-- 残作業: ROI overlayの選択中行だけ強調、実画像解像度が1280x720以外だった場合の座標変換を追加する。
+- 接続済み: 読み込んだスクリーンショットの実ピクセルサイズを保持し、ROI overlayを1280x720プレビュー座標へ変換する。
+- 残作業: ROI overlayの選択中行だけ強調する。
 
 ## First Milestone
 - SukiUI shell が起動する

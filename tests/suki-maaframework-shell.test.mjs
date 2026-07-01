@@ -55,6 +55,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const diagnostics = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaTaskDiagnostics.cs", "utf8");
   const ocrDetailRows = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaOcrDetailRows.cs", "utf8");
   const roiDetailRows = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaRoiDetailRows.cs", "utf8");
+  const roiPreviewProjector = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaRoiPreviewProjector.cs", "utf8");
   const resultPreview = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaResultPreview.cs", "utf8");
   const runCatalog = await fs.readFile("apps/rhodes-suki/Services/RhodesRunCatalog.cs", "utf8");
   const bitmapPathConverter = await fs.readFile("apps/rhodes-suki/Services/RhodesBitmapPathConverter.cs", "utf8");
@@ -236,6 +237,13 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(roiDetailRows, /roi/);
   assert.match(roiDetailRows, /rect/);
   assert.match(viewModel, /RoiDetailRows/);
+  assert.match(viewModel, /RoiPreviewRows/);
+  assert.match(viewModel, /CapturePixelSizeLabel/);
+  assert.match(viewModel, /RoiProjectionLabel/);
+  assert.match(viewModel, /PixelSize/);
+  assert.match(viewModel, /RhodesMaaRoiPreviewProjector\.Project/);
+  assert.match(roiPreviewProjector, /imageWidth/);
+  assert.match(roiPreviewProjector, /baseResolution\.Width/);
   assert.match(viewModel, /ShowRoiOverlay/);
   assert.match(debugPaths, /Recognition Scans/);
   assert.match(viewModel, /Campaigns/);
@@ -346,8 +354,10 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /RecognitionScanHistory/);
   assert.match(xaml, /RecognitionScanLogRows/);
   assert.match(xaml, /OcrDetailRows/);
-  assert.match(xaml, /RoiDetailRows/);
+  assert.match(xaml, /RoiPreviewRows/);
   assert.match(xaml, /ShowRoiOverlay/);
+  assert.match(xaml, /CapturePixelSizeLabel/);
+  assert.match(xaml, /RoiProjectionLabel/);
   assert.match(xaml, /Content="ROI"/);
   assert.match(xaml, /Canvas Width="1280" Height="720"/);
   assert.match(xaml, /Canvas\.Left="\{Binding X\}"/);

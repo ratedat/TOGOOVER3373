@@ -36,6 +36,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("MAA OCR detail rows expose raw OCR result groups", OcrDetailRowsExposeRawGroups),
     ("MAA ROI detail rows expose rect, roi, and point boxes", RoiDetailRowsExposeRectVariants),
+    ("MAA ROI preview projector scales actual image coordinates to 1280x720", RoiPreviewProjectorScalesImageCoordinates),
     ("MAA native resource task evidence uses recognition scan shape", MaaNativeEvidenceLog),
     ("Recognition scan history loads API and MAA native evidence logs", RecognitionScanHistoryLoadsUnifiedLogs),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
@@ -1104,6 +1105,27 @@ static void RoiDetailRowsExposeRectVariants()
     Equal("5,6 70x80", rows[1].BoundsLabel, "filtered bounds");
     Equal("best.box", rows[2].Source, "best box source");
     Equal("10,20 20x30", rows[2].BoundsLabel, "box bounds");
+}
+
+static void RoiPreviewProjectorScalesImageCoordinates()
+{
+    var sourceRows = new[]
+    {
+        new MaaRoiDetailRow("entry", "filtered.roi", 800, 450, 160, 90, "[800,450,160,90]"),
+    };
+
+    var projected = RhodesMaaRoiPreviewProjector.Project(sourceRows, new MaaBaseResolution(1280, 720), 1600, 900);
+
+    Equal(1, projected.Count, "projected count");
+    Equal(640.0, projected[0].X, "projected x");
+    Equal(360.0, projected[0].Y, "projected y");
+    Equal(128.0, projected[0].Width, "projected width");
+    Equal(72.0, projected[0].Height, "projected height");
+    Equal("1600x900->1280x720", projected[0].ScaleLabel, "projected scale label");
+
+    var oneToOne = RhodesMaaRoiPreviewProjector.Project(sourceRows, new MaaBaseResolution(1280, 720), 0, 0);
+    Equal(800.0, oneToOne[0].X, "one-to-one x");
+    Equal("1:1", oneToOne[0].ScaleLabel, "one-to-one label");
 }
 
 static void MaaNativeEvidenceLog()

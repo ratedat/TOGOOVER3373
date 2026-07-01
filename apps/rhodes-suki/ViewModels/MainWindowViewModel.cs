@@ -46,6 +46,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private SukiHypervisorStatus _hypervisorStatus = new("未確認", "Google Play Gamesや一部エミュレーターの前提確認", false, false, "info");
     private RhodesRecognitionScanStatusPreview _recognitionScanStatus = RhodesRecognitionScanStatusPreview.Empty;
     private Bitmap? _lastCaptureImage;
+    private int _capturePixelWidth;
+    private int _capturePixelHeight;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
     private SukiOcrEngineOption? _selectedOcrEngine;
@@ -166,6 +168,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         CandidateResults = [];
         OcrDetailRows = [];
         RoiDetailRows = [];
+        RoiPreviewRows = [];
         RecognitionScanHistory = [];
         RecognitionScanLogRows = [];
         BaseResolution = Services.RhodesMaaPaths.BaseResolution;
@@ -287,6 +290,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaOcrDetailRow> OcrDetailRows { get; }
 
     public ObservableCollection<MaaRoiDetailRow> RoiDetailRows { get; }
+
+    public ObservableCollection<MaaRoiPreviewRow> RoiPreviewRows { get; }
 
     public ObservableCollection<RhodesRecognitionScanHistoryItem> RecognitionScanHistory { get; }
 
@@ -745,6 +750,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         get => _lastCaptureImage;
         private set => SetCaptureImage(value);
     }
+
+    public string CapturePixelSizeLabel => _capturePixelWidth > 0 && _capturePixelHeight > 0
+        ? $"{_capturePixelWidth}x{_capturePixelHeight}"
+        : BaseResolution.AspectRatioLabel;
+
+    public string RoiProjectionLabel => RoiPreviewRows.FirstOrDefault()?.ScaleLabel ?? $"base {BaseResolution.AspectRatioLabel}";
 
     public string RhodesApiUrl
     {
@@ -2068,6 +2079,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ResourceTaskDiagnostics = RhodesMaaTaskDiagnostics.Summarize(ResourceTaskResults);
         ReplaceCollection(OcrDetailRows, RhodesMaaOcrDetailRows.FromTaskResults(ResourceTaskResults));
         ReplaceCollection(RoiDetailRows, RhodesMaaRoiDetailRows.FromTaskResults(ResourceTaskResults));
+        RefreshRoiPreviewRows();
+    }
+
+    private void RefreshRoiPreviewRows()
+    {
+        ReplaceCollection(
+            RoiPreviewRows,
+            RhodesMaaRoiPreviewProjector.Project(
+                RoiDetailRows,
+                BaseResolution,
+                _capturePixelWidth,
+                _capturePixelHeight));
+        OnPropertyChanged(nameof(RoiProjectionLabel));
     }
 
     private void RefreshResourceTasks()
@@ -2456,7 +2480,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         var previous = _lastCaptureImage;
         _lastCaptureImage = value;
+        _capturePixelWidth = value?.PixelSize.Width ?? 0;
+        _capturePixelHeight = value?.PixelSize.Height ?? 0;
         OnPropertyChanged(nameof(LastCaptureImage));
+        OnPropertyChanged(nameof(CapturePixelSizeLabel));
+        RefreshRoiPreviewRows();
         previous?.Dispose();
     }
 

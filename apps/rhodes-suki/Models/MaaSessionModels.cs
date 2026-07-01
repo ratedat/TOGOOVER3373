@@ -212,6 +212,19 @@ public sealed record MaaRoiDetailRow(
     public string BoundsLabel => $"{X},{Y} {Width}x{Height}";
 }
 
+public sealed record MaaRoiPreviewRow(
+    string Entry,
+    string Source,
+    double X,
+    double Y,
+    double Width,
+    double Height,
+    string Raw,
+    string ScaleLabel)
+{
+    public string BoundsLabel => $"{X:0.#},{Y:0.#} {Width:0.#}x{Height:0.#}";
+}
+
 public sealed record MaaTaskDetailSnapshot(
     string Summary,
     string RecognitionDetailJson,
