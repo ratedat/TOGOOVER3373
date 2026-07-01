@@ -26,6 +26,9 @@ public static class RhodesMaaLocalCandidateConverter
         string? profileId,
         IEnumerable<MaaTaskRunResult> taskResults)
     {
+        if (string.IsNullOrWhiteSpace(profileId) || string.Equals(profileId, "all", StringComparison.Ordinal))
+            return AllProfileCandidates(taskResults).ToArray();
+
         if (string.Equals(profileId, "runStatusFull", StringComparison.Ordinal))
             return RunStatusCandidates(taskResults).ToArray();
 
@@ -42,6 +45,17 @@ public static class RhodesMaaLocalCandidateConverter
             return AgeCandidates(taskResults).ToArray();
 
         return [];
+    }
+
+    private static IReadOnlyList<MaaCandidatePreview> AllProfileCandidates(IEnumerable<MaaTaskRunResult> taskResults)
+    {
+        var results = taskResults.ToArray();
+        var candidates = RunStatusCandidates(results)
+            .Concat(OperatorCandidates(results))
+            .Concat(RelicCandidates(results))
+            .Concat(ThoughtCandidates(results))
+            .Concat(AgeCandidates(results));
+        return RhodesMaaCandidateMerger.Merge([], candidates);
     }
 
     private static IEnumerable<MaaCandidatePreview> RunStatusCandidates(IEnumerable<MaaTaskRunResult> taskResults)

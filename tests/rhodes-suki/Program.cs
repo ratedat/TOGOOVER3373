@@ -16,6 +16,7 @@ var tests = new (string Name, Action Run)[]
     ("Local MAA candidate converter extracts current campaign relic candidates", LocalCandidateConverterRelics),
     ("Local MAA candidate converter preserves duplicate IS5 thought candidates", LocalCandidateConverterThoughts),
     ("Local MAA candidate converter extracts IS5 age candidates", LocalCandidateConverterAge),
+    ("Local MAA candidate converter dispatches all profile task results", LocalCandidateConverterAllProfiles),
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
@@ -373,6 +374,41 @@ static void LocalCandidateConverterAge()
     Equal("is5_sarkaz_selectable_age_is5_age_01_prime", candidates[0].AgeId, "age id");
     Equal("is5_sarkaz", candidates[0].CampaignId, "age campaign id");
     Equal("maa-local:age:is5_sarkaz_selectable_age_is5_age_01_prime", candidates[0].RecognitionKey, "age recognition key");
+
+    static MaaTaskRunResult M(string entry, string text, double score)
+    {
+        var encodedText = System.Text.Json.JsonSerializer.Serialize(text);
+        return new MaaTaskRunResult(
+            entry,
+            "Succeeded",
+            true,
+            "detail",
+            $"{{\"filtered_results\":[{{\"text\":{encodedText},\"score\":{score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}]}}",
+            "OCR",
+            true);
+    }
+}
+
+static void LocalCandidateConverterAllProfiles()
+{
+    var catalog = RhodesRunCatalog.LoadDefault();
+    var relic = catalog.Relics.First(item => item.CampaignId == catalog.Current.CampaignId);
+    var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+        null,
+        [
+            M("RhodesOcrRegion_run_hope_current", "3", 0.94),
+            M("RhodesOcrRegion_run_hope_max", "8", 0.92),
+            M("RhodesOcrRegion_operator_name_left_1", "グム", 0.91),
+            M("RhodesOcrRegion_relic_list_text", relic.Name, 0.90),
+            M("RhodesOcrRegion_is5_thought_list_text", "走る都市", 0.89),
+            M("RhodesOcrRegion_is5_age_detail_text", "天災の時代（全盛期）", 0.88),
+        ]);
+
+    Equal("hope|maxHope", string.Join("|", candidates.Where(item => item.Kind == "runStatus").Select(item => item.Field)), "all profile run fields");
+    Equal("gummy", string.Join("|", candidates.Where(item => item.Kind == "operator").Select(item => item.OperatorId)), "all profile operator");
+    Equal(relic.Id, string.Join("|", candidates.Where(item => item.Kind == "relic").Select(item => item.RelicId)), "all profile relic");
+    Equal("is5_sarkaz_selectable_thought_insp_20", string.Join("|", candidates.Where(item => item.Kind == "thought").Select(item => item.ThoughtId)), "all profile thought");
+    Equal("is5_sarkaz_selectable_age_is5_age_01_prime", string.Join("|", candidates.Where(item => item.Kind == "age").Select(item => item.AgeId)), "all profile age");
 
     static MaaTaskRunResult M(string entry, string text, double score)
     {
