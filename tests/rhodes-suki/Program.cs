@@ -1073,6 +1073,7 @@ static void RunCatalogLoadsChoices()
     Equal(true, catalog.Current.SelectedRelicIds.Contains("is5_sarkaz_relic_254"), "current relic selection");
     Equal("is5_sarkaz", catalog.Current.CampaignId, "current campaign");
     Equal(0, catalog.Current.Idea, "current idea");
+    Equal("profile", catalog.Current.OcrEngine, "current ocr engine");
 
     var tempDirectory = Path.Combine(Path.GetTempPath(), "rhodes-suki-tests", Guid.NewGuid().ToString("N"));
     Directory.CreateDirectory(tempDirectory);
@@ -1090,13 +1091,14 @@ static void RunCatalogLoadsChoices()
               },
               "operators": [],
               "relics": [],
-              "preferences": {}
+              "preferences": { "ocrEngine": "glm-ocr" }
             }
             """);
 
         var squadIdCatalog = RhodesRunCatalog.LoadDefault(RhodesRunCatalog.ResolveDataRoot(), statePath);
         Equal("奇想天外分隊", squadIdCatalog.Current.Squad, "current squad id label");
         Equal("組み合わせ02: #5破壊戦術分隊 + #3精神論分隊", squadIdCatalog.Current.SquadRandomEffect, "current squad option label");
+        Equal("glm-ocr", squadIdCatalog.Current.OcrEngine, "state ocr engine");
     }
     finally
     {
@@ -1377,11 +1379,12 @@ static void StateApiSukiPreferencesApply()
             [
                 new SukiOutputPartState("operators", true, false, true, 420, 132),
                 new SukiOutputPartState("relics", true, true, true, 420, 170),
-            ])))!.AsObject();
+            ]),
+        "maa-onnx"))!.AsObject();
 
     Equal("tournament", updated["mode"]!.GetValue<string>(), "mode tournament");
     var preferences = updated["preferences"]!.AsObject();
-    Equal("glm-ocr", preferences["ocrEngine"]!.GetValue<string>(), "ocr engine preserved");
+    Equal("maa-onnx", preferences["ocrEngine"]!.GetValue<string>(), "ocr engine updated");
     Equal(true, preferences["operatorShowSelectedFirst"]!.GetValue<bool>(), "operator selected first");
     Equal(true, preferences["operatorHideExcluded"]!.GetValue<bool>(), "operator hide excluded");
     Equal(4, preferences["operatorGridColumns"]!.GetValue<int>(), "operator columns");

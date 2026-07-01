@@ -54,6 +54,41 @@ public sealed record RhodesAdbApiSettings(
     string AdbPath,
     string Serial);
 
+public sealed record SukiOcrEngineOption(
+    string Id,
+    string Label,
+    string Detail)
+{
+    public string DisplayName => Label;
+}
+
+public static class SukiOcrEngineCatalog
+{
+    private static readonly SukiOcrEngineOption[] BuiltInOptions =
+    [
+        new("profile", "プロファイル既定", "認識プロファイル側の既定エンジンを使います。"),
+        new("hybrid", "MAA ONNX + PaddleOCR + Windows保険", "MAA OCRを主軸に複数OCRで補完します。"),
+        new("maa-onnx", "MAA ONNX OCR", "MAAFramework系OCRを優先します。"),
+        new("paddle", "PaddleOCR", "PaddleOCRを直接使う旧互換ルートです。"),
+        new("windows-paddle", "Windows + PaddleOCR 旧互換", "Windows OCRとPaddleOCRを併用します。"),
+        new("windows", "Windows OCR 旧互換", "Windows OCRのみを使う保険ルートです。"),
+        new("windows-glm", "Windows + GLM-OCR 検証", "Windows OCRと任意導入GLM-OCRを併用します。"),
+        new("glm-ocr", "GLM-OCR 検証", "任意導入GLM-OCRを優先します。"),
+    ];
+
+    private static readonly HashSet<string> ValidIds = BuiltInOptions
+        .Select(option => option.Id)
+        .ToHashSet(StringComparer.Ordinal);
+
+    public static IReadOnlyList<SukiOcrEngineOption> Options => BuiltInOptions;
+
+    public static string Normalize(string? value)
+    {
+        var normalized = string.IsNullOrWhiteSpace(value) ? "profile" : value.Trim().ToLowerInvariant();
+        return ValidIds.Contains(normalized) ? normalized : "profile";
+    }
+}
+
 public sealed record SukiOutputPreferences(
     bool SeparateWindow,
     bool TournamentMode,

@@ -32,6 +32,15 @@
     <DataTemplate x:Key="AdbPresetSelectionTemplate">
       <TextBlock Text="{Binding DisplayName}" Foreground="#E8EFEF" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
     </DataTemplate>
+    <DataTemplate x:Key="OcrEngineComboItemTemplate">
+      <StackPanel Spacing="2">
+        <TextBlock Text="{Binding Label}" Foreground="#E8EFEF" TextTrimming="CharacterEllipsis" />
+        <TextBlock Text="{Binding Detail}" Foreground="#AAB6B8" FontSize="11" TextTrimming="CharacterEllipsis" />
+      </StackPanel>
+    </DataTemplate>
+    <DataTemplate x:Key="OcrEngineSelectionTemplate">
+      <TextBlock Text="{Binding Label}" Foreground="#E8EFEF" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+    </DataTemplate>
     <services:RhodesBitmapPathConverter x:Key="BitmapPathConverter" />
   </suki:SukiWindow.Resources>
   <suki:SukiWindow.Styles>
@@ -545,7 +554,7 @@
               </StackPanel>
             </Grid>
 
-            <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="92,*,Auto" RowSpacing="8" ColumnSpacing="8">
+            <Grid Grid.Row="1" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="92,*,Auto" RowSpacing="8" ColumnSpacing="8">
               <TextBlock Text="プリセット" FontSize="12" VerticalAlignment="Center" Opacity="0.66" />
               <ComboBox Grid.Column="1" ItemsSource="{Binding AdbPresets}" SelectedItem="{Binding SelectedAdbPreset, Mode=TwoWay}" ItemTemplate="{StaticResource AdbPresetComboItemTemplate}" SelectionBoxItemTemplate="{StaticResource AdbPresetSelectionTemplate}" />
               <Button Grid.Column="2" Content="適用" Command="{Binding ApplyAdbPresetCommand}" CommandParameter="{Binding SelectedAdbPreset}" />
@@ -558,6 +567,9 @@
 
               <TextBlock Grid.Row="3" Text="Config" FontSize="12" VerticalAlignment="Center" Opacity="0.66" />
               <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AdbConfigJson, Mode=TwoWay}" />
+
+              <TextBlock Grid.Row="4" Text="OCR" FontSize="12" VerticalAlignment="Center" Opacity="0.66" />
+              <ComboBox Grid.Row="4" Grid.Column="1" Grid.ColumnSpan="2" ItemsSource="{Binding OcrEngineOptions}" SelectedItem="{Binding SelectedOcrEngine, Mode=TwoWay}" ItemTemplate="{StaticResource OcrEngineComboItemTemplate}" SelectionBoxItemTemplate="{StaticResource OcrEngineSelectionTemplate}" />
             </Grid>
 
             <ItemsControl Grid.Row="2" ItemsSource="{Binding RuntimeCapabilities}">

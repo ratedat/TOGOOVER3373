@@ -47,6 +47,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private Bitmap? _lastCaptureImage;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
+    private SukiOcrEngineOption? _selectedOcrEngine;
     private SukiCampaignPreview? _selectedCampaign;
     private MaaTaskDiagnosticsSnapshot _resourceTaskDiagnostics = MaaTaskDiagnosticsSnapshot.Empty;
     private bool _operatorShowSelectedFirst;
@@ -132,6 +133,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ProbeResults = [];
         AdbPresets = new ObservableCollection<MaaAdbPresetPreview>(RhodesAdbPresetCatalog.DefaultPresets());
         AdbDevices = [];
+        OcrEngineOptions = new ObservableCollection<SukiOcrEngineOption>(SukiOcrEngineCatalog.Options);
         SelectedAdbPreset = AdbPresets.FirstOrDefault(preset => preset.Id == "auto") ?? AdbPresets.FirstOrDefault();
         Campaigns = new ObservableCollection<SukiCampaignPreview>(runCatalog.Campaigns);
         _allOperators = runCatalog.Operators;
@@ -153,6 +155,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         _relicSelectedOnly = runCatalog.Current.RelicSelectedOnly;
         _operatorPaneColumns = ClampPaneColumns(runCatalog.Current.OperatorGridColumns);
         _relicPaneColumns = ClampPaneColumns(runCatalog.Current.RelicGridColumns);
+        _selectedOcrEngine = OcrEngineOptions.FirstOrDefault(option => option.Id == runCatalog.Current.OcrEngine)
+            ?? OcrEngineOptions.FirstOrDefault();
         _selectedCampaign = Campaigns.FirstOrDefault(campaign => campaign.Id == runCatalog.Current.CampaignId) ?? Campaigns.FirstOrDefault();
         ResourceProfiles = new ObservableCollection<MaaResourceProfilePreview>(RhodesMaaResourceCatalog.ProfileGroups(_allResourceTasks));
         ResourceTasks = [];
@@ -239,6 +243,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaAdbPresetPreview> AdbPresets { get; }
 
     public ObservableCollection<MaaAdbDevicePreview> AdbDevices { get; }
+
+    public ObservableCollection<SukiOcrEngineOption> OcrEngineOptions { get; }
 
     public ObservableCollection<SukiCampaignPreview> Campaigns { get; }
 
@@ -772,6 +778,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public SukiOcrEngineOption? SelectedOcrEngine
+    {
+        get => _selectedOcrEngine;
+        set
+        {
+            if (!SetProperty(ref _selectedOcrEngine, value))
+                return;
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+        }
+    }
+
     public bool IsBusy
     {
         get => _isBusy;
@@ -916,8 +934,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             "maa-ocr",
             "MAA-OCR",
             "OCR",
-            MaaOcrStatusState(),
-            MaaOcrStatusDetail(),
+            SelectedOcrEngine?.Label ?? MaaOcrStatusState(),
+            $"{SelectedOcrEngine?.Id ?? "profile"} / {MaaOcrStatusDetail()}",
             "認識",
             false);
         yield return new SukiRuntimeCapabilityPreview(
@@ -1013,6 +1031,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         var campaign = Campaigns.FirstOrDefault(item => string.Equals(item.Id, _runState.CampaignId, StringComparison.Ordinal));
         if (campaign is not null && !string.Equals(campaign.Id, SelectedCampaign?.Id, StringComparison.Ordinal))
             SelectedCampaign = campaign;
+        var engine = OcrEngineOptions.FirstOrDefault(item => string.Equals(item.Id, _runState.OcrEngine, StringComparison.Ordinal));
+        if (engine is not null)
+            SelectedOcrEngine = engine;
         RefreshChoicesFromRunState(_runState);
         RefreshRunStatePreviews();
     }
@@ -1087,6 +1108,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             yield return new SukiInspectorRow("RHODES API", _rhodesApiStatus.State, RhodesApiUrl);
             yield return new SukiInspectorRow("端末", $"{AdbDevices.Count}件", SessionState);
             yield return new SukiInspectorRow("Hyper-V", _hypervisorStatus.State, _hypervisorStatus.Detail);
+            yield return new SukiInspectorRow("OCRエンジン", SelectedOcrEngine?.Label ?? "プロファイル既定", SelectedOcrEngine?.Id ?? "profile");
             yield return new SukiInspectorRow("任意OCR", $"GLM={_glmRuntimeStatus.State} / Ollama={_ollamaRuntimeStatus.State}", RhodesApiUrl);
             yield break;
         }
@@ -1175,7 +1197,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                     part.ScrollEnabled,
                     part.HideExcluded,
                     part.Width,
-                    part.Height)).ToArray()));
+                    part.Height)).ToArray()),
+            SelectedOcrEngine?.Id ?? _runState.OcrEngine);
         var saved = await RhodesStateApiClient.SaveAsync(RhodesApiUrl, updated);
         if (!saved.Succeeded)
         {

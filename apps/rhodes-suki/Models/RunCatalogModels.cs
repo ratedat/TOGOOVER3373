@@ -222,7 +222,8 @@ public sealed record SukiRunStateSnapshot(
     int Shield = 0,
     int CommandLevel = 1,
     int Idea = 0,
-    IReadOnlyList<SukiSpecialFieldState>? SpecialFields = null);
+    IReadOnlyList<SukiSpecialFieldState>? SpecialFields = null,
+    string OcrEngine = "profile");
 
 public sealed record RhodesRunCatalogSnapshot(
     IReadOnlyList<SukiCampaignPreview> Campaigns,

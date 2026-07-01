@@ -216,7 +216,8 @@ public static class RhodesRunCatalog
             JsonInt(run, "shield"),
             JsonInt(run, "commandLevel"),
             ReadSpecialInt(run, campaignId, "idea"),
-            BuildSpecialFieldStates(run, campaigns, selectableEffects));
+            BuildSpecialFieldStates(run, campaigns, selectableEffects),
+            SukiOcrEngineCatalog.Normalize(JsonString(preferences, "ocrEngine", "profile")));
     }
 
     private static string ResolveSquadDisplayName(string dataRoot, string campaignId, JsonElement run)

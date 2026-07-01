@@ -96,7 +96,8 @@ public static class RhodesStateApiClient
     public static string ApplySukiPreferencesToStateJson(
         string stateJson,
         SukiChoicePersistenceOptions choiceOptions,
-        SukiOutputPreferences outputPreferences)
+        SukiOutputPreferences outputPreferences,
+        string ocrEngine = "profile")
     {
         var root = JsonNode.Parse(string.IsNullOrWhiteSpace(stateJson) ? "{}" : stateJson)?.AsObject() ?? [];
         var preferences = root["preferences"] as JsonObject;
@@ -106,6 +107,7 @@ public static class RhodesStateApiClient
             root["preferences"] = preferences;
         }
 
+        preferences["ocrEngine"] = SukiOcrEngineCatalog.Normalize(ocrEngine);
         preferences["operatorShowSelectedFirst"] = choiceOptions.OperatorShowSelectedFirst;
         preferences["operatorHideExcluded"] = choiceOptions.OperatorHideExcluded;
         preferences["operatorSelectedOnly"] = choiceOptions.OperatorSelectedOnly;
