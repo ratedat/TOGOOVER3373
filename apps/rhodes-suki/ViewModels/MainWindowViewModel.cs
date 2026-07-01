@@ -43,6 +43,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private SukiOptionalRuntimeStatus _glmRuntimeStatus = new("GLM-OCR", "未確認", "状態確認を実行してください。", false, false);
     private SukiOptionalRuntimeStatus _ollamaRuntimeStatus = new("Ollama", "未確認", "状態確認を実行してください。", false, false);
     private SukiHypervisorStatus _hypervisorStatus = new("未確認", "Google Play Gamesや一部エミュレーターの前提確認", false, false, "info");
+    private RhodesRecognitionScanStatusPreview _recognitionScanStatus = RhodesRecognitionScanStatusPreview.Empty;
     private Bitmap? _lastCaptureImage;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
@@ -178,6 +179,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
         RunSelectedProfileRecognitionAndApplyCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAndApplyAsync);
         RunSelectedProfileAdbScanCommand = new AsyncRelayCommand(RunSelectedProfileAdbScanAsync);
+        RefreshRecognitionScanStatusCommand = new AsyncRelayCommand(RefreshRecognitionScanStatusAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         SyncRunStateFromApiCommand = new AsyncRelayCommand(SyncRunStateFromApiAsync);
@@ -810,6 +812,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RunSelectedProfileAdbScanCommand { get; }
 
+    public ICommand RefreshRecognitionScanStatusCommand { get; }
+
     public ICommand RunAllResourceTasksCommand { get; }
 
     public ICommand ExportResourceTaskResultsCommand { get; }
@@ -823,6 +827,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand RunProbeCommand { get; }
 
     public ICommand RunResourceTaskCommand { get; }
+
+    public RhodesRecognitionScanStatusPreview RecognitionScanStatus
+    {
+        get => _recognitionScanStatus;
+        private set
+        {
+            if (!SetProperty(ref _recognitionScanStatus, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
 
     public ICommand SetWorkspaceCommand { get; }
 
@@ -1047,6 +1062,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         if (WorkspaceTab == "recognition")
         {
             yield return new SukiInspectorRow("認識プロファイル", SelectedResourceProfile?.DisplayName ?? "-", SelectedResourceProfile?.ProfileSummary ?? "");
+            yield return new SukiInspectorRow("API進捗", RecognitionScanStatus.Summary, RecognitionScanStatus.Detail);
             yield return new SukiInspectorRow("候補", $"{CandidateResults.Count}件", ResourceTaskDiagnostics.Summary);
             yield return new SukiInspectorRow("適用", LastCandidateApplySummary, "data/current-state.json");
             yield return new SukiInspectorRow(
@@ -1549,6 +1565,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = $"既存ADBスキャンAPIを開始します: {profileId}";
 
             var result = await RhodesRecognitionScanApiClient.RunAsync(RhodesApiUrl, profileId);
+            RecognitionScanStatus = await RhodesRecognitionScanStatusClient.FetchAsync(RhodesApiUrl);
             if (!result.Succeeded)
             {
                 StatusMessage = $"既存ADBスキャンAPI失敗: {result.Error}";
@@ -1570,6 +1587,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ? $"既存ADBスキャンAPI完了: {result.Candidates.Count}候補 / {result.Status} / {syncSummary}"
                 : $"既存ADBスキャンAPI完了: {result.Status} / {syncSummary}";
             RefreshInspectorRows();
+        });
+    }
+
+    private async Task RefreshRecognitionScanStatusAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            StatusMessage = "認識スキャン進捗を確認しています。";
+            RecognitionScanStatus = await RhodesRecognitionScanStatusClient.FetchAsync(RhodesApiUrl);
+            _rhodesApiStatus = RecognitionScanStatus.Succeeded
+                ? new SukiOptionalRuntimeStatus("RHODES API", "接続済み", "scan status取得済み", true, false)
+                : new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", RecognitionScanStatus.Error, false, false);
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+            StatusMessage = RecognitionScanStatus.Succeeded
+                ? $"認識スキャン進捗: {RecognitionScanStatus.Summary}"
+                : $"認識スキャン進捗取得失敗: {RecognitionScanStatus.Error}";
         });
     }
 

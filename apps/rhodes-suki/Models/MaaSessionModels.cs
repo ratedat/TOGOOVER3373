@@ -190,6 +190,45 @@ public sealed record SukiHypervisorStatus(
     bool RequiresBiosChange,
     string Severity);
 
+public sealed record RhodesRecognitionScanStatusPreview(
+    bool HasActiveScan,
+    string ActiveProfileId,
+    string ActiveStatus,
+    string ActiveStage,
+    int ActiveLogCount,
+    string LastProfileId,
+    string LastStatus,
+    string LastLogPath,
+    int LastCandidateCount,
+    string Error)
+{
+    public static RhodesRecognitionScanStatusPreview Empty { get; } = new(
+        false,
+        "",
+        "未確認",
+        "",
+        0,
+        "",
+        "",
+        "",
+        0,
+        "");
+
+    public bool Succeeded => string.IsNullOrWhiteSpace(Error);
+
+    public string Summary => HasActiveScan
+        ? $"実行中: {ActiveProfileId} / {ActiveStatus} / {ActiveStage}"
+        : string.IsNullOrWhiteSpace(LastProfileId)
+            ? ActiveStatus
+            : $"直近: {LastProfileId} / {LastStatus} / candidates={LastCandidateCount}";
+
+    public string Detail => HasActiveScan
+        ? $"log={ActiveLogCount}"
+        : string.IsNullOrWhiteSpace(LastLogPath)
+            ? Error
+            : LastLogPath;
+}
+
 public sealed record MaaCandidatePreview(
     string Kind,
     string Label,

@@ -440,6 +440,7 @@
                 <Button Content="認識+反映" Command="{Binding RunSelectedProfileRecognitionAndApplyCommand}" />
                 <Button Content="認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
                 <Button Content="ADB API" Command="{Binding RunSelectedProfileAdbScanCommand}" />
+                <Button Content="進捗" Command="{Binding RefreshRecognitionScanStatusCommand}" />
                 <Button Content="全実行" Command="{Binding RunAllResourceTasksCommand}" />
                 <Button Content="JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
               </StackPanel>
@@ -458,8 +459,8 @@
                 <TextBlock Text="{Binding SelectedResourceProfile.ProfileSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
               </StackPanel>
               <StackPanel Grid.Column="1" Spacing="2">
-                <TextBlock Text="定義元" FontSize="11" Opacity="0.58" />
-                <TextBlock Text="{Binding SelectedResourceProfile.SourceSummary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
+                <TextBlock Text="API進捗" FontSize="11" Opacity="0.58" />
+                <TextBlock Text="{Binding RecognitionScanStatus.Summary}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" Opacity="0.74" />
               </StackPanel>
             </Grid>
 

@@ -11,6 +11,7 @@ var tests = new (string Name, Action Run)[]
     ("Candidate preview exposes stable debugger identity", CandidatePreviewIdentity),
     ("MAA candidate API extraction preserves structured ids", CandidateApiExtraction),
     ("Recognition scan API extraction preserves profile status and candidates", RecognitionScanApiExtraction),
+    ("Recognition scan status API extraction exposes active and last scan summaries", RecognitionScanStatusExtraction),
     ("MAA candidate merger supplements missing local candidates safely", CandidateMergerSupplementsLocalCandidates),
     ("Local MAA candidate converter extracts run status candidates", LocalCandidateConverterRunStatus),
     ("Local MAA candidate converter keeps the best duplicate run status field", LocalCandidateConverterRunStatusBestDuplicate),
@@ -283,6 +284,46 @@ static void RecognitionScanApiExtraction()
     Equal("gummy", result.Candidates[0].OperatorId, "operator id");
     Equal("hope", result.Candidates[1].Field, "run field");
     Equal("3", result.Candidates[1].Value, "numeric scan value");
+}
+
+static void RecognitionScanStatusExtraction()
+{
+    var active = RhodesRecognitionScanStatusClient.ExtractStatus(
+        """
+        {
+          "active": {
+            "profileId": "relicsFull",
+            "status": "running",
+            "stage": "capture",
+            "log": [
+              { "event": "capture" },
+              { "event": "recognize" }
+            ]
+          },
+          "lastScan": null
+        }
+        """);
+    Equal(true, active.HasActiveScan, "active flag");
+    Equal("relicsFull", active.ActiveProfileId, "active profile");
+    Equal(2, active.ActiveLogCount, "active log count");
+    Equal(true, active.Summary.Contains("実行中", StringComparison.Ordinal), "active summary");
+
+    var last = RhodesRecognitionScanStatusClient.ExtractStatus(
+        """
+        {
+          "active": null,
+          "lastScan": {
+            "profileId": "operatorsFull",
+            "status": "completed",
+            "logPath": "O:/debug/recognition.json",
+            "counts": { "candidates": 7 }
+          }
+        }
+        """);
+    Equal(false, last.HasActiveScan, "last active flag");
+    Equal("operatorsFull", last.LastProfileId, "last profile");
+    Equal(7, last.LastCandidateCount, "last candidate count");
+    Equal("O:/debug/recognition.json", last.Detail, "last detail");
 }
 
 static void CandidateMergerSupplementsLocalCandidates()
