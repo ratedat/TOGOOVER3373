@@ -1,3 +1,4 @@
+using System.Text.Json.Nodes;
 using RhodesSuki.Models;
 using RhodesSuki.Services;
 
@@ -15,6 +16,7 @@ var tests = new (string Name, Action Run)[]
     ("Run catalog loads campaigns, operators, relics, and current selections", RunCatalogLoadsChoices),
     ("Choice filters support selected-first, hidden exclusions, and selected-only", ChoiceFilters),
     ("Operator taxonomy keeps Integrated Strategies class and branch order", OperatorTaxonomyOrder),
+    ("Run state store persists selected choices and display preferences", ChoicePersistence),
     ("Choice rows group filtered items into up to four panes", ChoiceRows),
 };
 
@@ -370,6 +372,58 @@ static void OperatorTaxonomyOrder()
         ("緩速師", "補助"),
     ]);
     Equal("先駆兵|闘士|重盾衛士|速射手|拡散術師|医師|守望者|緩速師|行商人|巡空者", string.Join("|", mixedBranches), "mixed branch order");
+}
+
+static void ChoicePersistence()
+{
+    var operators = new[]
+    {
+        new SukiChoiceItem("operator", "gummy", "グム", "★4 重装 / 庇護衛士", "重装", "庇護衛士", "", "", 4, 1, false),
+        new SukiChoiceItem("operator", "rain", "レイン", "★5 狙撃 / 速射手", "狙撃", "速射手", "", "", 5, 2, false),
+    };
+    operators[0].IsSelected = true;
+    operators[1].IsExcluded = true;
+
+    var relics = new[]
+    {
+        new SukiChoiceItem("relic", "is5_sarkaz_relic_001", "秘宝A", "No.001", "", "", "is5_sarkaz", "食品", 0, 1, false),
+        new SukiChoiceItem("relic", "is5_sarkaz_relic_002", "秘宝B", "No.002", "", "", "is5_sarkaz", "食品", 0, 2, false),
+    };
+    relics[0].IsSelected = true;
+    relics[1].IsExcluded = true;
+
+    var state = JsonNode.Parse(
+        """
+        {
+          "version": 1,
+          "run": { "campaignId": "is5_sarkaz", "hope": 3 },
+          "operators": ["old"],
+          "relics": [],
+          "preferences": { "ocrEngine": "profile" }
+        }
+        """)!.AsObject();
+    var updated = RhodesRunStateStore.ApplyChoices(
+        state,
+        operators,
+        relics,
+        new SukiChoicePersistenceOptions(true, true, false, false, true, true, 4, 3),
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
+
+    Equal("gummy", updated["operators"]!.AsArray()[0]!.GetValue<string>(), "selected operator");
+    Equal("is5_sarkaz_relic_001", updated["relics"]!.AsArray()[0]!.GetValue<string>(), "selected relic");
+    var preferences = updated["preferences"]!.AsObject();
+    Equal("rain", preferences["operatorExcludedIds"]!.AsArray()[0]!.GetValue<string>(), "operator exclusion");
+    Equal("is5_sarkaz_relic_002", preferences["relicExcludedIds"]!.AsArray()[0]!.GetValue<string>(), "relic exclusion");
+    Equal(true, preferences["operatorShowSelectedFirst"]!.GetValue<bool>(), "operator selected first preference");
+    Equal(true, preferences["operatorHideExcluded"]!.GetValue<bool>(), "operator hide excluded preference");
+    Equal(false, preferences["operatorSelectedOnly"]!.GetValue<bool>(), "operator selected only preference");
+    Equal(false, preferences["relicShowSelectedFirst"]!.GetValue<bool>(), "relic selected first preference");
+    Equal(true, preferences["relicHideExcluded"]!.GetValue<bool>(), "relic hide excluded preference");
+    Equal(true, preferences["relicSelectedOnly"]!.GetValue<bool>(), "relic selected only preference");
+    Equal(4, preferences["operatorGridColumns"]!.GetValue<int>(), "operator grid columns");
+    Equal(3, preferences["relicGridColumns"]!.GetValue<int>(), "relic grid columns");
+    Equal("2026-07-01T00:00:00.0000000Z", updated["updatedAt"]!.GetValue<string>(), "updatedAt");
+    Equal(3, updated["run"]!.AsObject()["hope"]!.GetValue<int>(), "existing run state preserved");
 }
 
 static void Equal<T>(T expected, T actual, string label)

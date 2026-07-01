@@ -202,6 +202,8 @@ public static class RhodesRunCatalog
             JsonBool(preferences, "relicShowSelectedFirst"),
             JsonBool(preferences, "relicHideExcluded"),
             JsonBool(preferences, "relicSelectedOnly"),
+            Math.Clamp(JsonNullableInt(preferences, "operatorGridColumns") ?? 2, 1, 4),
+            Math.Clamp(JsonNullableInt(preferences, "relicGridColumns") ?? 2, 1, 4),
             JsonString(run, "squad"),
             JsonString(run, "difficulty"),
             JsonInt(run, "hope"),
@@ -427,7 +429,7 @@ public static class RhodesRunCatalog
         };
     }
 
-    private static string ResolveDataRoot()
+    public static string ResolveDataRoot()
     {
         foreach (var root in CandidateRoots())
         {
@@ -456,7 +458,7 @@ public static class RhodesRunCatalog
             .FirstOrDefault() ?? preferred;
     }
 
-    private static string ResolveStatePath(string dataRoot)
+    public static string ResolveStatePath(string dataRoot)
     {
         var preferred = Path.Combine(dataRoot, "current-state.json");
         var candidates = new[] { preferred }

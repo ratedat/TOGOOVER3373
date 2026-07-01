@@ -206,6 +206,8 @@ public sealed record SukiRunStateSnapshot(
     bool RelicShowSelectedFirst,
     bool RelicHideExcluded,
     bool RelicSelectedOnly,
+    int OperatorGridColumns = 2,
+    int RelicGridColumns = 2,
     string Squad = "",
     string Difficulty = "",
     int Hope = 0,

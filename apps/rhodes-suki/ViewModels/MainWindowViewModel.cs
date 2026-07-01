@@ -138,6 +138,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         _relicShowSelectedFirst = runCatalog.Current.RelicShowSelectedFirst;
         _relicHideExcluded = runCatalog.Current.RelicHideExcluded;
         _relicSelectedOnly = runCatalog.Current.RelicSelectedOnly;
+        _operatorPaneColumns = ClampPaneColumns(runCatalog.Current.OperatorGridColumns);
+        _relicPaneColumns = ClampPaneColumns(runCatalog.Current.RelicGridColumns);
         _selectedCampaign = Campaigns.FirstOrDefault(campaign => campaign.Id == runCatalog.Current.CampaignId) ?? Campaigns.FirstOrDefault();
         _allResourceTasks = RhodesMaaResourceCatalog.DefaultTasks();
         ResourceProfiles = new ObservableCollection<MaaResourceProfilePreview>(RhodesMaaResourceCatalog.ProfileGroups(_allResourceTasks));
@@ -475,6 +477,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _operatorShowSelectedFirst, value))
                 return;
             RefreshOperatorChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -486,6 +489,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _operatorHideExcluded, value))
                 return;
             RefreshOperatorChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -497,6 +501,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _operatorSelectedOnly, value))
                 return;
             RefreshOperatorChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -530,6 +535,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _relicShowSelectedFirst, value))
                 return;
             RefreshRelicChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -541,6 +547,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _relicHideExcluded, value))
                 return;
             RefreshRelicChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -552,6 +559,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _relicSelectedOnly, value))
                 return;
             RefreshRelicChoices();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -564,6 +572,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 return;
             RefreshOperatorRows();
             RefreshInspectorRows();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -576,6 +585,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 return;
             RefreshRelicRows();
             RefreshInspectorRows();
+            PersistChoiceStateInBackground();
         }
     }
 
@@ -996,38 +1006,38 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         return Task.CompletedTask;
     }
 
-    private Task ToggleChoiceSelectedAsync(object? parameter)
+    private async Task ToggleChoiceSelectedAsync(object? parameter)
     {
         if (parameter is not SukiChoiceItem item)
-            return Task.CompletedTask;
+            return;
 
         item.IsSelected = !item.IsSelected;
         if (item.IsSelected)
             item.IsExcluded = false;
         RefreshChoiceAfterMutation(item.Kind);
-        StatusMessage = $"{item.Name}: {(item.IsSelected ? "選択しました。" : "選択を解除しました。")}";
-        return Task.CompletedTask;
+        if (await PersistChoiceStateAsync())
+            StatusMessage = $"{item.Name}: {(item.IsSelected ? "選択しました。" : "選択を解除しました。")}";
     }
 
-    private Task ToggleChoiceExcludedAsync(object? parameter)
+    private async Task ToggleChoiceExcludedAsync(object? parameter)
     {
         if (parameter is not SukiChoiceItem item)
-            return Task.CompletedTask;
+            return;
 
         item.IsExcluded = !item.IsExcluded;
         if (item.IsExcluded)
             item.IsSelected = false;
         RefreshChoiceAfterMutation(item.Kind);
-        StatusMessage = $"{item.Name}: {(item.IsExcluded ? "表示除外にしました。" : "表示除外を解除しました。")}";
-        return Task.CompletedTask;
+        if (await PersistChoiceStateAsync())
+            StatusMessage = $"{item.Name}: {(item.IsExcluded ? "表示除外にしました。" : "表示除外を解除しました。")}";
     }
 
-    private Task ClearVisibleChoicesAsync()
+    private async Task ClearVisibleChoicesAsync()
     {
         if (ChoiceTab == "recognition")
         {
             StatusMessage = "認識タスクには手動選択がありません。";
-            return Task.CompletedTask;
+            return;
         }
 
         var target = ChoiceTab == "relics" ? FilteredRelics : FilteredOperators;
@@ -1037,8 +1047,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
 
         RefreshChoiceAfterBulkMutation(ChoiceTab == "relics" ? "relic" : "operator");
-        StatusMessage = $"{ChoicePanelTitle}の表示中選択を解除しました。";
-        return Task.CompletedTask;
+        if (await PersistChoiceStateAsync())
+            StatusMessage = $"{ChoicePanelTitle}の表示中選択を解除しました。";
     }
 
     private Task ApplyAdbPresetAsync(MaaAdbPresetPreview? preset)
@@ -1344,6 +1354,38 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RefreshOperatorChoices();
         else
             RefreshOperatorSummaries();
+    }
+
+    private void PersistChoiceStateInBackground()
+    {
+        _ = PersistChoiceStateAsync();
+    }
+
+    private async Task<bool> PersistChoiceStateAsync()
+    {
+        try
+        {
+            await RhodesRunStateStore.SaveChoicesAsync(_allOperators, _allRelics, BuildChoicePersistenceOptions());
+            return true;
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"状態保存に失敗しました: {ex.Message}";
+            return false;
+        }
+    }
+
+    private SukiChoicePersistenceOptions BuildChoicePersistenceOptions()
+    {
+        return new SukiChoicePersistenceOptions(
+            OperatorShowSelectedFirst,
+            OperatorHideExcluded,
+            OperatorSelectedOnly,
+            RelicShowSelectedFirst,
+            RelicHideExcluded,
+            RelicSelectedOnly,
+            OperatorPaneColumns,
+            RelicPaneColumns);
     }
 
     private void RefreshOperatorSummaries()

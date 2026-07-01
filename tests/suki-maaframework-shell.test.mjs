@@ -56,6 +56,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const choiceFilter = await fs.readFile("apps/rhodes-suki/Services/RhodesChoiceFilter.cs", "utf8");
   const choiceRows = await fs.readFile("apps/rhodes-suki/Services/RhodesChoiceRows.cs", "utf8");
   const operatorTaxonomy = await fs.readFile("apps/rhodes-suki/Services/RhodesOperatorTaxonomy.cs", "utf8");
+  const runStateStore = await fs.readFile("apps/rhodes-suki/Services/RhodesRunStateStore.cs", "utf8");
   const models = await fs.readFile("apps/rhodes-suki/Models/MaaSessionModels.cs", "utf8");
   const runModels = await fs.readFile("apps/rhodes-suki/Models/RunCatalogModels.cs", "utf8");
   const viewModel = await fs.readFile("apps/rhodes-suki/ViewModels/MainWindowViewModel.cs", "utf8");
@@ -115,6 +116,9 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(operatorTaxonomy, /SortBranches/);
   assert.match(operatorTaxonomy, /"先鋒"/);
   assert.match(operatorTaxonomy, /"執行者"/);
+  assert.match(runStateStore, /SaveChoicesAsync/);
+  assert.match(runStateStore, /operatorExcludedIds/);
+  assert.match(runStateStore, /operatorGridColumns/);
   assert.match(models, /MaaTaskDetailSnapshot/);
   assert.match(models, /MaaResourceProfilePreview/);
   assert.match(models, /MaaCandidatePreview/);
@@ -176,6 +180,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RefreshRelicRows/);
   assert.match(viewModel, /RhodesOperatorTaxonomy\.SortClasses/);
   assert.match(viewModel, /RhodesOperatorTaxonomy\.SortBranches/);
+  assert.match(viewModel, /RhodesRunStateStore\.SaveChoicesAsync/);
   assert.match(viewModel, /SequenceEqual\(items\)/);
   assert.match(mainWindowCodeBehind, /CloseOpenComboBoxesOnOutsidePress/);
   assert.match(mainWindowCodeBehind, /IsDropDownOpen = false/);
