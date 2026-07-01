@@ -154,7 +154,38 @@ public sealed record MaaCandidatePreview(
     string CampaignId = "",
     string RecognitionKey = "",
     string ThoughtId = "",
-    string AgeId = "");
+    string AgeId = "")
+{
+    public string Identity => FirstNonEmpty(Field, OperatorId, RelicId, ThoughtId, AgeId, RecognitionKey, CampaignId);
+
+    public string DebugDetail
+    {
+        get
+        {
+            var parts = new[]
+            {
+                Part("field", Field),
+                Part("operator", OperatorId),
+                Part("relic", RelicId),
+                Part("thought", ThoughtId),
+                Part("age", AgeId),
+                Part("campaign", CampaignId),
+                Part("key", RecognitionKey),
+            }.Where(part => !string.IsNullOrWhiteSpace(part));
+            return string.Join(" · ", parts);
+        }
+    }
+
+    private static string FirstNonEmpty(params string[] values)
+    {
+        return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";
+    }
+
+    private static string Part(string label, string value)
+    {
+        return string.IsNullOrWhiteSpace(value) ? "" : $"{label}:{value}";
+    }
+}
 
 public sealed record SukiCandidateApplySummary(
     int AppliedCount,

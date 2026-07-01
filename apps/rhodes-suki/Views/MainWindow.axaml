@@ -673,12 +673,14 @@
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Border CornerRadius="7" Padding="9" Margin="0,0,0,8" Background="#132021" BorderBrush="#2B4547" BorderThickness="1">
-                      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="90,*,70" ColumnSpacing="8">
+                      <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="90,*,100" ColumnSpacing="8">
                         <TextBlock Text="{Binding Kind}" FontSize="11" Opacity="0.72" />
                         <TextBlock Grid.Column="1" Text="{Binding Label}" FontSize="13" FontWeight="SemiBold" />
                         <TextBlock Grid.Column="2" Text="{Binding Confidence}" FontFamily="Consolas" FontSize="11" HorizontalAlignment="Right" Opacity="0.65" />
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Value}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Field}" FontSize="11" HorizontalAlignment="Right" Opacity="0.55" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Identity}" FontSize="11" HorizontalAlignment="Right" Opacity="0.55" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding DebugDetail}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.50" />
+                        <TextBlock Grid.Row="2" Text="{Binding RawText}" FontSize="10" TextWrapping="Wrap" Opacity="0.45" />
                       </Grid>
                     </Border>
                   </DataTemplate>

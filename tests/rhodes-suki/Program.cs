@@ -8,6 +8,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA OCR filtered_results are preferred over all_results", OcrFilteredResults),
     ("MAA TemplateMatch count becomes a template candidate", TemplateCount),
     ("MAA hit without detail falls back to a simple candidate", HitFallback),
+    ("Candidate preview exposes stable debugger identity", CandidatePreviewIdentity),
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
@@ -125,6 +126,25 @@ static void HitFallback()
     Equal(1, previews.Count, "preview count");
     Equal("maa", previews[0].Kind, "kind");
     Equal("hit", previews[0].Value, "value");
+}
+
+static void CandidatePreviewIdentity()
+{
+    var runStatus = new MaaCandidatePreview("runStatus", "希望", "3", "3", 0.9, Field: "hope");
+    var thought = new MaaCandidatePreview(
+        "thought",
+        "枯れ木と若枝",
+        "thought_a",
+        "枯れ木と若枝",
+        0.8,
+        CampaignId: "is5_sarkaz",
+        RecognitionKey: "thought:is5_sarkaz:thought_a",
+        ThoughtId: "thought_a");
+
+    Equal("hope", runStatus.Identity, "run status identity");
+    Equal("thought_a", thought.Identity, "thought identity");
+    Equal("thought:thought_a", thought.DebugDetail.Split(" · ").First(part => part.StartsWith("thought:", StringComparison.Ordinal)), "thought debug detail");
+    Equal(true, thought.DebugDetail.Contains("campaign:is5_sarkaz", StringComparison.Ordinal), "campaign debug detail");
 }
 
 static void AdbPresets()
