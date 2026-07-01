@@ -25,6 +25,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("ADB detect API client parses runtime, candidates, and devices", AdbApiDetectionParsing),
+    ("ADB test API client parses resolution and screenshot details", AdbApiTestParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("RHODES API status probe parses health and state payloads", RhodesApiStatusParsing),
     ("Optional runtime probe parses GLM and Ollama status payloads", OptionalRuntimeStatusParsing),
@@ -717,6 +718,36 @@ static void AdbApiDetectionParsing()
     Equal(true, result.AdbCandidates[0].Available, "candidate available");
     Equal(1, result.Devices.Count, "device count");
     Equal(true, result.Devices[0].IsUsable, "device usable");
+}
+
+static void AdbApiTestParsing()
+{
+    var result = RhodesAdbApiClient.ExtractTestResult(
+        """
+        {
+          "ok": true,
+          "runtime": {
+            "adbPath": "adb",
+            "serial": "127.0.0.1:6520"
+          },
+          "resolution": {
+            "width": 1280,
+            "height": 720
+          },
+          "screenshot": {
+            "bytes": 123456,
+            "capturedAt": "2026-07-01T00:00:00.000Z",
+            "path": "O:/debug/adb-test.png"
+          }
+        }
+        """);
+
+    Equal(true, result.Succeeded, "test succeeded");
+    Equal("127.0.0.1:6520", result.RuntimeSerial, "runtime serial");
+    Equal(1280, result.Width, "width");
+    Equal(720, result.Height, "height");
+    Equal(123456L, result.ScreenshotBytes, "screenshot bytes");
+    Equal("O:/debug/adb-test.png", result.ScreenshotPath, "screenshot path");
 }
 
 static void SukiSettingsStore()

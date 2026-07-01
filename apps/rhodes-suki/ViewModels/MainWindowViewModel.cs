@@ -166,6 +166,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ApplyAdbPresetCommand = new AsyncRelayCommand(parameter => ApplyAdbPresetAsync(parameter as MaaAdbPresetPreview));
         RefreshAdbDevicesCommand = new AsyncRelayCommand(RefreshAdbDevicesAsync);
         ApplyAdbDeviceCommand = new AsyncRelayCommand(parameter => ApplyAdbDeviceAsync(parameter as MaaAdbDevicePreview));
+        RunAdbApiTestCommand = new AsyncRelayCommand(RunAdbApiTestAsync);
         RefreshOptionalRuntimesCommand = new AsyncRelayCommand(RefreshOptionalRuntimesAsync);
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
@@ -780,6 +781,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand ApplyAdbDeviceCommand { get; }
 
+    public ICommand RunAdbApiTestCommand { get; }
+
     public ICommand RefreshOptionalRuntimesCommand { get; }
 
     public ICommand CaptureCommand { get; }
@@ -1310,6 +1313,50 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RefreshRuntimeCapabilities();
             RefreshInspectorRows();
             StatusMessage = $"ランタイム状態: API={_rhodesApiStatus.State}, GLM={snapshot.Glm.State}, Ollama={snapshot.Ollama.State}, Hyper-V={_hypervisorStatus.State}";
+        });
+    }
+
+    private async Task RunAdbApiTestAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            StatusMessage = "ADB接続テストAPIを実行しています。";
+            var result = await RhodesAdbApiClient.TestAsync(
+                RhodesApiUrl,
+                new RhodesAdbApiSettings(
+                    true,
+                    SelectedAdbPreset?.Id ?? "auto",
+                    AdbPath,
+                    AdbSerial),
+                capture: true);
+            if (!result.Succeeded)
+            {
+                _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", result.Error, false, false);
+                SessionState = "API接続テスト失敗";
+                SessionDetail = result.Error;
+                StatusMessage = $"ADB接続テストAPI失敗: {result.Error}";
+                RefreshRuntimeCapabilities();
+                RefreshInspectorRows();
+                return;
+            }
+
+            if (!string.IsNullOrWhiteSpace(result.RuntimeAdbPath))
+                AdbPath = result.RuntimeAdbPath;
+            if (!string.IsNullOrWhiteSpace(result.RuntimeSerial))
+                AdbSerial = result.RuntimeSerial;
+
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続済み", "ADB接続テストAPI成功", true, false);
+            SessionState = "API接続OK";
+            SessionDetail = $"{result.Width}x{result.Height} / {result.RuntimeSerial}";
+            LastCapturePath = result.ScreenshotPath;
+            CaptureState = result.ScreenshotBytes > 0
+                ? $"API撮影: {result.ScreenshotBytes} bytes / {result.CapturedAt}"
+                : $"API接続: {result.Width}x{result.Height}";
+            if (!string.IsNullOrWhiteSpace(result.ScreenshotPath) && File.Exists(result.ScreenshotPath))
+                LastCaptureImage = new Bitmap(result.ScreenshotPath);
+            StatusMessage = $"ADB接続テストAPI成功: {result.Width}x{result.Height}";
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
         });
     }
 
