@@ -58,7 +58,8 @@ flowchart LR
 - 接続済み: `/api/adb/detect` による MAA 風ADB候補/端末検出、`/api/adb/test` による解像度/スクリーンショット確認。
 - 接続済み: `/api/ocr/glm/status`、`/api/ocr/glm/install`、`/api/ocr/glm/uninstall`、`/api/ocr/glm/ollama/*` による任意 GLM-OCR/Ollama 管理。
 - 接続済み: `/api/recognition/scan/status` による実行中/直近スキャン進捗確認。
-- 残作業: Suki 側から ADB/ランタイム設定を `current-state.json` の既存設定スキーマへ保存する導線を強化する。
+- 接続済み: Suki 側の保存操作から ADB path/serial/preset を `current-state.json` の既存 `adb` スキーマへ同期する。
+- 残作業: Suki 側から OCR engine/OBS/sidecar preference を `current-state.json` の既存設定スキーマへ保存する導線を強化する。
 - 残作業: MAAFramework native `Tasker` 実行と Node API 経由の候補化を、同一のスキャン履歴/証跡モデルへ統合する。
 - 残作業: OBS/sidecar 出力設定を Suki 側の設定保存とプレビュー確認に接続する。
 
