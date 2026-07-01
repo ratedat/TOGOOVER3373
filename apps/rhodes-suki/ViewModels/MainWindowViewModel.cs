@@ -1836,10 +1836,34 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ResolveMaaTasksSourcePath(),
                 ResolveScanProfilesSourcePath(),
                 ResolveGeneratedPipelinePath());
-            StatusMessage = MaaResourceGenerationResult.Succeeded
-                ? $"{MaaResourceGenerationResult.Message} / backup={MaaResourceGenerationResult.BackupPath}"
-                : $"MAA Resource再生成失敗: {MaaResourceGenerationResult.Message}";
+            if (!MaaResourceGenerationResult.Succeeded)
+            {
+                StatusMessage = $"MAA Resource再生成失敗: {MaaResourceGenerationResult.Message}";
+                return;
+            }
+
+            var message = $"{MaaResourceGenerationResult.Message} / backup={MaaResourceGenerationResult.BackupPath}";
+            var reloadSnapshot = await ReloadMaaResourceSessionIfReadyAsync();
+            StatusMessage = reloadSnapshot is null
+                ? $"{message} / 未接続のため次回接続時に反映"
+                : reloadSnapshot.IsReady
+                    ? $"{message} / Resource再読込済み"
+                    : $"{message} / Resource再読込失敗: {reloadSnapshot.Detail}";
         });
+    }
+
+    private async Task<MaaSessionSnapshot?> ReloadMaaResourceSessionIfReadyAsync()
+    {
+        if (!string.Equals(SessionState, "接続済み", StringComparison.Ordinal))
+            return null;
+
+        var snapshot = await _session.InitializeAdbAsync(BuildSessionOptions());
+        SessionState = snapshot.State;
+        SessionDetail = snapshot.IsReady
+            ? $"{snapshot.Detail} / Resource再読込済み"
+            : $"{snapshot.Detail} / Resource再読込失敗";
+        RefreshInspectorRows();
+        return snapshot;
     }
 
     private async Task SyncRunStateFromApiAsync()
