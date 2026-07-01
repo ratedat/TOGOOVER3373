@@ -93,6 +93,16 @@ public static class RhodesStateApiClient
         return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
     }
 
+    public static string ApplyRunContextToStateJson(
+        string stateJson,
+        string campaignId,
+        DateTimeOffset? now = null)
+    {
+        var root = JsonNode.Parse(string.IsNullOrWhiteSpace(stateJson) ? "{}" : stateJson)?.AsObject() ?? [];
+        RhodesRunStateStore.ApplyRunContext(root, campaignId, now ?? DateTimeOffset.UtcNow);
+        return root.ToJsonString(new JsonSerializerOptions { WriteIndented = true });
+    }
+
     public static string ApplySukiPreferencesToStateJson(
         string stateJson,
         SukiChoicePersistenceOptions choiceOptions,

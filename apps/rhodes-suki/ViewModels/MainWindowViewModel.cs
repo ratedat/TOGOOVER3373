@@ -1212,6 +1212,31 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         return "";
     }
 
+    private async Task<string> SaveRunContextToApiStateAsync(string campaignId)
+    {
+        var fetched = await RhodesStateApiClient.FetchAsync(RhodesApiUrl);
+        if (!fetched.Succeeded)
+        {
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", fetched.Error, false, false);
+            RefreshRuntimeCapabilities();
+            return fetched.Error;
+        }
+
+        var updated = RhodesStateApiClient.ApplyRunContextToStateJson(fetched.StateJson, campaignId);
+        var saved = await RhodesStateApiClient.SaveAsync(RhodesApiUrl, updated);
+        if (!saved.Succeeded)
+        {
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", saved.Error, false, false);
+            RefreshRuntimeCapabilities();
+            return saved.Error;
+        }
+
+        await RhodesRunStateStore.ReplaceStateJsonAsync(saved.StateJson);
+        _rhodesApiStatus = RhodesApiStatusProbe.ParseStateJson(saved.StateJson);
+        RefreshRuntimeCapabilities();
+        return "";
+    }
+
     private Task SetWorkspaceAsync(object? parameter)
     {
         var tab = parameter as string;
@@ -1276,13 +1301,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         await RunBusyAsync(async () =>
         {
-            await RhodesRunStateStore.SaveRunContextAsync(campaignId);
-            _runState = RhodesRunCatalog.LoadDefault().Current;
+            var apiError = await SaveRunContextToApiStateAsync(campaignId);
+            if (!string.IsNullOrWhiteSpace(apiError))
+                await RhodesRunStateStore.SaveRunContextAsync(campaignId);
+
+            ReloadRunStateFromStore();
             var campaign = Campaigns.FirstOrDefault(item => string.Equals(item.Id, _runState.CampaignId, StringComparison.Ordinal));
-            if (campaign is not null)
-                SelectedCampaign = campaign;
             RefreshRunStatePreviews();
-            StatusMessage = $"{campaign?.DisplayName ?? campaignId} を現在ランに設定しました。";
+            StatusMessage = string.IsNullOrWhiteSpace(apiError)
+                ? $"{campaign?.DisplayName ?? campaignId} を現在ランに設定し、APIへ同期しました。"
+                : $"{campaign?.DisplayName ?? campaignId} を現在ランに設定しました。API同期は失敗: {apiError}";
         });
     }
 

@@ -42,6 +42,7 @@ var tests = new (string Name, Action Run)[]
     ("Run state store can replace state from API JSON", StateApiReplacement),
     ("State API client can apply Suki ADB settings into current state JSON", StateApiAdbSettingsApply),
     ("State API client can apply Suki display preferences into current state JSON", StateApiSukiPreferencesApply),
+    ("State API client can apply current campaign into current state JSON", StateApiRunContextApply),
     ("Run state store switches current campaign without stale run values", RunContextPersistence),
     ("Recognition candidate applier persists safe run status fields", CandidateRunStatusApply),
     ("Recognition candidate applier applies campaign before dependent run fields", CandidateCampaignApplyFirst),
@@ -1440,6 +1441,36 @@ static void RunContextPersistence()
     var sameCampaign = JsonNode.Parse("""{ "run": { "campaignId": "is5_sarkaz", "hope": 3 } }""")!.AsObject();
     RhodesRunStateStore.ApplyRunContext(sameCampaign, "is5_sarkaz", DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
     Equal(3, sameCampaign["run"]!.AsObject()["hope"]!.GetValue<int>(), "same campaign keeps run values");
+}
+
+static void StateApiRunContextApply()
+{
+    var updated = JsonNode.Parse(RhodesStateApiClient.ApplyRunContextToStateJson(
+        """
+        {
+          "version": 1,
+          "run": {
+            "campaignId": "is3_mizuki",
+            "hope": 5,
+            "commandLevel": 6,
+            "special": { "is3_mizuki": { "light": 20 } }
+          },
+          "operators": ["gummy"],
+          "relics": ["is3_relic_001"],
+          "preferences": { "ocrEngine": "glm-ocr" }
+        }
+        """,
+        "is5_sarkaz",
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z")))!.AsObject();
+
+    var run = updated["run"]!.AsObject();
+    Equal("is5_sarkaz", run["campaignId"]!.GetValue<string>(), "api campaign id");
+    Equal(false, run.ContainsKey("hope"), "api stale hope removed");
+    Equal(false, run.ContainsKey("special"), "api stale special removed");
+    Equal(1, run["commandLevel"]!.GetValue<int>(), "api command level reset");
+    Equal("gummy", updated["operators"]!.AsArray()[0]!.GetValue<string>(), "api operators preserved");
+    Equal("glm-ocr", updated["preferences"]!.AsObject()["ocrEngine"]!.GetValue<string>(), "api preferences preserved");
+    Equal("2026-07-01T00:00:00.0000000Z", updated["updatedAt"]!.GetValue<string>(), "api updatedAt");
 }
 
 static void CandidateRunStatusApply()
