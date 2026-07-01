@@ -50,6 +50,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private int _capturePixelHeight;
     private string _selectedRoiPreviewKey = "";
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
+    private MaaRoiEditDraft _selectedRoiEditDraft = MaaRoiEditDraft.Empty;
     private MaaOcrDetailRow? _selectedOcrDetailRow;
     private MaaTaskRunResult? _selectedResourceTaskResult;
     private RhodesRecognitionScanLogRow? _selectedRecognitionScanLogRow;
@@ -810,6 +811,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             OnPropertyChanged();
             RefreshSelectedRoiPreviewRows();
         }
+    }
+
+    public MaaRoiEditDraft SelectedRoiEditDraft
+    {
+        get => _selectedRoiEditDraft;
+        private set => SetProperty(ref _selectedRoiEditDraft, value);
     }
 
     public MaaOcrDetailRow? SelectedOcrDetailRow
@@ -2174,6 +2181,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ReplaceCollection(
             SelectedRoiPreviewRows,
             _selectedRoiPreviewRow is null ? [] : [_selectedRoiPreviewRow]);
+        SelectedRoiEditDraft = MaaRoiEditDraft.FromPreview(_selectedRoiPreviewRow);
     }
 
     private void SelectRoiForOcrDetail(MaaOcrDetailRow? row)

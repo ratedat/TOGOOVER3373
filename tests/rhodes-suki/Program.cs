@@ -1132,6 +1132,12 @@ static void RoiPreviewProjectorScalesImageCoordinates()
     Equal("entry|filtered.roi|[800,450,160,90]|640,360,128,72", projected[0].Key, "projected key");
     Equal("Resource ROI候補", projected[0].EditKindLabel, "projected edit label");
     Equal("[640,360,128,72]", projected[0].ProjectedRoiJson, "projected roi json");
+    var draft = MaaRoiEditDraft.FromPreview(projected[0]);
+    Equal(true, draft.HasSelection, "draft has selection");
+    Equal("編集候補", draft.StatusLabel, "draft status");
+    Equal("[640,360,128,72]", draft.RoiJson, "draft roi json");
+    Equal("entry / filtered.roi", draft.Detail, "draft detail");
+    Equal("未選択", MaaRoiEditDraft.FromPreview(null).StatusLabel, "empty draft status");
 
     var oneToOne = RhodesMaaRoiPreviewProjector.Project(sourceRows, new MaaBaseResolution(1280, 720), 0, 0);
     Equal(800.0, oneToOne[0].X, "one-to-one x");

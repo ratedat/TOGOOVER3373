@@ -276,6 +276,32 @@ public sealed record MaaRoiPreviewRow(
     }
 }
 
+public sealed record MaaRoiEditDraft(
+    string Entry,
+    string Source,
+    string RoiJson,
+    bool IsResourceRoiCandidate)
+{
+    public static MaaRoiEditDraft Empty { get; } = new("", "", "-", false);
+
+    public bool HasSelection => !string.IsNullOrWhiteSpace(Entry);
+
+    public string StatusLabel => HasSelection
+        ? IsResourceRoiCandidate ? "編集候補" : "診断用"
+        : "未選択";
+
+    public string Detail => HasSelection
+        ? $"{Entry} / {Source}"
+        : "ROI行を選択してください";
+
+    public static MaaRoiEditDraft FromPreview(MaaRoiPreviewRow? row)
+    {
+        return row is null
+            ? Empty
+            : new MaaRoiEditDraft(row.Entry, row.Source, row.ProjectedRoiJson, row.IsResourceRoiCandidate);
+    }
+}
+
 public sealed record MaaTaskDetailSnapshot(
     string Summary,
     string RecognitionDetailJson,

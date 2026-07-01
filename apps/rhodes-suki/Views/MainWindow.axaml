@@ -843,6 +843,14 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
 
+                <Border CornerRadius="7" Padding="9" Background="#151913" BorderBrush="#3A4528" BorderThickness="1">
+                  <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                    <TextBlock Text="{Binding SelectedRoiEditDraft.StatusLabel}" FontSize="13" FontWeight="SemiBold" />
+                    <TextBlock Grid.Column="1" Text="{Binding SelectedRoiEditDraft.RoiJson}" FontFamily="Consolas" FontSize="11" Opacity="0.78" />
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding SelectedRoiEditDraft.Detail}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
+                  </Grid>
+                </Border>
+
                 <ListBox ItemsSource="{Binding RoiPreviewRows}" SelectedItem="{Binding SelectedRoiPreviewRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
                   <ListBox.ItemTemplate>
                     <DataTemplate>
