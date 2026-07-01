@@ -37,6 +37,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA OCR detail rows expose raw OCR result groups", OcrDetailRowsExposeRawGroups),
     ("MAA ROI detail rows expose rect, roi, and point boxes", RoiDetailRowsExposeRectVariants),
     ("MAA ROI preview projector scales actual image coordinates to 1280x720", RoiPreviewProjectorScalesImageCoordinates),
+    ("MAA ROI selection matcher links OCR detail rows to ROI previews", RoiSelectionMatcherLinksOcrRows),
     ("MAA native resource task evidence uses recognition scan shape", MaaNativeEvidenceLog),
     ("Recognition scan history loads API and MAA native evidence logs", RecognitionScanHistoryLoadsUnifiedLogs),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
@@ -1127,6 +1128,22 @@ static void RoiPreviewProjectorScalesImageCoordinates()
     var oneToOne = RhodesMaaRoiPreviewProjector.Project(sourceRows, new MaaBaseResolution(1280, 720), 0, 0);
     Equal(800.0, oneToOne[0].X, "one-to-one x");
     Equal("1:1", oneToOne[0].ScaleLabel, "one-to-one label");
+}
+
+static void RoiSelectionMatcherLinksOcrRows()
+{
+    var roiRows = new[]
+    {
+        new MaaRoiPreviewRow("entry-a", "best.box", 1, 2, 3, 4, "best", "1:1"),
+        new MaaRoiPreviewRow("entry-b", "filtered.roi", 5, 6, 7, 8, "other", "1:1"),
+        new MaaRoiPreviewRow("entry-a", "filtered.roi", 9, 10, 11, 12, "target", "1:1"),
+    };
+    var ocrRow = new MaaOcrDetailRow("entry-a", "グム", 0.91, "filtered", "OCR");
+
+    var selected = RhodesMaaRoiSelectionMatcher.MatchForOcrDetail(roiRows, ocrRow);
+
+    Equal("target", selected?.Raw, "matched roi row");
+    Equal(null, RhodesMaaRoiSelectionMatcher.MatchForOcrDetail(roiRows, new MaaOcrDetailRow("entry-c", "グム", 0.91, "filtered", "OCR")), "missing match");
 }
 
 static void MaaNativeEvidenceLog()

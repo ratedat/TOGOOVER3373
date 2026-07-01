@@ -50,6 +50,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private int _capturePixelHeight;
     private string _selectedRoiPreviewKey = "";
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
+    private MaaOcrDetailRow? _selectedOcrDetailRow;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
     private SukiOcrEngineOption? _selectedOcrEngine;
@@ -806,6 +807,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             _selectedRoiPreviewRow = value;
             OnPropertyChanged();
             RefreshSelectedRoiPreviewRows();
+        }
+    }
+
+    public MaaOcrDetailRow? SelectedOcrDetailRow
+    {
+        get => _selectedOcrDetailRow;
+        set
+        {
+            if (Equals(_selectedOcrDetailRow, value))
+                return;
+
+            _selectedOcrDetailRow = value;
+            OnPropertyChanged();
+            SelectRoiForOcrDetail(value);
         }
     }
 
@@ -2129,6 +2144,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ReplaceCollection(
             SelectedRoiPreviewRows,
             _selectedRoiPreviewRow is null ? [] : [_selectedRoiPreviewRow]);
+    }
+
+    private void SelectRoiForOcrDetail(MaaOcrDetailRow? row)
+    {
+        var selected = RhodesMaaRoiSelectionMatcher.MatchForOcrDetail(RoiPreviewRows, row);
+        if (selected is not null)
+            SelectedRoiPreviewRow = selected;
     }
 
     private void RefreshResourceTasks()

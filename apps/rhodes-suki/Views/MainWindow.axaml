@@ -828,8 +828,8 @@
                   </ItemsControl.ItemTemplate>
                 </ItemsControl>
 
-                <ItemsControl ItemsSource="{Binding OcrDetailRows}">
-                  <ItemsControl.ItemTemplate>
+                <ListBox ItemsSource="{Binding OcrDetailRows}" SelectedItem="{Binding SelectedOcrDetailRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
+                  <ListBox.ItemTemplate>
                     <DataTemplate>
                       <Border CornerRadius="7" Padding="9" Background="#132021" BorderBrush="#2B4547" BorderThickness="1" Margin="0,0,0,8">
                         <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -840,8 +840,8 @@
                         </Grid>
                       </Border>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </ListBox.ItemTemplate>
+                </ListBox>
 
                 <ListBox ItemsSource="{Binding RoiPreviewRows}" SelectedItem="{Binding SelectedRoiPreviewRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
                   <ListBox.ItemTemplate>

@@ -73,7 +73,8 @@ flowchart LR
 - 接続済み: ROI overlayのON/OFFをプレビュー操作から切り替えられる。
 - 接続済み: 読み込んだスクリーンショットの実ピクセルサイズを保持し、ROI overlayを1280x720プレビュー座標へ変換する。
 - 接続済み: ROI一覧で選択した行だけをプレビュー上で強調表示する。
-- 残作業: ROI overlayの選択状態をOCR/detail行の選択とも連動する。
+- 接続済み: OCR detail行の選択から同じentry/sourceのROI overlayを自動選択して強調する。
+- 残作業: ROI overlayの選択状態をResource task結果、ログイベント行、将来のROI編集操作とも連動する。
 
 ## First Milestone
 - SukiUI shell が起動する
