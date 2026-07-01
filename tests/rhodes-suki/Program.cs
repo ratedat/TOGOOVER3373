@@ -25,6 +25,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("Optional runtime probe parses GLM and Ollama status payloads", OptionalRuntimeStatusParsing),
+    ("MAAFramework runtime probe reports native and VC++ diagnostics", MaaFrameworkRuntimeDiagnostics),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
     ("Resource profile groups keep operational recognition order", ResourceProfileOrder),
@@ -681,6 +682,48 @@ static void OptionalRuntimeStatusParsing()
     Equal(false, missing.Installed, "missing flag");
     Equal("導入中", installing.State, "installing state");
     Equal(true, installing.Installing, "installing flag");
+}
+
+static void MaaFrameworkRuntimeDiagnostics()
+{
+    var missingNative = MaaFrameworkRuntimeProbe.BuildStatus(new MaaFrameworkRuntimeProbeFacts(
+        "MaaFramework.Binding",
+        "5.8.0.0",
+        "win-x64",
+        @"C:\app\runtimes\win-x64\native",
+        ["MaaFramework.dll", "opencv_world4_maa.dll"],
+        true,
+        []));
+    Equal("MAAFramework", missingNative.Name, "native status name");
+    Equal("ネイティブ未配置", missingNative.State, "native missing state");
+    Equal(false, missingNative.IsReady, "native missing ready");
+    Equal(true, missingNative.Detail.Contains("MaaFramework.dll", StringComparison.Ordinal), "native missing detail");
+    Equal(true, missingNative.Detail.Contains(@"C:\app\runtimes\win-x64\native", StringComparison.Ordinal), "native path detail");
+
+    var missingVc = MaaFrameworkRuntimeProbe.BuildStatus(new MaaFrameworkRuntimeProbeFacts(
+        "MaaFramework.Binding",
+        "5.8.0.0",
+        "win-x64",
+        @"C:\app\runtimes\win-x64\native",
+        [],
+        true,
+        ["vcruntime140_1.dll"]));
+    Equal("VC++不足", missingVc.State, "vc missing state");
+    Equal(false, missingVc.IsReady, "vc missing ready");
+    Equal(true, missingVc.Detail.Contains("Visual C++ 2015-2022", StringComparison.Ordinal), "vc guidance detail");
+    Equal(true, missingVc.Detail.Contains("vcruntime140_1.dll", StringComparison.Ordinal), "vc missing detail");
+
+    var ok = MaaFrameworkRuntimeProbe.BuildStatus(new MaaFrameworkRuntimeProbeFacts(
+        "MaaFramework.Binding",
+        "5.8.0.0",
+        "win-x64",
+        @"C:\app\runtimes\win-x64\native",
+        [],
+        true,
+        []));
+    Equal("参照済み", ok.State, "ok state");
+    Equal(true, ok.IsReady, "ok ready");
+    Equal(true, ok.Detail.Contains("VC++ runtime OK", StringComparison.Ordinal), "ok vc detail");
 }
 
 static void TaskDiagnostics()

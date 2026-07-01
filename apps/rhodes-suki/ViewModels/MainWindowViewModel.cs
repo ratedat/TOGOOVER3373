@@ -15,6 +15,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private readonly IReadOnlyList<MaaResourceTaskPreview> _allResourceTasks;
     private readonly IReadOnlyList<SukiChoiceItem> _allOperators = [];
     private readonly IReadOnlyList<SukiChoiceItem> _allRelics = [];
+    private readonly IntegrationStatus _maaFrameworkStatus;
     private SukiRunStateSnapshot _runState;
     private byte[] _lastCapture = [];
     private string _adbPath = "adb";
@@ -63,6 +64,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         MaaSessionSnapshot sessionSnapshot)
     {
         _session = session;
+        _maaFrameworkStatus = maaStatus;
         _sessionState = sessionSnapshot.State;
         _sessionDetail = sessionSnapshot.Detail;
         _allResourceTasks = RhodesMaaResourceCatalog.DefaultTasks();
@@ -855,8 +857,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             "maa",
             "MAAFramework",
             "CORE",
-            SessionState,
-            SessionDetail,
+            _maaFrameworkStatus.State,
+            _maaFrameworkStatus.Detail,
             "接続",
             false);
         yield return new SukiRuntimeCapabilityPreview(

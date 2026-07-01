@@ -57,6 +57,15 @@ public sealed record MaaSessionSnapshot(
     bool AgentBinaryRootExists,
     bool IsReady);
 
+public sealed record MaaFrameworkRuntimeProbeFacts(
+    string BindingAssemblyName,
+    string BindingAssemblyVersion,
+    string RuntimeIdentifier,
+    string NativeRuntimeDirectory,
+    IReadOnlyList<string> MissingNativeFiles,
+    bool VisualCppRuntimeCheckRequired,
+    IReadOnlyList<string> MissingVisualCppRuntimeFiles);
+
 public sealed record MaaRoi(int X, int Y, int Width, int Height)
 {
     public int[] ToArray() => [X, Y, Width, Height];

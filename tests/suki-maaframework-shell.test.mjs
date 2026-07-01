@@ -45,6 +45,7 @@ test("Suki service tests cover MAA Resource detail conversion behavior", async (
 test("Suki shell keeps MAA session and probe code in thin RHODES-owned services", async () => {
   const session = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaSession.cs", "utf8");
   const optionalRuntimeProbe = await fs.readFile("apps/rhodes-suki/Services/RhodesOptionalRuntimeProbe.cs", "utf8");
+  const runtimeProbe = await fs.readFile("apps/rhodes-suki/Services/MaaFrameworkRuntimeProbe.cs", "utf8");
   const probe = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionProbe.cs", "utf8");
   const catalog = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaResourceCatalog.cs", "utf8");
   const adbPresets = await fs.readFile("apps/rhodes-suki/Services/RhodesAdbPresetCatalog.cs", "utf8");
@@ -158,6 +159,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /ApplyAdbDeviceCommand/);
   assert.match(viewModel, /RefreshOptionalRuntimesCommand/);
   assert.match(viewModel, /RhodesOptionalRuntimeProbe\.ProbeAsync/);
+  assert.match(viewModel, /_maaFrameworkStatus\.State/);
+  assert.match(viewModel, /_maaFrameworkStatus\.Detail/);
   assert.match(viewModel, /SaveSettingsCommand/);
   assert.match(viewModel, /LoadSettings/);
   assert.match(viewModel, /ResourceTaskDiagnostics/);
@@ -226,6 +229,10 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(resource, /RhodesProbe/);
   assert.match(optionalRuntimeProbe, /api\/ocr\/glm\/status/);
   assert.match(optionalRuntimeProbe, /api\/ocr\/glm\/ollama\/status/);
+  assert.match(runtimeProbe, /Visual C\+\+ 2015-2022 Redistributable x64/);
+  assert.match(runtimeProbe, /vcruntime140_1\.dll/);
+  assert.match(runtimeProbe, /BuildStatus/);
+  assert.match(runtimeProbe, /NativeRuntimeDirectory/);
 });
 
 test("MAA resource generator converts RHODES recognition definitions into pipeline nodes", async () => {
