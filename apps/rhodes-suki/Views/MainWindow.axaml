@@ -142,7 +142,21 @@
                     <StackPanel Spacing="8">
                       <TextBlock Text="IS固有値" FontSize="16" FontWeight="SemiBold" />
                       <TextBlock Text="{Binding CampaignHeaderTitle}" FontSize="12" Opacity="0.66" />
-                      <TextBlock Text="IS#5は想念・時代・思案を独立した認識プロファイルとして扱います。今後のIS追加もここへ差し込みます。" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                      <ItemsControl ItemsSource="{Binding SpecialValuePreviews}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border CornerRadius="7" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                              <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8" RowSpacing="2">
+                                <TextBlock Text="{Binding Label}" FontSize="13" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding Kind}" FontSize="10" Opacity="0.58" />
+                                <TextBlock Grid.Row="1" Text="{Binding Value}" FontSize="18" FontWeight="SemiBold" />
+                                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding ProfileId}" FontFamily="Consolas" FontSize="10" HorizontalAlignment="Right" Opacity="0.48" />
+                                <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
+                              </Grid>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                       <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Content="思案認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
                         <Button Content="認識へ移動" Command="{Binding SetWorkspaceCommand}" CommandParameter="recognition" />
@@ -152,9 +166,24 @@
 
                   <Border Grid.Column="1" CornerRadius="8" Padding="14" Background="#101617" BorderBrush="#2B3638" BorderThickness="1">
                     <StackPanel Spacing="8">
-                      <TextBlock Text="現在のラン構成" FontSize="16" FontWeight="SemiBold" />
+                      <TextBlock Text="IS切替 / 現在のラン構成" FontSize="16" FontWeight="SemiBold" />
                       <TextBlock Text="{Binding RunContextSummary}" FontSize="12" TextWrapping="Wrap" Opacity="0.72" />
-                      <TextBlock Text="オペレーターと秘宝の編集は選択ワークスペースで行います。OBSに出す項目は出力ワークスペースへ分離します。" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                      <ItemsControl ItemsSource="{Binding CampaignPreviews}">
+                        <ItemsControl.ItemTemplate>
+                          <DataTemplate>
+                            <Border CornerRadius="7" Padding="10" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                              <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8">
+                                <TextBlock Text="{Binding DisplayName}" FontSize="13" FontWeight="SemiBold" />
+                                <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6">
+                                  <TextBlock Text="{Binding SelectedLabel}" FontSize="10" Opacity="0.58" />
+                                  <TextBlock Text="{Binding CurrentRunLabel}" FontSize="10" Opacity="0.58" />
+                                </StackPanel>
+                                <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
+                              </Grid>
+                            </Border>
+                          </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                      </ItemsControl>
                       <StackPanel Orientation="Horizontal" Spacing="8">
                         <Button Content="選択へ移動" Command="{Binding SetWorkspaceCommand}" CommandParameter="choices" />
                         <Button Content="出力へ移動" Command="{Binding SetWorkspaceCommand}" CommandParameter="output" />
@@ -319,20 +348,40 @@
             </ScrollViewer>
           </Grid>
 
-          <Grid RowDefinitions="Auto,*" RowSpacing="12" IsVisible="{Binding IsOutputWorkspaceVisible}">
+          <Grid RowDefinitions="Auto,Auto,*" RowSpacing="12" IsVisible="{Binding IsOutputWorkspaceVisible}">
             <StackPanel Spacing="2">
               <TextBlock Text="出力 / OBS" FontSize="20" FontWeight="SemiBold" />
               <TextBlock Text="サイドカーや大会向け表示で使う表示部品をここへ集約します。" FontSize="12" Opacity="0.62" />
             </StackPanel>
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+
+            <Border Grid.Row="1" CornerRadius="8" Padding="12" Background="#101617" BorderBrush="#2B3638" BorderThickness="1">
+              <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,120" RowSpacing="8" ColumnSpacing="10">
+                <StackPanel Orientation="Horizontal" Spacing="14">
+                  <CheckBox Content="別ウィンドウ" IsChecked="{Binding OutputSeparateWindow, Mode=TwoWay}" />
+                  <CheckBox Content="大会向け" IsChecked="{Binding OutputTournamentMode, Mode=TwoWay}" />
+                  <CheckBox Content="透過背景" IsChecked="{Binding OutputTransparentBackground, Mode=TwoWay}" />
+                </StackPanel>
+                <TextBox Grid.Column="1" Text="{Binding OutputScrollSpeed, Mode=TwoWay}" HorizontalContentAlignment="Right" />
+                <TextBlock Grid.Row="1" Text="OBSプレビュー、ブラウザソース、サイドカー表示で共通の表示部品を管理します。" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                <TextBlock Grid.Row="1" Grid.Column="1" Text="px/s" FontSize="11" HorizontalAlignment="Right" Opacity="0.58" />
+              </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
               <ItemsControl ItemsSource="{Binding OutputParts}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>
                     <Border CornerRadius="8" Padding="12" Margin="0,0,0,10" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
-                      <Grid ColumnDefinitions="*,Auto" RowDefinitions="Auto,Auto" ColumnSpacing="12">
-                        <TextBlock Text="{Binding Label}" FontSize="15" FontWeight="SemiBold" />
-                        <CheckBox Grid.Column="1" IsChecked="{Binding Enabled, Mode=OneWay}" IsEnabled="False" />
-                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                      <Grid ColumnDefinitions="*,Auto,Auto,Auto" RowDefinitions="Auto,Auto,Auto" ColumnSpacing="12" RowSpacing="4">
+                        <StackPanel Spacing="2">
+                          <TextBlock Text="{Binding Label}" FontSize="15" FontWeight="SemiBold" />
+                          <TextBlock Text="{Binding BindingPath}" FontFamily="Consolas" FontSize="10" Opacity="0.48" />
+                        </StackPanel>
+                        <CheckBox Grid.Column="1" Content="表示" IsChecked="{Binding Enabled, Mode=TwoWay}" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="2" Content="スクロール" IsChecked="{Binding ScrollEnabled, Mode=TwoWay}" VerticalAlignment="Center" />
+                        <CheckBox Grid.Column="3" Content="除外反映" IsChecked="{Binding HideExcluded, Mode=TwoWay}" VerticalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="4" Text="{Binding Detail}" FontSize="11" TextWrapping="Wrap" Opacity="0.62" />
+                        <TextBlock Grid.Row="2" Text="{Binding SizeLabel}" FontFamily="Consolas" FontSize="11" Opacity="0.6" />
                       </Grid>
                     </Border>
                   </DataTemplate>
@@ -378,7 +427,7 @@
               <TextBox Grid.Row="3" Grid.Column="1" Grid.ColumnSpan="2" Text="{Binding AdbConfigJson, Mode=TwoWay}" />
             </Grid>
 
-            <ItemsControl Grid.Row="2" ItemsSource="{Binding RuntimeStatuses}">
+            <ItemsControl Grid.Row="2" ItemsSource="{Binding RuntimeCapabilities}">
               <ItemsControl.ItemsPanel>
                 <ItemsPanelTemplate>
                   <WrapPanel />
@@ -386,12 +435,15 @@
               </ItemsControl.ItemsPanel>
               <ItemsControl.ItemTemplate>
                 <DataTemplate>
-                  <Border Width="220" CornerRadius="8" Padding="10" Margin="0,0,10,10" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
-                    <StackPanel Spacing="3">
+                  <Border Width="226" MinHeight="116" CornerRadius="8" Padding="10" Margin="0,0,10,10" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                    <Grid RowDefinitions="Auto,Auto,*,Auto" ColumnDefinitions="*,Auto" RowSpacing="4" ColumnSpacing="8">
                       <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
-                      <TextBlock Text="{Binding State}" FontSize="12" Opacity="0.78" />
-                      <TextBlock Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
-                    </StackPanel>
+                      <TextBlock Grid.Column="1" Text="{Binding Tag}" FontSize="10" Opacity="0.58" />
+                      <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding State}" FontSize="12" Opacity="0.78" />
+                      <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
+                      <TextBlock Grid.Row="3" Text="{Binding PrimaryAction}" FontSize="10" Opacity="0.68" />
+                      <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding InstallLabel}" FontSize="10" Opacity="0.46" />
+                    </Grid>
                   </Border>
                 </DataTemplate>
               </ItemsControl.ItemTemplate>
@@ -448,14 +500,31 @@
         </Grid>
       </Border>
 
-      <Grid Grid.Column="2" RowDefinitions="250,*" RowSpacing="12">
+      <Grid Grid.Column="2" RowDefinitions="310,*" RowSpacing="12">
         <Border CornerRadius="10" Padding="14" Background="#101617" BorderBrush="#2B3638" BorderThickness="1">
-          <Grid RowDefinitions="Auto,*" RowSpacing="10">
+          <Grid RowDefinitions="Auto,*,Auto,86" RowSpacing="10">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
-              <TextBlock Text="診断" FontSize="18" FontWeight="SemiBold" />
+              <TextBlock Text="インスペクタ" FontSize="18" FontWeight="SemiBold" />
               <TextBlock Grid.Column="1" Text="{Binding ResourceTaskDiagnostics.Summary}" FontSize="12" VerticalAlignment="Center" Opacity="0.72" />
             </Grid>
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+              <ItemsControl ItemsSource="{Binding InspectorRows}">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate>
+                    <Border CornerRadius="7" Padding="9" Margin="0,0,0,8" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1">
+                      <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="100,*" ColumnSpacing="8">
+                        <TextBlock Text="{Binding Label}" FontSize="11" Opacity="0.58" />
+                        <TextBlock Grid.Column="1" Text="{Binding Value}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontSize="10" TextWrapping="Wrap" Opacity="0.52" />
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </ScrollViewer>
+
+            <TextBlock Grid.Row="2" Text="診断" FontSize="13" FontWeight="SemiBold" />
+            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
               <ItemsControl ItemsSource="{Binding ResourceTaskDiagnostics.Lines}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>

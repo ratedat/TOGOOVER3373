@@ -17,12 +17,15 @@ Primary users: debuggers and maintainers validating Integrated Strategies run st
 Layout:
 - Top bar: app title, subtitle, current IS campaign selector such as `IS#5 サルカズの炉辺奇談`, current base coordinate system badge such as `1280x720 / 16:9`, and a truncated resource path.
 - Main area: three columns.
-- Left column, width about 330 px: run setup and MAA ADB connection. Include runtime status, run setup controls or summary for squad/difficulty when available, ADB preset selector, ADB path input, serial/connection target input, config JSON input, buttons for connect, device list refresh, capture, probe all, device list rows, and compact migration notes.
-- Center column: operational run-state workbench. In the current foundation this shows tabs for `オペレーター`, `秘宝`, and `認識タスク`; the longer-term shell should support stable workspace groups such as `Run`, `Choices`, `Recognition`, `Output`, `Runtime`, and `Debug`.
-  - Operator tab: search input, rarity/class/branch filters, selected-first toggle, hide-excluded toggle, selected-only toggle, selected count, and scrollable operator rows. Each row must show name, rarity, class, branch, selected state, selection toggle, and display-exclusion toggle.
-  - Relic tab: search input, category filter, selected-first toggle, hide-excluded toggle, selected-only toggle, owned count, and scrollable relic rows. Each row must show relic name, number/category, effect, selected state, selection toggle, and display-exclusion toggle.
-  - Recognition task tab: profile selector, recognition run button, run all button, export JSON button, candidate API URL input, convert button, current profile/source summary, and a scrollable list of recognition task rows. Each row has label, purpose, entry id, source/profile summaries, and a run button.
-- Right column, width about 380 px: diagnostics and results. Top diagnostics panel lists MAA task summary and log lines. Bottom panel shows the latest ADB screenshot preview, candidate rows, resource task result rows, probe payload rows, and probe result rows.
+- Left column, width about 210 px: workspace navigation. Include durable destinations `Run`, `Choices`, `Recognition`, `Output`, `Runtime`, and `Debug`, each with a short label and operational description.
+- Center column: operational run-state workbench. Do not add a new top-level tab for every new field; put new features inside these stable workspaces.
+  - Run workspace: base run value cards for hope, ingots, thought/conception, shield, life, command level, difficulty, and squad. Include campaign-specific special value cards for entries such as IS#5 thought count, age, and thought burden. Include an IS switching/current-run context section.
+  - Choices workspace: operator and relic catalogs. Operator view needs search input, rarity/class/branch filters, selected-first toggle, hide-excluded toggle, selected-only toggle, selected count, and scrollable rows with selection and display-exclusion controls. Relic view needs search, category filter, selected-first, hide-excluded, selected-only, owned count, effect text, and the same selection/exclusion controls.
+  - Recognition workspace: profile selector, recognition run button, run all button, export JSON button, candidate API URL input, convert button, current profile/source summary, and a scrollable list of recognition task rows. Each row has label, purpose, entry id, source/profile summaries, and a run button.
+  - Output workspace: OBS sidecar settings. Include separate-window, tournament-mode, transparent-background, scroll-speed controls, and output part rows for operators, relics, run values, IS special values, and recognition status. Each row can toggle display, scroll, and exclusion handling.
+  - Runtime workspace: ADB preset selector, ADB path input, serial/connection target input, config JSON input, buttons for connect, device list refresh, capture, detected device rows, and capability cards for ADB, MAAFramework, MAA-OCR, GLM-OCR, Ollama, and Hyper-V. Distinguish required capabilities from optional downloads.
+  - Debug workspace: developer logs, migration notes, saved debug screenshot/resource paths, and low-level probe context.
+- Right column, width about 360 px: inspector and results. Top panel lists current workspace inspector rows and compact MAA task diagnostics. Bottom panel shows the latest ADB screenshot preview, candidate rows, resource task result rows, probe payload rows, and probe result rows.
 - Footer: one-line status message.
 
 Visual rules:
@@ -39,10 +42,12 @@ Required visible interaction states:
 - last screenshot missing vs available
 - IS campaign selected and switchable
 - operator/relic selected, excluded, selected-first, hide-excluded, and selected-only states
+- output part enabled/disabled, scroll enabled/disabled, exclusion-aware output, transparent mode, and tournament mode
+- required runtime capability vs optional GLM-OCR/Ollama download state
 - task running / completed / failed
 - candidate API unavailable but local preview available
 
 Implementation mapping:
 - Stitch output should be treated as visual direction, not a new framework.
 - The production implementation remains SukiUI/Avalonia XAML in `apps/rhodes-suki/Views/MainWindow.axaml`.
-- Preserve bindings: `Campaigns`, `SelectedCampaign`, `FilteredOperators`, `FilteredRelics`, operator/relic search and filter bindings, `AdbPath`, `AdbSerial`, `AdbPresets`, `AdbDevices`, `LastCaptureImage`, `ResourceProfiles`, `SelectedResourceProfile`, `ResourceTasks`, `ResourceTaskDiagnostics`, `CandidateResults`, `ResourceTaskResults`, `ProbePayloads`, `ProbeResults`, and `RecognitionDetailJson`.
+- Preserve bindings: `Campaigns`, `SelectedCampaign`, `CampaignPreviews`, `SpecialValuePreviews`, `RunFieldPreviews`, `FilteredOperators`, `FilteredRelics`, operator/relic search and filter bindings, `OutputParts`, `RuntimeCapabilities`, `InspectorRows`, `AdbPath`, `AdbSerial`, `AdbPresets`, `AdbDevices`, `LastCaptureImage`, `ResourceProfiles`, `SelectedResourceProfile`, `ResourceTasks`, `ResourceTaskDiagnostics`, `CandidateResults`, `ResourceTaskResults`, `ProbePayloads`, `ProbeResults`, and `RecognitionDetailJson`.

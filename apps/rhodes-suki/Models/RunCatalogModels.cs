@@ -30,11 +30,151 @@ public sealed record SukiRunFieldPreview(
     string RecognitionTaskId,
     string Detail);
 
-public sealed record SukiOutputPartPreview(
-    string Id,
+public sealed record SukiSpecialValuePreview(
     string Label,
+    string Value,
+    string Kind,
+    string ProfileId,
+    string Detail);
+
+public sealed record SukiCampaignWorkspacePreview(
+    string Id,
+    string DisplayName,
     string Detail,
-    bool Enabled);
+    bool IsCurrentRun,
+    bool IsSelected)
+{
+    public string SelectedLabel => IsSelected ? "表示中" : "";
+
+    public string CurrentRunLabel => IsCurrentRun ? "ラン元" : "";
+}
+
+public sealed record SukiRuntimeCapabilityPreview(
+    string Id,
+    string Name,
+    string Tag,
+    string State,
+    string Detail,
+    string PrimaryAction,
+    bool IsOptional)
+{
+    public string InstallLabel => IsOptional ? "任意DL" : "必須";
+}
+
+public sealed record SukiInspectorRow(
+    string Label,
+    string Value,
+    string Detail);
+
+public sealed class SukiOutputPartPreview : INotifyPropertyChanged
+{
+    private bool _enabled;
+    private bool _scrollEnabled;
+    private bool _hideExcluded;
+    private int _width;
+    private int _height;
+
+    public SukiOutputPartPreview(
+        string id,
+        string label,
+        string bindingPath,
+        string detail,
+        bool enabled,
+        bool scrollEnabled,
+        bool hideExcluded,
+        int width,
+        int height)
+    {
+        Id = id;
+        Label = label;
+        BindingPath = bindingPath;
+        Detail = detail;
+        _enabled = enabled;
+        _scrollEnabled = scrollEnabled;
+        _hideExcluded = hideExcluded;
+        _width = width;
+        _height = height;
+    }
+
+    public event PropertyChangedEventHandler? PropertyChanged;
+
+    public string Id { get; }
+
+    public string Label { get; }
+
+    public string BindingPath { get; }
+
+    public string Detail { get; }
+
+    public bool Enabled
+    {
+        get => _enabled;
+        set
+        {
+            if (_enabled == value)
+                return;
+            _enabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool ScrollEnabled
+    {
+        get => _scrollEnabled;
+        set
+        {
+            if (_scrollEnabled == value)
+                return;
+            _scrollEnabled = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public bool HideExcluded
+    {
+        get => _hideExcluded;
+        set
+        {
+            if (_hideExcluded == value)
+                return;
+            _hideExcluded = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public int Width
+    {
+        get => _width;
+        set
+        {
+            if (_width == value)
+                return;
+            _width = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SizeLabel));
+        }
+    }
+
+    public int Height
+    {
+        get => _height;
+        set
+        {
+            if (_height == value)
+                return;
+            _height = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(SizeLabel));
+        }
+    }
+
+    public string SizeLabel => $"{Width}x{Height}";
+
+    private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
+    {
+        PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+    }
+}
 
 public sealed record SukiRunStateSnapshot(
     string CampaignId,

@@ -46,6 +46,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private bool _relicShowSelectedFirst;
     private bool _relicHideExcluded;
     private bool _relicSelectedOnly;
+    private bool _outputSeparateWindow = true;
+    private bool _outputTournamentMode;
+    private bool _outputTransparentBackground = true;
+    private int _outputScrollSpeed = 40;
     private bool _isBusy;
 
     public MainWindowViewModel(
@@ -87,14 +91,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ];
         HeaderStatusChips = new ObservableCollection<SukiStatusChip>(BuildHeaderStatusChips());
         RunFieldPreviews = new ObservableCollection<SukiRunFieldPreview>(BuildRunFieldPreviews(runCatalog.Current));
+        CampaignPreviews = [];
+        SpecialValuePreviews = [];
+        RuntimeCapabilities = new ObservableCollection<SukiRuntimeCapabilityPreview>(BuildRuntimeCapabilities());
+        InspectorRows = [];
         OutputParts =
         [
-            new SukiOutputPartPreview("operators", "招集オペレーター", "選択中オペレーターをOBSへ表示", true),
-            new SukiOutputPartPreview("relics", "秘宝一覧", "所持秘宝と表示除外を反映", true),
-            new SukiOutputPartPreview("run", "ラン基本値", "希望、源石錐、シールド、指揮Lvなど", true),
-            new SukiOutputPartPreview("special", "IS固有値", "思案、啓示、灯火などキャンペーン別の値", true),
-            new SukiOutputPartPreview("recognition", "認識ステータス", "デバッグ配布時のみ候補/信頼度を表示", false),
+            new SukiOutputPartPreview("operators", "招集オペレーター", "choices.operators", "選択中オペレーターをOBSへ表示", true, false, true, 420, 132),
+            new SukiOutputPartPreview("relics", "秘宝一覧", "choices.relics", "所持秘宝と表示除外を反映", true, true, true, 420, 170),
+            new SukiOutputPartPreview("run", "ラン基本値", "run.status", "希望、源石錐、シールド、指揮Lvなど", true, false, false, 260, 116),
+            new SukiOutputPartPreview("special", "IS固有値", "run.special", "思案、啓示、灯火などキャンペーン別の値", true, true, false, 300, 126),
+            new SukiOutputPartPreview("recognition", "認識ステータス", "recognition.status", "デバッグ配布時のみ候補/信頼度を表示", false, true, false, 360, 92),
         ];
+        foreach (var outputPart in OutputParts)
+        {
+            outputPart.PropertyChanged += (_, _) => RefreshInspectorRows();
+        }
         DebugLogLines =
         [
             "Suki shell ready.",
@@ -153,6 +165,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RefreshOperatorFilterOptions();
         RefreshRelicFilterOptions();
         RefreshChoiceLists();
+        RefreshCampaignPreviews();
+        RefreshSpecialValuePreviews();
+        RefreshInspectorRows();
         LoadSettings();
     }
 
@@ -167,6 +182,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<SukiStatusChip> HeaderStatusChips { get; }
 
     public ObservableCollection<SukiRunFieldPreview> RunFieldPreviews { get; }
+
+    public ObservableCollection<SukiCampaignWorkspacePreview> CampaignPreviews { get; }
+
+    public ObservableCollection<SukiSpecialValuePreview> SpecialValuePreviews { get; }
+
+    public ObservableCollection<SukiRuntimeCapabilityPreview> RuntimeCapabilities { get; }
+
+    public ObservableCollection<SukiInspectorRow> InspectorRows { get; }
 
     public ObservableCollection<SukiOutputPartPreview> OutputParts { get; }
 
@@ -209,7 +232,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public MaaTaskDiagnosticsSnapshot ResourceTaskDiagnostics
     {
         get => _resourceTaskDiagnostics;
-        private set => SetProperty(ref _resourceTaskDiagnostics, value);
+        private set
+        {
+            if (!SetProperty(ref _resourceTaskDiagnostics, value))
+                return;
+            RefreshInspectorRows();
+        }
     }
 
     public MaaBaseResolution BaseResolution { get; }
@@ -226,6 +254,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _adbPath, value))
                 return;
             OnPropertyChanged(nameof(AdbHeaderDetail));
+            RefreshInspectorRows();
         }
     }
 
@@ -238,6 +267,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 return;
             OnPropertyChanged(nameof(AdbHeaderTitle));
             OnPropertyChanged(nameof(AdbHeaderDetail));
+            RefreshInspectorRows();
         }
     }
 
@@ -261,6 +291,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             OnPropertyChanged(nameof(IsRuntimeWorkspaceVisible));
             OnPropertyChanged(nameof(IsDebugWorkspaceVisible));
             OnPropertyChanged(nameof(WorkspaceTitle));
+            RefreshInspectorRows();
         }
     }
 
@@ -273,6 +304,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 return;
             RefreshRelicFilterOptions();
             RefreshChoiceLists();
+            RefreshCampaignPreviews();
+            RefreshSpecialValuePreviews();
+            RefreshInspectorRows();
             OnPropertyChanged(nameof(RunContextSummary));
             OnPropertyChanged(nameof(CampaignHeaderTitle));
             OnPropertyChanged(nameof(CampaignHeaderDetail));
@@ -510,28 +544,94 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public bool OutputSeparateWindow
+    {
+        get => _outputSeparateWindow;
+        set
+        {
+            if (!SetProperty(ref _outputSeparateWindow, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
+    public bool OutputTournamentMode
+    {
+        get => _outputTournamentMode;
+        set
+        {
+            if (!SetProperty(ref _outputTournamentMode, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
+    public bool OutputTransparentBackground
+    {
+        get => _outputTransparentBackground;
+        set
+        {
+            if (!SetProperty(ref _outputTransparentBackground, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
+    public int OutputScrollSpeed
+    {
+        get => _outputScrollSpeed;
+        set
+        {
+            if (!SetProperty(ref _outputScrollSpeed, Math.Clamp(value, 0, 160)))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
     public string SessionState
     {
         get => _sessionState;
-        private set => SetProperty(ref _sessionState, value);
+        private set
+        {
+            if (!SetProperty(ref _sessionState, value))
+                return;
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+        }
     }
 
     public string SessionDetail
     {
         get => _sessionDetail;
-        private set => SetProperty(ref _sessionDetail, value);
+        private set
+        {
+            if (!SetProperty(ref _sessionDetail, value))
+                return;
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+        }
     }
 
     public string CaptureState
     {
         get => _captureState;
-        private set => SetProperty(ref _captureState, value);
+        private set
+        {
+            if (!SetProperty(ref _captureState, value))
+                return;
+            RefreshInspectorRows();
+        }
     }
 
     public string LastCapturePath
     {
         get => _lastCapturePath;
-        private set => SetProperty(ref _lastCapturePath, value);
+        private set
+        {
+            if (!SetProperty(ref _lastCapturePath, value))
+                return;
+            RefreshInspectorRows();
+        }
     }
 
     public Bitmap? LastCaptureImage
@@ -543,7 +643,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public string RhodesApiUrl
     {
         get => _rhodesApiUrl;
-        set => SetProperty(ref _rhodesApiUrl, string.IsNullOrWhiteSpace(value) ? "http://127.0.0.1:5173" : value.TrimEnd('/'));
+        set
+        {
+            if (!SetProperty(ref _rhodesApiUrl, string.IsNullOrWhiteSpace(value) ? "http://127.0.0.1:5173" : value.TrimEnd('/')))
+                return;
+            RefreshInspectorRows();
+        }
     }
 
     public string StatusMessage
@@ -560,6 +665,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _selectedAdbPreset, value))
                 return;
             OnPropertyChanged(nameof(AdbHeaderDetail));
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
         }
     }
 
@@ -571,6 +678,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             if (!SetProperty(ref _selectedResourceProfile, value))
                 return;
             RefreshResourceTasks();
+            RefreshInspectorRows();
         }
     }
 
@@ -646,6 +754,173 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         yield return new SukiRunFieldPreview("指揮Lv", $"Lv{state.CommandLevel}", "OCR", "run.command_level", "指揮Lvパネル");
         yield return new SukiRunFieldPreview("等級", string.IsNullOrWhiteSpace(state.Difficulty) ? "-" : state.Difficulty, "Manual / squad panel", "run.difficulty_grade", "閉じたマップ上のバッジではなく分隊情報から確定");
         yield return new SukiRunFieldPreview("分隊", string.IsNullOrWhiteSpace(state.Squad) ? "-" : state.Squad, "Manual / OCR", "run.squad_name", "分隊カードまたは情報パネル");
+    }
+
+    private IEnumerable<SukiRuntimeCapabilityPreview> BuildRuntimeCapabilities()
+    {
+        yield return new SukiRuntimeCapabilityPreview(
+            "adb",
+            "ADB",
+            "CORE",
+            string.IsNullOrWhiteSpace(AdbSerial) ? "未選択" : "選択済み",
+            $"{SelectedAdbPreset?.Label ?? "自動"} / {AdbHeaderTitle}",
+            "端末一覧",
+            false);
+        yield return new SukiRuntimeCapabilityPreview(
+            "maa",
+            "MAAFramework",
+            "CORE",
+            SessionState,
+            SessionDetail,
+            "接続",
+            false);
+        yield return new SukiRuntimeCapabilityPreview(
+            "maa-ocr",
+            "MAA-OCR",
+            "OCR",
+            "移行対象",
+            "MAA Resource/Tasker 経由の標準OCR",
+            "認識",
+            false);
+        yield return new SukiRuntimeCapabilityPreview(
+            "glm",
+            "GLM-OCR",
+            "OPTIONAL",
+            "任意導入",
+            "高精度検証用。一般配布では任意DLで扱う",
+            "状態確認",
+            true);
+        yield return new SukiRuntimeCapabilityPreview(
+            "ollama",
+            "Ollama",
+            "OPTIONAL",
+            "任意導入",
+            "GLM-OCRローカル実行の補助ランタイム",
+            "状態確認",
+            true);
+        yield return new SukiRuntimeCapabilityPreview(
+            "hyperv",
+            "Hyper-V",
+            "PLATFORM",
+            "確認対象",
+            "Google Play Gamesや一部エミュレーターの前提確認",
+            "診断",
+            false);
+    }
+
+    private void RefreshRuntimeCapabilities()
+    {
+        ReplaceCollection(RuntimeCapabilities, BuildRuntimeCapabilities());
+    }
+
+    private void RefreshCampaignPreviews()
+    {
+        ReplaceCollection(
+            CampaignPreviews,
+            Campaigns.Select(campaign =>
+            {
+                var relicCount = _allRelics.Count(item => item.CampaignId == campaign.Id);
+                var selectedRelics = _allRelics.Count(item => item.CampaignId == campaign.Id && item.IsSelected);
+                return new SukiCampaignWorkspacePreview(
+                    campaign.Id,
+                    campaign.DisplayName,
+                    $"{campaign.FullTitle} / 秘宝{selectedRelics}/{relicCount}",
+                    string.Equals(campaign.Id, _runState.CampaignId, StringComparison.Ordinal),
+                    string.Equals(campaign.Id, SelectedCampaign?.Id, StringComparison.Ordinal));
+            }));
+    }
+
+    private void RefreshSpecialValuePreviews()
+    {
+        ReplaceCollection(SpecialValuePreviews, BuildSpecialValuePreviews());
+    }
+
+    private IEnumerable<SukiSpecialValuePreview> BuildSpecialValuePreviews()
+    {
+        var campaignId = SelectedCampaign?.Id ?? _runState.CampaignId;
+        if (campaignId == "is5_sarkaz")
+        {
+            yield return new SukiSpecialValuePreview("想念", _runState.Idea.ToString(), "数値", "run.idea.current", "想念アイコン直下の値。重複する思案とは別管理");
+            yield return new SukiSpecialValuePreview("思案", "0件", "個数入力", "is5ThoughtFull", "同一思案の重複所持を許可");
+            yield return new SukiSpecialValuePreview("時代", "未選択", "候補選択", "is5AgeFull", "時代スキャン結果をレビューして確定");
+            yield return new SukiSpecialValuePreview("思考負荷", "未入力", "補助値", "run.thought_burden", "必要な画面のみで扱い、思考不可は保存対象外");
+            yield break;
+        }
+
+        if (campaignId == "is3_mizuki")
+        {
+            yield return new SukiSpecialValuePreview("啓示", "0件", "複数選択", "is3RevelationFull", "啓示候補を重複なしで管理");
+            yield return new SukiSpecialValuePreview("拒絶反応", "未選択", "単一選択", "is3RejectionReaction", "現在反応をラン状態へ反映");
+            yield break;
+        }
+
+        if (campaignId == "is4_sami")
+        {
+            yield return new SukiSpecialValuePreview("啓示", "0件", "複数選択", "is4RevelationFull", "啓示板と手動入力を統合");
+            yield return new SukiSpecialValuePreview("崩壊値", "未入力", "数値", "is4CollapseValue", "OCRまたは手入力で管理");
+            yield return new SukiSpecialValuePreview("失いしパラダイム", "未選択", "状態", "is4ParadigmLost", "状態付き特殊値として扱う");
+            yield break;
+        }
+
+        if (campaignId == "is6_sui")
+        {
+            yield return new SukiSpecialValuePreview("歳時貨幣", "0件", "複数選択", "is6CoinFull", "表裏や状態差分を別スロットで保持");
+            yield return new SukiSpecialValuePreview("時刻", "未入力", "状態", "is6SeasonalHours", "季節時刻を個別状態で管理");
+            yield break;
+        }
+
+        yield return new SukiSpecialValuePreview("固有値", "未定義", "キャンペーン", "campaign.special", "このISの固有値定義を追加してください");
+    }
+
+    private void RefreshInspectorRows()
+    {
+        ReplaceCollection(InspectorRows, BuildInspectorRows());
+    }
+
+    private IEnumerable<SukiInspectorRow> BuildInspectorRows()
+    {
+        yield return new SukiInspectorRow("ワークスペース", WorkspaceTitle, WorkspaceTab);
+        yield return new SukiInspectorRow("IS", CampaignHeaderTitle, CampaignHeaderDetail);
+
+        if (WorkspaceTab == "run")
+        {
+            yield return new SukiInspectorRow("基本値", $"{RunFieldPreviews.Count}項目", "runStatusFull");
+            yield return new SukiInspectorRow("固有値", $"{SpecialValuePreviews.Count}項目", SelectedCampaign?.Id ?? "");
+            yield break;
+        }
+
+        if (WorkspaceTab == "choices")
+        {
+            yield return new SukiInspectorRow("オペレーター", OperatorListSummary, "選択 / 除外 / 優先表示");
+            yield return new SukiInspectorRow("秘宝", RelicListSummary, "IS別秘宝カタログ");
+            yield break;
+        }
+
+        if (WorkspaceTab == "recognition")
+        {
+            yield return new SukiInspectorRow("認識プロファイル", SelectedResourceProfile?.DisplayName ?? "-", SelectedResourceProfile?.ProfileSummary ?? "");
+            yield return new SukiInspectorRow("候補", $"{CandidateResults.Count}件", ResourceTaskDiagnostics.Summary);
+            yield break;
+        }
+
+        if (WorkspaceTab == "output")
+        {
+            var visible = OutputParts.Count(part => part.Enabled);
+            yield return new SukiInspectorRow("表示部品", $"{visible}/{OutputParts.Count}", $"scroll {OutputScrollSpeed}px/s");
+            yield return new SukiInspectorRow("別ウィンドウ", OutputSeparateWindow ? "ON" : "OFF", "OBSサイドカー");
+            yield return new SukiInspectorRow("大会向け", OutputTournamentMode ? "ON" : "OFF", "表示情報を絞る");
+            yield break;
+        }
+
+        if (WorkspaceTab == "runtime")
+        {
+            yield return new SukiInspectorRow("ADB", AdbHeaderTitle, AdbHeaderDetail);
+            yield return new SukiInspectorRow("端末", $"{AdbDevices.Count}件", SessionState);
+            yield break;
+        }
+
+        yield return new SukiInspectorRow("ログ", LastCapturePath, CaptureState);
+        yield return new SukiInspectorRow("API", RhodesApiUrl, "候補化API");
     }
 
     private async Task ConnectAsync()
@@ -762,6 +1037,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             AdbPath = preset.AdbPath;
 
         AdbSerial = preset.Serial;
+        RefreshRuntimeCapabilities();
+        RefreshInspectorRows();
         StatusMessage = $"ADBプリセットを適用しました: {preset.DisplayName}";
         return Task.CompletedTask;
     }
@@ -780,6 +1057,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = devices.Count == 0
                 ? "ADB端末は見つかりませんでした。エミュレーター側のADB設定を確認してください。"
                 : $"ADB端末を取得しました: {devices.Count}件";
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
         });
     }
 
@@ -792,6 +1071,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
 
         AdbSerial = device.Serial;
+        RefreshRuntimeCapabilities();
+        RefreshInspectorRows();
         StatusMessage = $"ADB serialを適用しました: {device.Serial}";
         return Task.CompletedTask;
     }
@@ -820,6 +1101,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             {
                 await RunProbeCoreAsync(payload);
             }
+            RefreshInspectorRows();
         });
     }
 
@@ -861,6 +1143,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ResourceTaskResults.Clear();
         CandidateResults.Clear();
         RefreshResourceTaskDiagnostics();
+        RefreshInspectorRows();
         if (!ResourceTasks.Any())
         {
             StatusMessage = "選択プロファイルにResource taskがありません。";
@@ -874,6 +1157,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RefreshResourceTaskDiagnostics();
             StatusMessage = $"{task.Entry}: {result.Status}";
         }
+        RefreshInspectorRows();
     }
 
     private async Task ConvertResourceTaskResultsCoreAsync()
@@ -927,6 +1211,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             {
                 CandidateResults.Add(candidate);
             }
+            RefreshInspectorRows();
             StatusMessage = $"候補化しました: {CandidateResults.Count}件";
             return;
         }
@@ -938,12 +1223,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         if (CandidateResults.Count > 0)
         {
+            RefreshInspectorRows();
             StatusMessage = string.IsNullOrWhiteSpace(apiError)
                 ? $"候補化APIは0件だったためローカルMAAプレビューを表示しました: {CandidateResults.Count}件"
                 : $"候補化APIに接続できないためローカルMAAプレビューを表示しました: {CandidateResults.Count}件";
             return;
         }
 
+        RefreshInspectorRows();
         StatusMessage = string.IsNullOrWhiteSpace(apiError)
             ? "候補は0件です。"
             : $"候補化API失敗: {apiError}";
@@ -979,6 +1266,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             var result = await _session.RunResourceTaskAsync(task.Entry);
             ResourceTaskResults.Add(result);
             RefreshResourceTaskDiagnostics();
+            RefreshInspectorRows();
             StatusMessage = $"{task.Entry}: {result.Status}";
         });
     }
@@ -995,12 +1283,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             ResourceTasks.Add(task);
         }
+        RefreshInspectorRows();
     }
 
     private void RefreshChoiceLists()
     {
         RefreshOperatorChoices();
         RefreshRelicChoices();
+        RefreshCampaignPreviews();
+        RefreshInspectorRows();
         OnPropertyChanged(nameof(RunContextSummary));
         OnPropertyChanged(nameof(CampaignHeaderDetail));
     }
@@ -1022,6 +1313,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(OperatorListSummary));
         OnPropertyChanged(nameof(RunContextSummary));
         OnPropertyChanged(nameof(CampaignHeaderDetail));
+        RefreshInspectorRows();
     }
 
     private void RefreshRelicChoices()
@@ -1040,6 +1332,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(RelicListSummary));
         OnPropertyChanged(nameof(RunContextSummary));
         OnPropertyChanged(nameof(CampaignHeaderDetail));
+        RefreshCampaignPreviews();
+        RefreshInspectorRows();
     }
 
     private void RefreshOperatorFilterOptions()
@@ -1144,6 +1438,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         LastCaptureImage = CreateCaptureBitmap(capture.EncodedImage);
         LastCapturePath = await SaveCaptureAsync(capture.EncodedImage);
         CaptureState = $"{capture.Detail} / {LastCapturePath}";
+        RefreshInspectorRows();
         return capture;
     }
 
