@@ -12,6 +12,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA candidate API extraction preserves structured ids", CandidateApiExtraction),
     ("Local MAA candidate converter extracts run status candidates", LocalCandidateConverterRunStatus),
     ("Local MAA candidate converter extracts exact operator name candidates", LocalCandidateConverterOperators),
+    ("Local MAA candidate converter extracts current campaign relic candidates", LocalCandidateConverterRelics),
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
@@ -247,12 +248,48 @@ static void LocalCandidateConverterOperators()
 
     static MaaTaskRunResult M(string entry, string text, double score)
     {
+        var encodedText = System.Text.Json.JsonSerializer.Serialize(text);
         return new MaaTaskRunResult(
             entry,
             "Succeeded",
             true,
             "detail",
-            $"{{\"filtered_results\":[{{\"text\":\"{text}\",\"score\":{score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}]}}",
+            $"{{\"filtered_results\":[{{\"text\":{encodedText},\"score\":{score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}]}}",
+            "OCR",
+            true);
+    }
+}
+
+static void LocalCandidateConverterRelics()
+{
+    var catalog = RhodesRunCatalog.LoadDefault();
+    var relics = catalog.Relics
+        .Where(item => item.CampaignId == catalog.Current.CampaignId)
+        .Take(2)
+        .ToArray();
+    Equal(true, relics.Length >= 2, "current campaign relic fixtures");
+
+    var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+        "relicsFull",
+        [
+            M("RhodesRunStatusTopBarOcr", relics[0].Name, 0.99),
+            M("RhodesOcrRegion_relic_list_text", $"No.001 {relics[0].Name}\n{relics[1].Name}", 0.88),
+        ]);
+
+    Equal($"{relics[0].Id}|{relics[1].Id}", string.Join("|", candidates.Select(item => item.RelicId)), "relic ids");
+    Equal("relic|relic", string.Join("|", candidates.Select(item => item.Kind)), "relic kinds");
+    Equal(catalog.Current.CampaignId, candidates[0].CampaignId, "relic campaign id");
+    Equal($"maa-local:relic:{relics[0].Id}", candidates[0].RecognitionKey, "relic recognition key");
+
+    static MaaTaskRunResult M(string entry, string text, double score)
+    {
+        var encodedText = System.Text.Json.JsonSerializer.Serialize(text);
+        return new MaaTaskRunResult(
+            entry,
+            "Succeeded",
+            true,
+            "detail",
+            $"{{\"filtered_results\":[{{\"text\":{encodedText},\"score\":{score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}]}}",
             "OCR",
             true);
     }

@@ -32,6 +32,9 @@ public static class RhodesMaaLocalCandidateConverter
         if (string.Equals(profileId, "operatorsFull", StringComparison.Ordinal))
             return OperatorCandidates(taskResults).ToArray();
 
+        if (string.Equals(profileId, "relicsFull", StringComparison.Ordinal))
+            return RelicCandidates(taskResults).ToArray();
+
         return [];
     }
 
@@ -91,7 +94,7 @@ public static class RhodesMaaLocalCandidateConverter
             .Where(item => !string.IsNullOrWhiteSpace(item.Id) && !string.IsNullOrWhiteSpace(item.Name))
             .ToArray();
         var byNormalizedName = operators
-            .GroupBy(item => NormalizeOperatorName(item.Name), StringComparer.Ordinal)
+            .GroupBy(item => NormalizeChoiceName(item.Name), StringComparer.Ordinal)
             .Where(group => !string.IsNullOrWhiteSpace(group.Key) && group.Count() == 1)
             .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
         var matched = new Dictionary<string, (SukiChoiceItem Operator, string RawText, double? Confidence, int Order)>(
@@ -105,7 +108,7 @@ public static class RhodesMaaLocalCandidateConverter
 
             foreach (var textResult in PrimaryTextResults(taskResult.RecognitionDetailJson))
             {
-                foreach (var token in OperatorNameTokens(textResult.Text))
+                foreach (var token in ChoiceNameTokens(textResult.Text))
                 {
                     if (!byNormalizedName.TryGetValue(token.Normalized, out var op))
                         continue;
@@ -137,6 +140,65 @@ public static class RhodesMaaLocalCandidateConverter
         }
     }
 
+    private static IEnumerable<MaaCandidatePreview> RelicCandidates(IEnumerable<MaaTaskRunResult> taskResults)
+    {
+        var catalog = RhodesRunCatalog.LoadDefault();
+        var campaignId = catalog.Current.CampaignId;
+        if (string.IsNullOrWhiteSpace(campaignId))
+            yield break;
+
+        var relics = catalog.Relics
+            .Where(item => string.Equals(item.CampaignId, campaignId, StringComparison.Ordinal))
+            .Where(item => !string.IsNullOrWhiteSpace(item.Id) && !string.IsNullOrWhiteSpace(item.Name))
+            .ToArray();
+        var byNormalizedName = relics
+            .GroupBy(item => NormalizeChoiceName(item.Name), StringComparer.Ordinal)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key) && group.Count() == 1)
+            .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
+        var matched = new Dictionary<string, (SukiChoiceItem Relic, string RawText, double? Confidence, int Order)>(
+            StringComparer.Ordinal);
+        var order = 0;
+
+        foreach (var taskResult in taskResults)
+        {
+            if (!taskResult.Succeeded || !IsRelicNameEntry(taskResult.Entry))
+                continue;
+
+            foreach (var textResult in PrimaryTextResults(taskResult.RecognitionDetailJson))
+            {
+                foreach (var token in ChoiceNameTokens(textResult.Text))
+                {
+                    if (!byNormalizedName.TryGetValue(token.Normalized, out var relic))
+                        continue;
+
+                    if (!matched.TryGetValue(relic.Id, out var existing))
+                    {
+                        matched[relic.Id] = (relic, token.Raw, textResult.Confidence, order);
+                    }
+                    else if ((textResult.Confidence ?? 0) > (existing.Confidence ?? 0))
+                    {
+                        matched[relic.Id] = (relic, token.Raw, textResult.Confidence, existing.Order);
+                    }
+                }
+            }
+
+            order++;
+        }
+
+        foreach (var item in matched.Values.OrderBy(item => item.Order))
+        {
+            yield return new MaaCandidatePreview(
+                "relic",
+                item.Relic.Name,
+                item.Relic.Id,
+                item.RawText,
+                Math.Max(0.68, item.Confidence ?? 0),
+                RelicId: item.Relic.Id,
+                CampaignId: item.Relic.CampaignId,
+                RecognitionKey: $"maa-local:relic:{item.Relic.Id}");
+        }
+    }
+
     private static bool IsOperatorNameEntry(string entry)
     {
         return entry.Equals("RhodesOperatorNameOcr", StringComparison.Ordinal)
@@ -146,12 +208,18 @@ public static class RhodesMaaLocalCandidateConverter
             || entry.Contains("operator.recruit.name", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static IEnumerable<(string Raw, string Normalized)> OperatorNameTokens(string value)
+    private static bool IsRelicNameEntry(string entry)
+    {
+        return entry.Equals("RhodesOcrRegion_relic_list_text", StringComparison.Ordinal)
+            || entry.Contains("relic.list_text", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static IEnumerable<(string Raw, string Normalized)> ChoiceNameTokens(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             yield break;
 
-        var whole = NormalizeOperatorName(value);
+        var whole = NormalizeChoiceName(value);
         if (whole.Length >= 2)
             yield return (value.Trim(), whole);
 
@@ -163,13 +231,13 @@ public static class RhodesMaaLocalCandidateConverter
 
         foreach (var part in parts)
         {
-            var normalized = NormalizeOperatorName(part);
+            var normalized = NormalizeChoiceName(part);
             if (normalized.Length >= 2)
                 yield return (part.Trim(), normalized);
         }
     }
 
-    private static string NormalizeOperatorName(string value)
+    private static string NormalizeChoiceName(string value)
     {
         if (string.IsNullOrWhiteSpace(value))
             return "";
