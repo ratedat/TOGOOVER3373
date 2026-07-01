@@ -168,6 +168,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ApplyAdbDeviceCommand = new AsyncRelayCommand(parameter => ApplyAdbDeviceAsync(parameter as MaaAdbDevicePreview));
         RunAdbApiTestCommand = new AsyncRelayCommand(RunAdbApiTestAsync);
         RefreshOptionalRuntimesCommand = new AsyncRelayCommand(RefreshOptionalRuntimesAsync);
+        InstallGlmOcrCommand = new AsyncRelayCommand(() => RunOptionalRuntimeActionAsync("GLM-OCR導入", RhodesOptionalRuntimeProbe.InstallGlmAsync, status => _glmRuntimeStatus = status));
+        UninstallGlmOcrCommand = new AsyncRelayCommand(() => RunOptionalRuntimeActionAsync("GLM-OCR削除", RhodesOptionalRuntimeProbe.UninstallGlmAsync, status => _glmRuntimeStatus = status));
+        InstallOllamaCommand = new AsyncRelayCommand(() => RunOptionalRuntimeActionAsync("Ollama導入", RhodesOptionalRuntimeProbe.InstallOllamaAsync, status => _ollamaRuntimeStatus = status));
+        StartOllamaCommand = new AsyncRelayCommand(() => RunOptionalRuntimeActionAsync("Ollama起動", RhodesOptionalRuntimeProbe.StartOllamaAsync, status => _ollamaRuntimeStatus = status));
+        UninstallOllamaCommand = new AsyncRelayCommand(() => RunOptionalRuntimeActionAsync("Ollama削除", RhodesOptionalRuntimeProbe.UninstallOllamaAsync, status => _ollamaRuntimeStatus = status));
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
         RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
@@ -785,6 +790,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RefreshOptionalRuntimesCommand { get; }
 
+    public ICommand InstallGlmOcrCommand { get; }
+
+    public ICommand UninstallGlmOcrCommand { get; }
+
+    public ICommand InstallOllamaCommand { get; }
+
+    public ICommand StartOllamaCommand { get; }
+
+    public ICommand UninstallOllamaCommand { get; }
+
     public ICommand CaptureCommand { get; }
 
     public ICommand RunAllProbesCommand { get; }
@@ -1357,6 +1372,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = $"ADB接続テストAPI成功: {result.Width}x{result.Height}";
             RefreshRuntimeCapabilities();
             RefreshInspectorRows();
+        });
+    }
+
+    private async Task RunOptionalRuntimeActionAsync(
+        string label,
+        Func<string, HttpClient?, Task<SukiOptionalRuntimeActionResult>> action,
+        Action<SukiOptionalRuntimeStatus> applyStatus)
+    {
+        await RunBusyAsync(async () =>
+        {
+            StatusMessage = $"{label}を実行しています。";
+            var result = await action(RhodesApiUrl, null);
+            applyStatus(result.Status);
+            _rhodesApiStatus = result.Succeeded
+                ? new SukiOptionalRuntimeStatus("RHODES API", "接続済み", $"{label} API実行済み", true, false)
+                : new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", result.Error, false, false);
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+            StatusMessage = result.Succeeded
+                ? $"{label}: {result.Status.State}"
+                : $"{label}失敗: {result.Error}";
         });
     }
 

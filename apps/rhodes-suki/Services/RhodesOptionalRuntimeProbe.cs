@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text;
 using RhodesSuki.Models;
 
 namespace RhodesSuki.Services;
@@ -6,7 +7,12 @@ namespace RhodesSuki.Services;
 public static class RhodesOptionalRuntimeProbe
 {
     private static readonly Uri GlmStatusPath = new("/api/ocr/glm/status", UriKind.Relative);
+    private static readonly Uri GlmInstallPath = new("/api/ocr/glm/install", UriKind.Relative);
+    private static readonly Uri GlmUninstallPath = new("/api/ocr/glm/uninstall", UriKind.Relative);
     private static readonly Uri OllamaStatusPath = new("/api/ocr/glm/ollama/status", UriKind.Relative);
+    private static readonly Uri OllamaInstallPath = new("/api/ocr/glm/ollama/install", UriKind.Relative);
+    private static readonly Uri OllamaStartPath = new("/api/ocr/glm/ollama/start", UriKind.Relative);
+    private static readonly Uri OllamaUninstallPath = new("/api/ocr/glm/ollama/uninstall", UriKind.Relative);
 
     public static async Task<SukiOptionalRuntimeProbeSnapshot> ProbeAsync(string apiUrl, HttpClient? client = null)
     {
@@ -43,6 +49,31 @@ public static class RhodesOptionalRuntimeProbe
         return new SukiOptionalRuntimeStatus(label, state, detail, installed, installing);
     }
 
+    public static Task<SukiOptionalRuntimeActionResult> InstallGlmAsync(string apiUrl, HttpClient? client = null)
+    {
+        return PostRuntimeActionAsync(apiUrl, GlmInstallPath, "GLM-OCR", client);
+    }
+
+    public static Task<SukiOptionalRuntimeActionResult> UninstallGlmAsync(string apiUrl, HttpClient? client = null)
+    {
+        return PostRuntimeActionAsync(apiUrl, GlmUninstallPath, "GLM-OCR", client);
+    }
+
+    public static Task<SukiOptionalRuntimeActionResult> InstallOllamaAsync(string apiUrl, HttpClient? client = null)
+    {
+        return PostRuntimeActionAsync(apiUrl, OllamaInstallPath, "Ollama", client);
+    }
+
+    public static Task<SukiOptionalRuntimeActionResult> StartOllamaAsync(string apiUrl, HttpClient? client = null)
+    {
+        return PostRuntimeActionAsync(apiUrl, OllamaStartPath, "Ollama", client);
+    }
+
+    public static Task<SukiOptionalRuntimeActionResult> UninstallOllamaAsync(string apiUrl, HttpClient? client = null)
+    {
+        return PostRuntimeActionAsync(apiUrl, OllamaUninstallPath, "Ollama", client);
+    }
+
     private static async Task<SukiOptionalRuntimeStatus> ProbeEndpointAsync(HttpClient client, Uri path, string label)
     {
         try
@@ -53,6 +84,42 @@ public static class RhodesOptionalRuntimeProbe
         catch (Exception ex)
         {
             return new SukiOptionalRuntimeStatus(label, "確認失敗", ex.Message, false, false);
+        }
+    }
+
+    private static async Task<SukiOptionalRuntimeActionResult> PostRuntimeActionAsync(
+        string apiUrl,
+        Uri path,
+        string label,
+        HttpClient? client = null)
+    {
+        var ownsClient = client is null;
+        client ??= new HttpClient();
+        try
+        {
+            client.BaseAddress = NormalizeBaseUri(apiUrl);
+            using var content = new StringContent("", Encoding.UTF8, "application/json");
+            var response = await client.PostAsync(path, content);
+            var json = await response.Content.ReadAsStringAsync();
+            if (!response.IsSuccessStatusCode)
+            {
+                return new SukiOptionalRuntimeActionResult(
+                    new SukiOptionalRuntimeStatus(label, "操作失敗", $"{(int)response.StatusCode} {Shorten(json, 180)}", false, false),
+                    $"{(int)response.StatusCode} {Shorten(json, 180)}");
+            }
+
+            return new SukiOptionalRuntimeActionResult(ParseStatusJson(json, label), "");
+        }
+        catch (Exception ex)
+        {
+            return new SukiOptionalRuntimeActionResult(
+                new SukiOptionalRuntimeStatus(label, "操作失敗", ex.Message, false, false),
+                ex.Message);
+        }
+        finally
+        {
+            if (ownsClient)
+                client.Dispose();
         }
     }
 
@@ -79,5 +146,14 @@ public static class RhodesOptionalRuntimeProbe
     private static string FirstNonEmpty(params string[] values)
     {
         return values.FirstOrDefault(value => !string.IsNullOrWhiteSpace(value)) ?? "";
+    }
+
+    private static string Shorten(string value, int maxLength)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return "";
+
+        var text = value.Trim().ReplaceLineEndings(" ");
+        return text.Length <= maxLength ? text : $"{text[..maxLength]}...";
     }
 }

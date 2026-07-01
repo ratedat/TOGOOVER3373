@@ -176,6 +176,13 @@ public sealed record SukiOptionalRuntimeProbeSnapshot(
     SukiOptionalRuntimeStatus Glm,
     SukiOptionalRuntimeStatus Ollama);
 
+public sealed record SukiOptionalRuntimeActionResult(
+    SukiOptionalRuntimeStatus Status,
+    string Error)
+{
+    public bool Succeeded => string.IsNullOrWhiteSpace(Error);
+}
+
 public sealed record SukiHypervisorStatus(
     string State,
     string Detail,

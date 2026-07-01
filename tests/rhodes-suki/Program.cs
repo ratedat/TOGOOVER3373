@@ -798,6 +798,11 @@ static void OptionalRuntimeStatusParsing()
     Equal(false, missing.Installed, "missing flag");
     Equal("導入中", installing.State, "installing state");
     Equal(true, installing.Installing, "installing flag");
+    var actionStatus = RhodesOptionalRuntimeProbe.ParseStatusJson(
+        """{"status":"partial","installed":true,"installing":true,"root":"D:/state/ollama-runtime"}""",
+        "Ollama");
+    Equal("導入中", actionStatus.State, "action status installing");
+    Equal(true, actionStatus.Installed, "action status installed");
 }
 
 static void RhodesApiStatusParsing()
