@@ -45,6 +45,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _roiRescanEvidencePreviewText = "";
     private string _lastRoiRescanBeforePath = "";
     private string _lastRoiRescanAfterPath = "";
+    private MaaEvidencePreviewNode? _selectedRoiRescanEvidencePreviewNode;
     private MaaRoiDraftApplyResult _roiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
     private MaaRoiBatchApplyResult _roiBatchApplyResult = MaaRoiBatchApplyResult.Failed("未確認");
     private MaaResourceGenerationResult _maaResourceGenerationResult = MaaResourceGenerationResult.Failed("未実行");
@@ -202,6 +203,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RoiBatchDrafts = [];
         RoiAdjustmentSessions = [];
         RoiRescanComparisonRows = [];
+        RoiRescanEvidencePreviewNodes = [];
         RecognitionScanHistory = [];
         RecognitionScanLogRows = [];
         BaseResolution = Services.RhodesMaaPaths.BaseResolution;
@@ -352,6 +354,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaRoiAdjustmentSessionItem> RoiAdjustmentSessions { get; }
 
     public ObservableCollection<MaaRoiRescanComparisonRow> RoiRescanComparisonRows { get; }
+
+    public ObservableCollection<MaaEvidencePreviewNode> RoiRescanEvidencePreviewNodes { get; }
 
     public ObservableCollection<RhodesRecognitionScanHistoryItem> RecognitionScanHistory { get; }
 
@@ -891,6 +895,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _roiRescanEvidencePreviewText;
         private set => SetProperty(ref _roiRescanEvidencePreviewText, value ?? "");
+    }
+
+    public MaaEvidencePreviewNode? SelectedRoiRescanEvidencePreviewNode
+    {
+        get => _selectedRoiRescanEvidencePreviewNode;
+        set
+        {
+            if (!SetProperty(ref _selectedRoiRescanEvidencePreviewNode, value) || value is null)
+                return;
+            RoiRescanEvidencePreviewText = string.IsNullOrWhiteSpace(value.PreviewText)
+                ? value.Detail
+                : value.PreviewText;
+        }
     }
 
     public string LastCandidateApplySummary
@@ -2117,6 +2134,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             RoiRescanEvidencePreviewTitle = $"{normalizedSide}比較証跡なし";
             RoiRescanEvidencePreviewText = "";
+            SelectedRoiRescanEvidencePreviewNode = null;
+            ReplaceCollection(RoiRescanEvidencePreviewNodes, Array.Empty<MaaEvidencePreviewNode>());
             StatusMessage = $"{normalizedSide}比較証跡が見つかりません。";
             return;
         }
@@ -2124,6 +2143,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         var text = await File.ReadAllTextAsync(path);
         RoiRescanEvidencePreviewTitle = $"{normalizedSide}: {path}";
         RoiRescanEvidencePreviewText = BuildRoiRescanEvidencePreview(text, SelectedRoiRescanComparisonRow);
+        SelectedRoiRescanEvidencePreviewNode = null;
+        ReplaceCollection(RoiRescanEvidencePreviewNodes, BuildRoiRescanEvidencePreviewNodes(text, SelectedRoiRescanComparisonRow));
         StatusMessage = $"比較証跡をプレビューしました: {path}";
     }
 
@@ -2187,6 +2208,125 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             return TruncateEvidencePreview(json);
         }
+    }
+
+    private static IReadOnlyList<MaaEvidencePreviewNode> BuildRoiRescanEvidencePreviewNodes(
+        string json,
+        MaaRoiRescanComparisonRow? selectedRow)
+    {
+        try
+        {
+            using var document = JsonDocument.Parse(json);
+            var root = document.RootElement;
+            var candidates = FilterEvidenceCandidates(JsonArray(root, "candidates"), selectedRow);
+            var tasks = FilterEvidenceTasks(EvidenceTaskResults(root), selectedRow);
+            var logs = FilterEvidenceTasks(JsonArray(root, "log"), selectedRow);
+            return
+            [
+                new MaaEvidencePreviewNode("Summary", "scan metadata", EvidenceSummary(root)),
+                EvidenceSection("Candidates", candidates, CandidateEvidenceTitle),
+                EvidenceSection("Resource task results", tasks, TaskEvidenceTitle),
+                EvidenceSection("Log", logs, LogEvidenceTitle),
+            ];
+        }
+        catch (JsonException)
+        {
+            return [new MaaEvidencePreviewNode("Raw JSON", "JSON parse failed", TruncateEvidencePreview(json))];
+        }
+    }
+
+    private static IReadOnlyList<JsonElement> FilterEvidenceCandidates(
+        IEnumerable<JsonElement> candidates,
+        MaaRoiRescanComparisonRow? selectedRow)
+    {
+        var items = candidates.ToArray();
+        return selectedRow is null || string.IsNullOrWhiteSpace(selectedRow.CandidateKey)
+            ? items
+            : items.Where(candidate => CandidateJsonKey(candidate).Equals(selectedRow.CandidateKey, StringComparison.Ordinal)).ToArray();
+    }
+
+    private static IReadOnlyList<JsonElement> FilterEvidenceTasks(
+        IEnumerable<JsonElement> rows,
+        MaaRoiRescanComparisonRow? selectedRow)
+    {
+        var items = rows.ToArray();
+        return selectedRow is null || string.IsNullOrWhiteSpace(selectedRow.TaskEntry)
+            ? items
+            : items.Where(row => JsonString(row, "entry").Equals(selectedRow.TaskEntry, StringComparison.Ordinal)).ToArray();
+    }
+
+    private static MaaEvidencePreviewNode EvidenceSection(
+        string title,
+        IReadOnlyList<JsonElement> items,
+        Func<JsonElement, int, string> titleFactory)
+    {
+        const int maxChildren = 80;
+        var options = new JsonSerializerOptions { WriteIndented = true };
+        var children = items
+            .Take(maxChildren)
+            .Select((item, index) => new MaaEvidencePreviewNode(
+                titleFactory(item, index),
+                EvidenceNodeDetail(item),
+                JsonSerializer.Serialize(item, options)))
+            .ToList();
+        if (items.Count > maxChildren)
+        {
+            children.Add(new MaaEvidencePreviewNode(
+                "truncated",
+                $"{items.Count - maxChildren} items hidden",
+                $"The preview tree shows the first {maxChildren} of {items.Count} items."));
+        }
+
+        return new MaaEvidencePreviewNode(title, $"{items.Count} item(s)", "", children);
+    }
+
+    private static string EvidenceSummary(JsonElement root)
+    {
+        var summary = new[]
+        {
+            $"profileId: {JsonString(root, "profileId")}",
+            $"status: {JsonString(root, "status")}",
+            $"source: {JsonString(root, "source")}",
+            $"startedAt: {JsonString(root, "startedAt")}",
+            $"completedAt: {JsonString(root, "completedAt")}",
+            $"counts: {EvidenceCounts(root)}",
+        };
+        return string.Join(Environment.NewLine, summary);
+    }
+
+    private static string EvidenceCounts(JsonElement root)
+    {
+        return root.ValueKind == JsonValueKind.Object
+            && root.TryGetProperty("counts", out var counts)
+            ? counts.GetRawText()
+            : "{}";
+    }
+
+    private static string CandidateEvidenceTitle(JsonElement item, int index)
+    {
+        return FirstNonEmpty(JsonString(item, "label"), JsonString(item, "field"), JsonString(item, "kind"), $"candidate {index + 1}");
+    }
+
+    private static string TaskEvidenceTitle(JsonElement item, int index)
+    {
+        return FirstNonEmpty(JsonString(item, "entry"), $"task {index + 1}");
+    }
+
+    private static string LogEvidenceTitle(JsonElement item, int index)
+    {
+        return FirstNonEmpty(JsonString(item, "event"), JsonString(item, "entry"), $"log {index + 1}");
+    }
+
+    private static string EvidenceNodeDetail(JsonElement item)
+    {
+        var parts = new[]
+        {
+            JsonString(item, "kind"),
+            JsonString(item, "entry"),
+            JsonString(item, "status"),
+            JsonString(item, "value"),
+        }.Where(part => !string.IsNullOrWhiteSpace(part));
+        return string.Join(" / ", parts);
     }
 
     private static IReadOnlyList<JsonElement> JsonArray(JsonElement element, string propertyName)
@@ -3590,6 +3730,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         SetRoiRescanComparisonEvidence("", "");
         RoiRescanEvidencePreviewTitle = "比較証跡未表示";
         RoiRescanEvidencePreviewText = "";
+        SelectedRoiRescanEvidencePreviewNode = null;
+        ReplaceCollection(RoiRescanEvidencePreviewNodes, Array.Empty<MaaEvidencePreviewNode>());
     }
 
     private void SetRoiRescanComparisonEvidence(string beforePath, string afterPath)

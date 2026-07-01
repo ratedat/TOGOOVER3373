@@ -748,6 +748,17 @@ public sealed record MaaRoiRescanComparisonRow(
     public string ValueDiff => $"{BeforeValue} -> {AfterValue}";
 }
 
+public sealed record MaaEvidencePreviewNode(
+    string Title,
+    string Detail,
+    string PreviewText,
+    IReadOnlyList<MaaEvidencePreviewNode>? Children = null)
+{
+    public IReadOnlyList<MaaEvidencePreviewNode> SafeChildren => Children ?? [];
+
+    public bool HasChildren => SafeChildren.Count > 0;
+}
+
 public sealed record SukiCandidateApplySummary(
     int AppliedCount,
     int IgnoredCount,
