@@ -365,6 +365,7 @@ public sealed record RhodesRecognitionScanHistoryPayload(
 public sealed record RhodesRecognitionScanLogRow(
     string Event,
     string At,
+    string Entry,
     string Stage,
     string Label,
     string Detail,
@@ -372,7 +373,7 @@ public sealed record RhodesRecognitionScanLogRow(
 {
     public string DisplayName => string.IsNullOrWhiteSpace(Event) ? "event不明" : Event;
 
-    public string Context => string.Join(" / ", new[] { Stage, Label }.Where(value => !string.IsNullOrWhiteSpace(value)));
+    public string Context => string.Join(" / ", new[] { Entry, Stage, Label }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
     public string Summary => string.IsNullOrWhiteSpace(Context) ? Detail : $"{Context} / {Detail}";
 

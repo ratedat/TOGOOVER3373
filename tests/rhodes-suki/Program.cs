@@ -1144,6 +1144,8 @@ static void RoiSelectionMatcherLinksOcrRows()
 
     Equal("target", selected?.Raw, "matched roi row");
     Equal(null, RhodesMaaRoiSelectionMatcher.MatchForOcrDetail(roiRows, new MaaOcrDetailRow("entry-c", "グム", 0.91, "filtered", "OCR")), "missing match");
+    Equal("target", RhodesMaaRoiSelectionMatcher.MatchForTaskResult(roiRows, new MaaTaskRunResult("entry-a", "Succeeded", true, ""))?.Raw, "matched task roi");
+    Equal("target", RhodesMaaRoiSelectionMatcher.MatchForLogRow(roiRows, new RhodesRecognitionScanLogRow("maa-task", "", "entry-a", "", "", "", ""))?.Raw, "matched log roi");
 }
 
 static void MaaNativeEvidenceLog()
@@ -1245,6 +1247,7 @@ static void RecognitionScanHistoryLoadsUnifiedLogs()
         Equal(1, nativePayload.TaskResults.Count, "native payload task results");
         Equal(1, nativePayload.LogRows.Count, "native payload log rows");
         Equal("maa-task", nativePayload.LogRows[0].DisplayName, "native payload log event");
+        Equal("RhodesOcrRegion_operator_name", nativePayload.LogRows[0].Entry, "native payload log entry");
         Equal("グム", nativePayload.Candidates[0].Label, "native payload candidate label");
 
         var apiPayload = RhodesRecognitionScanHistory.LoadPayload(history[1].LogPath);

@@ -813,8 +813,8 @@
             <TextBlock Grid.Row="4" Text="詳細" FontSize="13" FontWeight="SemiBold" />
             <ScrollViewer Grid.Row="5" VerticalScrollBarVisibility="Auto">
               <StackPanel Spacing="8">
-                <ItemsControl ItemsSource="{Binding RecognitionScanLogRows}">
-                  <ItemsControl.ItemTemplate>
+                <ListBox ItemsSource="{Binding RecognitionScanLogRows}" SelectedItem="{Binding SelectedRecognitionScanLogRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
+                  <ListBox.ItemTemplate>
                     <DataTemplate>
                       <Border CornerRadius="7" Padding="9" Background="#101617" BorderBrush="#2B3638" BorderThickness="1" Margin="0,0,0,8">
                         <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -825,8 +825,8 @@
                         </Grid>
                       </Border>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </ListBox.ItemTemplate>
+                </ListBox>
 
                 <ListBox ItemsSource="{Binding OcrDetailRows}" SelectedItem="{Binding SelectedOcrDetailRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
                   <ListBox.ItemTemplate>
@@ -858,8 +858,8 @@
                   </ListBox.ItemTemplate>
                 </ListBox>
 
-                <ItemsControl ItemsSource="{Binding ResourceTaskResults}">
-                  <ItemsControl.ItemTemplate>
+                <ListBox ItemsSource="{Binding ResourceTaskResults}" SelectedItem="{Binding SelectedResourceTaskResult, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
+                  <ListBox.ItemTemplate>
                     <DataTemplate>
                       <Border CornerRadius="7" Padding="9" Background="#151D1E" BorderBrush="#2B3638" BorderThickness="1" Margin="0,0,0,8">
                         <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10">
@@ -870,8 +870,8 @@
                         </Grid>
                       </Border>
                     </DataTemplate>
-                  </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                  </ListBox.ItemTemplate>
+                </ListBox>
 
                 <ItemsControl ItemsSource="{Binding ProbePayloads}">
                   <ItemsControl.ItemTemplate>

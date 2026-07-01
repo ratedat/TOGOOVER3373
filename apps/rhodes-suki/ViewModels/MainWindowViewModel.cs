@@ -51,6 +51,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _selectedRoiPreviewKey = "";
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
     private MaaOcrDetailRow? _selectedOcrDetailRow;
+    private MaaTaskRunResult? _selectedResourceTaskResult;
+    private RhodesRecognitionScanLogRow? _selectedRecognitionScanLogRow;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
     private SukiOcrEngineOption? _selectedOcrEngine;
@@ -821,6 +823,34 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             _selectedOcrDetailRow = value;
             OnPropertyChanged();
             SelectRoiForOcrDetail(value);
+        }
+    }
+
+    public MaaTaskRunResult? SelectedResourceTaskResult
+    {
+        get => _selectedResourceTaskResult;
+        set
+        {
+            if (Equals(_selectedResourceTaskResult, value))
+                return;
+
+            _selectedResourceTaskResult = value;
+            OnPropertyChanged();
+            SelectRoiForTaskResult(value);
+        }
+    }
+
+    public RhodesRecognitionScanLogRow? SelectedRecognitionScanLogRow
+    {
+        get => _selectedRecognitionScanLogRow;
+        set
+        {
+            if (Equals(_selectedRecognitionScanLogRow, value))
+                return;
+
+            _selectedRecognitionScanLogRow = value;
+            OnPropertyChanged();
+            SelectRoiForLogRow(value);
         }
     }
 
@@ -2149,6 +2179,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private void SelectRoiForOcrDetail(MaaOcrDetailRow? row)
     {
         var selected = RhodesMaaRoiSelectionMatcher.MatchForOcrDetail(RoiPreviewRows, row);
+        if (selected is not null)
+            SelectedRoiPreviewRow = selected;
+    }
+
+    private void SelectRoiForTaskResult(MaaTaskRunResult? result)
+    {
+        var selected = RhodesMaaRoiSelectionMatcher.MatchForTaskResult(RoiPreviewRows, result);
+        if (selected is not null)
+            SelectedRoiPreviewRow = selected;
+    }
+
+    private void SelectRoiForLogRow(RhodesRecognitionScanLogRow? row)
+    {
+        var selected = RhodesMaaRoiSelectionMatcher.MatchForLogRow(RoiPreviewRows, row);
         if (selected is not null)
             SelectedRoiPreviewRow = selected;
     }

@@ -194,6 +194,7 @@ public static class RhodesRecognitionScanHistory
             rows.Add(new RhodesRecognitionScanLogRow(
                 JsonString(entry, "event"),
                 JsonString(entry, "at"),
+                JsonString(entry, "entry"),
                 JsonString(entry, "stage"),
                 JsonString(entry, "label"),
                 BuildLogDetail(entry),
@@ -207,7 +208,7 @@ public static class RhodesRecognitionScanHistory
         var parts = new List<string>();
         foreach (var property in entry.EnumerateObject())
         {
-            if (property.Name is "event" or "at" or "stage" or "label" or "path")
+            if (property.Name is "event" or "at" or "entry" or "stage" or "label" or "path")
                 continue;
 
             var value = JsonValueText(property.Value);

@@ -243,8 +243,16 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /SelectedRoiPreviewRows/);
   assert.match(viewModel, /RefreshSelectedRoiPreviewRows/);
   assert.match(viewModel, /SelectedOcrDetailRow/);
+  assert.match(viewModel, /SelectedResourceTaskResult/);
+  assert.match(viewModel, /SelectedRecognitionScanLogRow/);
   assert.match(viewModel, /SelectRoiForOcrDetail/);
+  assert.match(viewModel, /SelectRoiForTaskResult/);
+  assert.match(viewModel, /SelectRoiForLogRow/);
   assert.match(viewModel, /RhodesMaaRoiSelectionMatcher\.MatchForOcrDetail/);
+  assert.match(viewModel, /RhodesMaaRoiSelectionMatcher\.MatchForTaskResult/);
+  assert.match(viewModel, /RhodesMaaRoiSelectionMatcher\.MatchForLogRow/);
+  assert.match(roiSelectionMatcher, /MatchForTaskResult/);
+  assert.match(roiSelectionMatcher, /MatchForLogRow/);
   assert.match(roiSelectionMatcher, /StartsWith/);
   assert.match(viewModel, /CapturePixelSizeLabel/);
   assert.match(viewModel, /RoiProjectionLabel/);
@@ -366,6 +374,8 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /SelectedRoiPreviewRows/);
   assert.match(xaml, /SelectedItem="\{Binding SelectedRoiPreviewRow, Mode=TwoWay\}"/);
   assert.match(xaml, /SelectedItem="\{Binding SelectedOcrDetailRow, Mode=TwoWay\}"/);
+  assert.match(xaml, /SelectedItem="\{Binding SelectedRecognitionScanLogRow, Mode=TwoWay\}"/);
+  assert.match(xaml, /SelectedItem="\{Binding SelectedResourceTaskResult, Mode=TwoWay\}"/);
   assert.match(xaml, /BorderBrush="#FFD447"/);
   assert.match(xaml, /ShowRoiOverlay/);
   assert.match(xaml, /CapturePixelSizeLabel/);
