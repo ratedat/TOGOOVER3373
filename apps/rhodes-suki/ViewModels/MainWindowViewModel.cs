@@ -40,6 +40,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _lastRoiDraftPath = "";
     private string _lastRoiSessionPath = "";
     private string _roiRescanComparisonSummary = "再スキャン比較未実行";
+    private string _roiRescanComparisonEvidenceSummary = "比較証跡未保存";
+    private string _lastRoiRescanBeforePath = "";
+    private string _lastRoiRescanAfterPath = "";
     private MaaRoiDraftApplyResult _roiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
     private MaaRoiBatchApplyResult _roiBatchApplyResult = MaaRoiBatchApplyResult.Failed("未確認");
     private MaaResourceGenerationResult _maaResourceGenerationResult = MaaResourceGenerationResult.Failed("未実行");
@@ -866,6 +869,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public string RoiRescanComparisonEvidenceSummary
+    {
+        get => _roiRescanComparisonEvidenceSummary;
+        private set => SetProperty(ref _roiRescanComparisonEvidenceSummary, string.IsNullOrWhiteSpace(value) ? "比較証跡未保存" : value);
+    }
+
     public string LastCandidateApplySummary
     {
         get => _lastCandidateApplySummary;
@@ -1374,7 +1383,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 "ROIセッション",
                 string.IsNullOrWhiteSpace(LastRoiSessionPath) ? $"{RoiBatchDrafts.Count}候補" : LastRoiSessionPath,
                 $"{RoiBatchApplyResult.Summary} / 保存{RoiAdjustmentSessions.Count}件");
-            yield return new SukiInspectorRow("ROI比較", RoiRescanComparisonSummary, $"{RoiRescanComparisonRows.Count}差分");
+            yield return new SukiInspectorRow("ROI比較", RoiRescanComparisonSummary, RoiRescanComparisonEvidenceSummary);
             yield return new SukiInspectorRow("MAA Resource", MaaResourceGenerationResult.Message, MaaResourceGenerationResult.OutputPath);
             yield return new SukiInspectorRow(
                 "結果JSON",
@@ -1909,7 +1918,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 RoiBatchApplyResult,
                 RhodesSukiDebugPaths.RoiSessionsDirectory,
                 comparisonSummary: RoiRescanComparisonSummary,
-                comparisonRows: RoiRescanComparisonRows);
+                comparisonRows: RoiRescanComparisonRows,
+                comparisonBeforeLogPath: _lastRoiRescanBeforePath,
+                comparisonAfterLogPath: _lastRoiRescanAfterPath);
             RefreshRoiAdjustmentSessions();
             StatusMessage = $"ROI調整セッションを保存しました: {LastRoiSessionPath}";
         });
@@ -1974,6 +1985,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             ReplaceCollection(RoiBatchDrafts, payload.Drafts.Select(draft => draft.ToPreview()));
             ReplaceCollection(RoiRescanComparisonRows, payload.SafeComparisonRows);
             RoiRescanComparisonSummary = payload.SafeComparisonSummary;
+            SetRoiRescanComparisonEvidence(payload.SafeComparisonBeforeLogPath, payload.SafeComparisonAfterLogPath);
             RefreshRoiAdjustmentSessions();
             StatusMessage = restoredScan
                 ? $"ROI調整セッションを再開しました: 候補{CandidateResults.Count}件 / task{ResourceTaskResults.Count}件 / ROI候補{RoiBatchDrafts.Count}件 / 比較{RoiRescanComparisonRows.Count}件"
@@ -2002,6 +2014,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             }
 
             var beforeCandidates = SnapshotCandidatesForComparison(beforeTaskResults, CandidateResults);
+            var beforeEvidencePath = await SaveResourceTaskResultsAsync(
+                beforeTaskResults,
+                SelectedResourceProfile?.Id,
+                beforeCandidates);
             await RunAllResourceTasksCoreAsync();
             await ConvertResourceTaskResultsCoreAsync();
 
@@ -2009,6 +2025,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             var comparisonRows = CompareRoiRescanCandidates(beforeCandidates, afterCandidates);
             ReplaceCollection(RoiRescanComparisonRows, comparisonRows);
             RoiRescanComparisonSummary = BuildRoiRescanComparisonSummary(beforeCandidates.Count, afterCandidates.Length, comparisonRows);
+            SetRoiRescanComparisonEvidence(beforeEvidencePath, LastResourceTaskResultsPath);
             StatusMessage = RoiRescanComparisonSummary;
             RefreshInspectorRows();
         });
@@ -3328,6 +3345,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         ReplaceCollection(RoiRescanComparisonRows, Array.Empty<MaaRoiRescanComparisonRow>());
         RoiRescanComparisonSummary = summary;
+        SetRoiRescanComparisonEvidence("", "");
+    }
+
+    private void SetRoiRescanComparisonEvidence(string beforePath, string afterPath)
+    {
+        _lastRoiRescanBeforePath = beforePath ?? "";
+        _lastRoiRescanAfterPath = afterPath ?? "";
+        RoiRescanComparisonEvidenceSummary =
+            string.IsNullOrWhiteSpace(_lastRoiRescanBeforePath) && string.IsNullOrWhiteSpace(_lastRoiRescanAfterPath)
+                ? "比較証跡未保存"
+                : $"before={_lastRoiRescanBeforePath} / after={_lastRoiRescanAfterPath}";
     }
 
     private static IReadOnlyList<MaaRoiRescanComparisonRow> CompareRoiRescanCandidates(

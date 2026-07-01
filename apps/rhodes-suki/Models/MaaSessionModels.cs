@@ -399,7 +399,9 @@ public sealed record MaaRoiAdjustmentSessionPayload(
     IReadOnlyList<MaaRoiAdjustmentSessionDraft> Drafts,
     MaaRoiBatchApplyResult? BatchResult,
     string? ComparisonSummary,
-    IReadOnlyList<MaaRoiRescanComparisonRow>? ComparisonRows)
+    IReadOnlyList<MaaRoiRescanComparisonRow>? ComparisonRows,
+    string? ComparisonBeforeLogPath,
+    string? ComparisonAfterLogPath)
 {
     public IReadOnlyList<MaaRoiRescanComparisonRow> SafeComparisonRows => ComparisonRows ?? [];
 
@@ -410,6 +412,10 @@ public sealed record MaaRoiAdjustmentSessionPayload(
     public int ComparisonCount => SafeComparisonRows.Count;
 
     public string SafeComparisonSummary => string.IsNullOrWhiteSpace(ComparisonSummary) ? "再スキャン比較未実行" : ComparisonSummary;
+
+    public string SafeComparisonBeforeLogPath => ComparisonBeforeLogPath ?? "";
+
+    public string SafeComparisonAfterLogPath => ComparisonAfterLogPath ?? "";
 }
 
 public sealed record MaaRoiAdjustmentSessionItem(

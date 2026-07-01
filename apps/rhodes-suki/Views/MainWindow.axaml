@@ -1039,11 +1039,12 @@
                 </Border>
 
                 <Border CornerRadius="7" Padding="9" Background="#151915" BorderBrush="#3B4730" BorderThickness="1">
-                  <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="6">
+                  <Grid RowDefinitions="Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="6">
                     <TextBlock Text="調整後再スキャン比較" FontSize="13" FontWeight="SemiBold" />
                     <Button Grid.Column="1" Content="再スキャン比較" Command="{Binding RunRoiRescanComparisonCommand}" Padding="8,3" />
                     <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding RoiRescanComparisonSummary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.68" />
-                    <ListBox Grid.Row="2" Grid.ColumnSpan="2" ItemsSource="{Binding RoiRescanComparisonRows}" MaxHeight="132" Background="Transparent" BorderThickness="0" Padding="0">
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding RoiRescanComparisonEvidenceSummary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.46" />
+                    <ListBox Grid.Row="3" Grid.ColumnSpan="2" ItemsSource="{Binding RoiRescanComparisonRows}" MaxHeight="132" Background="Transparent" BorderThickness="0" Padding="0">
                       <ListBox.ItemTemplate>
                         <DataTemplate>
                           <Border CornerRadius="6" Padding="8" Background="#101514" BorderBrush="#2F3A30" BorderThickness="1" Margin="0,0,0,6">

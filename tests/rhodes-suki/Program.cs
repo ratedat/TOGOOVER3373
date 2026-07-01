@@ -1227,7 +1227,9 @@ static void RoiAdjustmentSessionLog()
         batchResult,
         createdAt,
         "再スキャン比較: 追加1 / 変化1 / 消失0",
-        comparisonRows);
+        comparisonRows,
+        "before.json",
+        "after.json");
     var root = JsonNode.Parse(json)!.AsObject();
     Equal(1, root["schemaVersion"]!.GetValue<int>(), "roi session schema version");
     Equal("maa-roi-adjustment-session", root["kind"]!.GetValue<string>(), "roi session kind");
@@ -1237,6 +1239,8 @@ static void RoiAdjustmentSessionLog()
     Equal("確認済み", root["drafts"]!.AsArray()[0]!.AsObject()["stateLabel"]!.GetValue<string>(), "roi session draft state");
     Equal("再スキャン比較: 追加1 / 変化1 / 消失0", root["comparisonSummary"]!.GetValue<string>(), "roi session comparison summary");
     Equal(2, root["comparisonRows"]!.AsArray().Count, "roi session comparison row count");
+    Equal("before.json", root["comparisonBeforeLogPath"]!.GetValue<string>(), "roi session comparison before path");
+    Equal("after.json", root["comparisonAfterLogPath"]!.GetValue<string>(), "roi session comparison after path");
 
     var directory = Path.Combine(Path.GetTempPath(), $"rhodes-suki-roi-session-{Guid.NewGuid():N}");
     try
@@ -1250,7 +1254,9 @@ static void RoiAdjustmentSessionLog()
             directory,
             createdAt,
             "再スキャン比較: 追加1 / 変化1 / 消失0",
-            comparisonRows).GetAwaiter().GetResult();
+            comparisonRows,
+            "before.json",
+            "after.json").GetAwaiter().GetResult();
         Equal(true, File.Exists(file), "roi session file exists");
         Equal(true, Path.GetFileName(file).Contains("runStatusFull", StringComparison.Ordinal), "roi session filename profile");
         var loaded = RhodesMaaRoiAdjustmentSessionLog.Load(file);
@@ -1258,6 +1264,8 @@ static void RoiAdjustmentSessionLog()
         Equal(1, loaded.IncludedCount, "loaded roi session included count");
         Equal(2, loaded.ComparisonCount, "loaded roi session comparison count");
         Equal("希望", loaded.SafeComparisonRows[0].Label, "loaded roi session comparison label");
+        Equal("before.json", loaded.SafeComparisonBeforeLogPath, "loaded roi session comparison before path");
+        Equal("after.json", loaded.SafeComparisonAfterLogPath, "loaded roi session comparison after path");
         Equal("RhodesOcrRegion_run_hope_current", loaded.Drafts[0].ToPreview().Entry, "loaded roi session preview entry");
         Equal("確認済み", loaded.Drafts[0].ToPreview().StateLabel, "loaded roi session preview state");
         var newerFile = RhodesMaaRoiAdjustmentSessionLog.SaveAsync(

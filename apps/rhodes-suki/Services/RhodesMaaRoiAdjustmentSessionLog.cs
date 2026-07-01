@@ -24,7 +24,9 @@ public static class RhodesMaaRoiAdjustmentSessionLog
         MaaRoiBatchApplyResult? batchResult,
         DateTimeOffset createdAt,
         string? comparisonSummary = null,
-        IEnumerable<MaaRoiRescanComparisonRow>? comparisonRows = null)
+        IEnumerable<MaaRoiRescanComparisonRow>? comparisonRows = null,
+        string? comparisonBeforeLogPath = null,
+        string? comparisonAfterLogPath = null)
     {
         var payload = new MaaRoiAdjustmentSessionPayload(
             1,
@@ -36,7 +38,9 @@ public static class RhodesMaaRoiAdjustmentSessionLog
             drafts.Select(MaaRoiAdjustmentSessionDraft.FromPreview).ToArray(),
             batchResult,
             comparisonSummary?.Trim() ?? "",
-            comparisonRows?.ToArray() ?? []);
+            comparisonRows?.ToArray() ?? [],
+            comparisonBeforeLogPath?.Trim() ?? "",
+            comparisonAfterLogPath?.Trim() ?? "");
 
         return JsonSerializer.Serialize(payload, WriteOptions);
     }
@@ -50,7 +54,9 @@ public static class RhodesMaaRoiAdjustmentSessionLog
         string directory,
         DateTimeOffset? createdAt = null,
         string? comparisonSummary = null,
-        IEnumerable<MaaRoiRescanComparisonRow>? comparisonRows = null)
+        IEnumerable<MaaRoiRescanComparisonRow>? comparisonRows = null,
+        string? comparisonBeforeLogPath = null,
+        string? comparisonAfterLogPath = null)
     {
         Directory.CreateDirectory(directory);
         var timestamp = createdAt ?? DateTimeOffset.UtcNow;
@@ -58,7 +64,17 @@ public static class RhodesMaaRoiAdjustmentSessionLog
         var file = Path.Combine(
             directory,
             $"roi-session-{TimestampForFile(timestamp)}-{SanitizeFilePart(normalizedProfile)}.json");
-        var json = BuildJson(drafts, profileId, scanLogPath, capturePath, batchResult, timestamp, comparisonSummary, comparisonRows);
+        var json = BuildJson(
+            drafts,
+            profileId,
+            scanLogPath,
+            capturePath,
+            batchResult,
+            timestamp,
+            comparisonSummary,
+            comparisonRows,
+            comparisonBeforeLogPath,
+            comparisonAfterLogPath);
         await File.WriteAllTextAsync(file, $"{json}{Environment.NewLine}");
         return file;
     }
@@ -98,7 +114,7 @@ public static class RhodesMaaRoiAdjustmentSessionLog
 
     private static MaaRoiAdjustmentSessionPayload Empty()
     {
-        return new MaaRoiAdjustmentSessionPayload(0, "", null, "", "", "", [], null, "", []);
+        return new MaaRoiAdjustmentSessionPayload(0, "", null, "", "", "", [], null, "", [], "", "");
     }
 
     private static MaaRoiAdjustmentSessionItem? TryLoadItem(string path)

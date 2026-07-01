@@ -103,7 +103,8 @@ flowchart LR
 - 接続済み: ROI overlayのドラッグ/リサイズ中にEscで開始時ROIへ戻し、pointer captureを解除できる。
 - 接続済み: ROI調整後に同じResource profileを再スキャンし、before/afterの候補追加・変化・消失を同一画面で比較表示できる。
 - 接続済み: ROI調整セッション保存時に再スキャン比較サマリと差分行を紐付け、セッション再開時に復元できる。
-- 残作業: 再スキャン比較のbefore/after task/candidate証跡JSONを保存し、差分行から個別証跡へジャンプできるようにする。
+- 接続済み: 再スキャン比較のbefore/after task/candidate証跡JSONを保存し、ROI調整セッションへ証跡パスを保持できる。
+- 残作業: 再スキャン比較の差分行からbefore/after個別証跡へジャンプできるようにする。
 
 ## First Milestone
 - SukiUI shell が起動する
