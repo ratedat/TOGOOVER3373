@@ -259,6 +259,7 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /RunSelectedProfileRecognitionCommand/);
   assert.match(xaml, /RunSelectedProfileRecognitionAndApplyCommand/);
   assert.match(xaml, /OpenRecognitionProfileCommand/);
+  assert.match(xaml, /CommandParameter="\{Binding ProfileId\}"/);
   assert.match(xaml, /CommandParameter="runStatusFull"/);
   assert.match(xaml, /CommandParameter="operatorsFull"/);
   assert.match(xaml, /CommandParameter="relicsFull"/);
