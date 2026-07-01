@@ -167,6 +167,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RhodesOptionalRuntimeProbe\.ProbeAsync/);
   assert.match(viewModel, /_maaFrameworkStatus\.State/);
   assert.match(viewModel, /_maaFrameworkStatus\.Detail/);
+  assert.match(viewModel, /_rhodesApiStatus\.State/);
+  assert.match(viewModel, /RHODES API/);
   assert.match(viewModel, /SaveSettingsCommand/);
   assert.match(viewModel, /LoadSettings/);
   assert.match(viewModel, /ResourceTaskDiagnostics/);

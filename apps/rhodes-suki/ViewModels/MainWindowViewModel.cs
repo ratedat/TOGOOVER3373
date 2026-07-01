@@ -39,6 +39,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _rhodesApiUrl = "http://127.0.0.1:5173";
     private string _statusMessage = "MAAFramework の検証準備ができています。";
     private string _lastCandidateApplySummary = "候補未反映";
+    private SukiOptionalRuntimeStatus _rhodesApiStatus = new("RHODES API", "未確認", "状態同期または認識API実行で確認します。", false, false);
     private SukiOptionalRuntimeStatus _glmRuntimeStatus = new("GLM-OCR", "未確認", "状態確認を実行してください。", false, false);
     private SukiOptionalRuntimeStatus _ollamaRuntimeStatus = new("Ollama", "未確認", "状態確認を実行してください。", false, false);
     private SukiHypervisorStatus _hypervisorStatus = new("未確認", "Google Play Gamesや一部エミュレーターの前提確認", false, false, "info");
@@ -720,6 +721,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             if (!SetProperty(ref _rhodesApiUrl, string.IsNullOrWhiteSpace(value) ? "http://127.0.0.1:5173" : value.TrimEnd('/')))
                 return;
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "未確認", "API URLが変更されました。状態同期で確認してください。", false, false);
+            RefreshRuntimeCapabilities();
             RefreshInspectorRows();
         }
     }
@@ -859,6 +862,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             string.IsNullOrWhiteSpace(AdbSerial) ? "未選択" : "選択済み",
             $"{SelectedAdbPreset?.Label ?? "自動"} / {AdbHeaderTitle}",
             "端末一覧",
+            false);
+        yield return new SukiRuntimeCapabilityPreview(
+            "rhodes-api",
+            "RHODES API",
+            "CORE",
+            _rhodesApiStatus.State,
+            $"{_rhodesApiStatus.Detail} / {RhodesApiUrl}",
+            "状態同期",
             false);
         yield return new SukiRuntimeCapabilityPreview(
             "maa",
@@ -1039,6 +1050,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         if (WorkspaceTab == "runtime")
         {
             yield return new SukiInspectorRow("ADB", AdbHeaderTitle, AdbHeaderDetail);
+            yield return new SukiInspectorRow("RHODES API", _rhodesApiStatus.State, RhodesApiUrl);
             yield return new SukiInspectorRow("端末", $"{AdbDevices.Count}件", SessionState);
             yield return new SukiInspectorRow("Hyper-V", _hypervisorStatus.State, _hypervisorStatus.Detail);
             yield return new SukiInspectorRow("任意OCR", $"GLM={_glmRuntimeStatus.State} / Ollama={_ollamaRuntimeStatus.State}", RhodesApiUrl);
@@ -1445,9 +1457,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         var result = await RhodesStateApiClient.FetchAsync(RhodesApiUrl);
         if (!result.Succeeded)
+        {
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", result.Error, false, false);
+            RefreshRuntimeCapabilities();
             return result.Error;
+        }
 
         await RhodesRunStateStore.ReplaceStateJsonAsync(result.StateJson);
+        _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続済み", "state取得済み", true, false);
+        RefreshRuntimeCapabilities();
         ReloadRunStateFromStore();
         return "";
     }
