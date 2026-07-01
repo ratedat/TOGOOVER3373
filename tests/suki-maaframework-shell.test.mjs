@@ -157,6 +157,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(models, /IsResourceRoiCandidate/);
   assert.match(models, /MaaRoiEditDraft/);
   assert.match(models, /MaaRoiDraftApplyResult/);
+  assert.match(models, /MaaResourceGenerationResult/);
   assert.match(models, /FromPreview/);
   assert.match(models, /SukiOptionalRuntimeStatus/);
   assert.match(models, /MaaCandidatePreview/);
@@ -256,10 +257,13 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /ExportSelectedRoiDraftCommand/);
   assert.match(viewModel, /PreviewSelectedRoiDraftApplyCommand/);
   assert.match(viewModel, /ApplySelectedRoiDraftCommand/);
+  assert.match(viewModel, /RegenerateMaaResourceCommand/);
+  assert.match(viewModel, /MaaResourceGenerationResult/);
   assert.match(viewModel, /RoiDraftApplyResult/);
   assert.match(viewModel, /RhodesMaaRoiEditDraftLog\.SaveAsync/);
   assert.match(viewModel, /RhodesMaaRoiDraftSourceUpdater\.ApplyToMaaTasksJson/);
   assert.match(viewModel, /RhodesMaaRoiDraftSourceUpdater\.ApplyToMaaTasksFileAsync/);
+  assert.match(viewModel, /RhodesMaaGeneratedResourceBuilder\.RegenerateFileAsync/);
   assert.match(viewModel, /RefreshSelectedRoiPreviewRows/);
   assert.match(viewModel, /SelectedOcrDetailRow/);
   assert.match(viewModel, /SelectedResourceTaskResult/);
@@ -293,6 +297,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(generatedResourceBuilder, /scan-profiles\.json/);
   assert.match(generatedResourceBuilder, /TemplateMatch/);
   assert.match(generatedResourceBuilder, /RhodesTemplate/);
+  assert.match(generatedResourceBuilder, /RegenerateFileAsync/);
   assert.match(viewModel, /Campaigns/);
   assert.match(viewModel, /SelectedCampaign/);
   assert.match(viewModel, /構想/);
@@ -412,6 +417,8 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /ExportSelectedRoiDraftCommand/);
   assert.match(xaml, /PreviewSelectedRoiDraftApplyCommand/);
   assert.match(xaml, /ApplySelectedRoiDraftCommand/);
+  assert.match(xaml, /RegenerateMaaResourceCommand/);
+  assert.match(xaml, /MaaResourceGenerationResult\.Message/);
   assert.match(xaml, /RoiDraftApplyResult\.Message/);
   assert.match(xaml, /SelectedItem="\{Binding SelectedRoiPreviewRow, Mode=TwoWay\}"/);
   assert.match(xaml, /SelectedItem="\{Binding SelectedOcrDetailRow, Mode=TwoWay\}"/);

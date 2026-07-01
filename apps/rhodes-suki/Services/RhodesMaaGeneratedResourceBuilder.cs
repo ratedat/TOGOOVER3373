@@ -2,6 +2,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.RegularExpressions;
+using RhodesSuki.Models;
 
 namespace RhodesSuki.Services;
 
@@ -117,6 +118,37 @@ public static class RhodesMaaGeneratedResourceBuilder
         }
 
         return $"{pipeline.ToJsonString(WriteOptions)}{Environment.NewLine}";
+    }
+
+    public static async Task<MaaResourceGenerationResult> RegenerateFileAsync(
+        string maaTasksPath,
+        string scanProfilesPath,
+        string outputPath)
+    {
+        if (!File.Exists(maaTasksPath))
+            return MaaResourceGenerationResult.Failed($"maa-tasks.jsonが見つかりません: {maaTasksPath}");
+        if (!File.Exists(scanProfilesPath))
+            return MaaResourceGenerationResult.Failed($"scan-profiles.jsonが見つかりません: {scanProfilesPath}");
+
+        var generatedJson = BuildJson(
+            await File.ReadAllTextAsync(maaTasksPath),
+            await File.ReadAllTextAsync(scanProfilesPath));
+        var nodeCount = JsonNode.Parse(generatedJson)?.AsObject().Count ?? 0;
+        Directory.CreateDirectory(Path.GetDirectoryName(outputPath) ?? ".");
+        var backupPath = "";
+        if (File.Exists(outputPath))
+        {
+            backupPath = $"{outputPath}.bak-{DateTimeOffset.Now:yyyyMMdd-HHmmss-fff}";
+            File.Copy(outputPath, backupPath, overwrite: false);
+        }
+
+        await File.WriteAllTextAsync(outputPath, generatedJson);
+        return new MaaResourceGenerationResult(
+            true,
+            $"MAA Resourceを再生成しました: {nodeCount} nodes",
+            outputPath,
+            backupPath,
+            nodeCount);
     }
 
     private static JsonObject OcrNode(JsonElement recognition, JsonObject attach)

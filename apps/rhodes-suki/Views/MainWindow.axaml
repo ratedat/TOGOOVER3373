@@ -855,6 +855,8 @@
                   </Grid>
                 </Border>
 
+                <Button Content="{Binding MaaResourceGenerationResult.Message}" Command="{Binding RegenerateMaaResourceCommand}" HorizontalContentAlignment="Left" Padding="9,6" />
+
                 <ListBox ItemsSource="{Binding RoiPreviewRows}" SelectedItem="{Binding SelectedRoiPreviewRow, Mode=TwoWay}" Background="Transparent" BorderThickness="0" Padding="0">
                   <ListBox.ItemTemplate>
                     <DataTemplate>

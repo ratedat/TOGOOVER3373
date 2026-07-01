@@ -318,6 +318,19 @@ public sealed record MaaRoiDraftApplyResult(
     }
 }
 
+public sealed record MaaResourceGenerationResult(
+    bool Succeeded,
+    string Message,
+    string OutputPath,
+    string BackupPath,
+    int NodeCount)
+{
+    public static MaaResourceGenerationResult Failed(string message)
+    {
+        return new MaaResourceGenerationResult(false, message, "", "", 0);
+    }
+}
+
 public sealed record MaaTaskDetailSnapshot(
     string Summary,
     string RecognitionDetailJson,

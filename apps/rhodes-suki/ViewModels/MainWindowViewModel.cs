@@ -38,6 +38,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _lastResourceTaskResultsPath = "";
     private string _lastRoiDraftPath = "";
     private MaaRoiDraftApplyResult _roiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
+    private MaaResourceGenerationResult _maaResourceGenerationResult = MaaResourceGenerationResult.Failed("未実行");
     private string _rhodesApiUrl = "http://127.0.0.1:5173";
     private string _statusMessage = "MAAFramework の検証準備ができています。";
     private string _lastCandidateApplySummary = "候補未反映";
@@ -210,6 +211,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ExportSelectedRoiDraftCommand = new AsyncRelayCommand(ExportSelectedRoiDraftAsync);
         PreviewSelectedRoiDraftApplyCommand = new AsyncRelayCommand(PreviewSelectedRoiDraftApplyAsync);
         ApplySelectedRoiDraftCommand = new AsyncRelayCommand(ApplySelectedRoiDraftAsync);
+        RegenerateMaaResourceCommand = new AsyncRelayCommand(RegenerateMaaResourceAsync);
         SyncRunStateFromApiCommand = new AsyncRelayCommand(SyncRunStateFromApiAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
         ApplyCandidateResultsCommand = new AsyncRelayCommand(ApplyCandidateResultsAsync);
@@ -846,6 +848,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public MaaResourceGenerationResult MaaResourceGenerationResult
+    {
+        get => _maaResourceGenerationResult;
+        private set
+        {
+            if (!SetProperty(ref _maaResourceGenerationResult, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
     public MaaOcrDetailRow? SelectedOcrDetailRow
     {
         get => _selectedOcrDetailRow;
@@ -982,6 +995,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand PreviewSelectedRoiDraftApplyCommand { get; }
 
     public ICommand ApplySelectedRoiDraftCommand { get; }
+
+    public ICommand RegenerateMaaResourceCommand { get; }
 
     public ICommand SyncRunStateFromApiCommand { get; }
 
@@ -1249,6 +1264,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 "ROIドラフト",
                 string.IsNullOrWhiteSpace(LastRoiDraftPath) ? SelectedRoiEditDraft.StatusLabel : LastRoiDraftPath,
                 $"{SelectedRoiEditDraft.Detail} / {RoiDraftApplyResult.Message}");
+            yield return new SukiInspectorRow("MAA Resource", MaaResourceGenerationResult.Message, MaaResourceGenerationResult.OutputPath);
             yield return new SukiInspectorRow(
                 "結果JSON",
                 string.IsNullOrWhiteSpace(LastResourceTaskResultsPath) ? "-" : LastResourceTaskResultsPath,
@@ -1809,6 +1825,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = result.Succeeded
                 ? $"ROIを適用しました: {result.TargetId} / backup={result.BackupPath}"
                 : $"ROI適用失敗: {result.Message}";
+        });
+    }
+
+    private async Task RegenerateMaaResourceAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            MaaResourceGenerationResult = await RhodesMaaGeneratedResourceBuilder.RegenerateFileAsync(
+                ResolveMaaTasksSourcePath(),
+                ResolveScanProfilesSourcePath(),
+                ResolveGeneratedPipelinePath());
+            StatusMessage = MaaResourceGenerationResult.Succeeded
+                ? $"{MaaResourceGenerationResult.Message} / backup={MaaResourceGenerationResult.BackupPath}"
+                : $"MAA Resource再生成失敗: {MaaResourceGenerationResult.Message}";
         });
     }
 
@@ -2668,6 +2698,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
 
         return Path.Combine(AppContext.BaseDirectory, RhodesMaaRoiDraftSourceUpdater.MaaTasksSourcePath);
+    }
+
+    private static string ResolveScanProfilesSourcePath()
+    {
+        foreach (var origin in new[] { AppContext.BaseDirectory, Directory.GetCurrentDirectory() }.Distinct(StringComparer.OrdinalIgnoreCase))
+        {
+            var candidate = Path.Combine(origin, RhodesMaaGeneratedResourceBuilder.ScanProfilesSourcePath);
+            if (File.Exists(candidate))
+                return candidate;
+        }
+
+        return Path.Combine(AppContext.BaseDirectory, RhodesMaaGeneratedResourceBuilder.ScanProfilesSourcePath);
+    }
+
+    private static string ResolveGeneratedPipelinePath()
+    {
+        return Path.Combine(AppContext.BaseDirectory, RhodesMaaGeneratedResourceBuilder.GeneratedPipelinePath);
     }
 
     private async Task RunBusyAsync(Func<Task> action)

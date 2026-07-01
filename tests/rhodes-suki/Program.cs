@@ -1249,6 +1249,27 @@ static void MaaGeneratedResourceBuilder()
     Equal(941, root["RhodesOcrRegion_run_hope_current"]!.AsObject()["roi"]!.AsArray()[0]!.GetValue<int>(), "generated hope roi x");
     Equal("TemplateMatch", root["RhodesTemplate_runStatusFull_run_ingot"]!.AsObject()["recognition"]!.GetValue<string>(), "generated template recognition");
     Equal("run/IngotIcon.png", root["RhodesTemplate_runStatusFull_run_ingot"]!.AsObject()["template"]!.GetValue<string>(), "generated template path");
+
+    var directory = Path.Combine(Path.GetTempPath(), $"rhodes-suki-generated-resource-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(directory);
+    try
+    {
+        var maaTasks = Path.Combine(directory, "maa-tasks.json");
+        var scanProfiles = Path.Combine(directory, "scan-profiles.json");
+        var output = Path.Combine(directory, "rhodes-generated.json");
+        File.WriteAllText(maaTasks, File.ReadAllText(Path.Combine("data", "recognition", "maa-tasks.json")));
+        File.WriteAllText(scanProfiles, File.ReadAllText(Path.Combine("data", "recognition", "scan-profiles.json")));
+        File.WriteAllText(output, "{}");
+        var result = RhodesMaaGeneratedResourceBuilder.RegenerateFileAsync(maaTasks, scanProfiles, output).GetAwaiter().GetResult();
+        Equal(true, result.Succeeded, "regenerate resource succeeded");
+        Equal(true, File.Exists(result.BackupPath), "regenerate resource backup");
+        Equal(true, result.NodeCount > 10, "regenerate resource node count");
+        Equal(true, File.ReadAllText(output).Contains("RhodesOcrRegion_run_hope_current", StringComparison.Ordinal), "regenerated resource output");
+    }
+    finally
+    {
+        Directory.Delete(directory, true);
+    }
 }
 
 static void MaaNativeEvidenceLog()
