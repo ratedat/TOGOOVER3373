@@ -289,9 +289,12 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RefreshRoiAdjustmentSessionsCommand/);
   assert.match(viewModel, /LoadRoiAdjustmentSessionCommand/);
   assert.match(viewModel, /LoadRoiAdjustmentSessionAsync/);
+  assert.match(viewModel, /LoadRecognitionPayload/);
+  assert.match(viewModel, /ClearRecognitionPayload/);
   assert.match(viewModel, /RhodesMaaRoiAdjustmentSessionLog\.SaveAsync/);
   assert.match(viewModel, /RhodesMaaRoiAdjustmentSessionLog\.LoadRecent/);
   assert.match(viewModel, /RhodesMaaRoiAdjustmentSessionLog\.Load/);
+  assert.match(viewModel, /RhodesRecognitionScanHistory\.LoadPayload\(payload\.ScanLogPath\)/);
   assert.match(roiAdjustmentSessionLog, /maa-roi-adjustment-session/);
   assert.match(roiAdjustmentSessionLog, /SaveAsync/);
   assert.match(roiAdjustmentSessionLog, /Load/);

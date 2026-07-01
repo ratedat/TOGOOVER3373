@@ -1889,13 +1889,33 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             }
 
             LastRoiSessionPath = item.SessionPath;
-            LastResourceTaskResultsPath = payload.ScanLogPath;
+            var restoredScan = false;
+            if (!string.IsNullOrWhiteSpace(payload.ScanLogPath))
+            {
+                var scanPayload = RhodesRecognitionScanHistory.LoadPayload(payload.ScanLogPath);
+                if (scanPayload.Succeeded)
+                {
+                    LoadRecognitionPayload(scanPayload, payload.ScanLogPath, "ROI調整セッションから読込");
+                    restoredScan = true;
+                }
+                else
+                {
+                    ClearRecognitionPayload(payload.ScanLogPath, "ROI調整セッションから読込");
+                }
+            }
+            else
+            {
+                ClearRecognitionPayload("", "ROI調整セッションから読込");
+            }
+
             if (!string.IsNullOrWhiteSpace(payload.CapturePath))
                 TryLoadCapturePreviewFromPath(payload.CapturePath);
             RoiBatchApplyResult = payload.BatchResult ?? MaaRoiBatchApplyResult.Failed("未確認");
             ReplaceCollection(RoiBatchDrafts, payload.Drafts.Select(draft => draft.ToPreview()));
             RefreshRoiAdjustmentSessions();
-            StatusMessage = $"ROI調整セッションを再開しました: {item.SessionPath}";
+            StatusMessage = restoredScan
+                ? $"ROI調整セッションを再開しました: 候補{CandidateResults.Count}件 / task{ResourceTaskResults.Count}件 / ROI候補{RoiBatchDrafts.Count}件"
+                : $"ROI調整セッションを再開しました: ROI候補{RoiBatchDrafts.Count}件 / 元スキャン未復元";
             return Task.CompletedTask;
         });
     }
@@ -2320,32 +2340,51 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 return Task.CompletedTask;
             }
 
-            CandidateResults.Clear();
-            foreach (var candidate in payload.Candidates)
-            {
-                CandidateResults.Add(candidate);
-            }
-
-            ResourceTaskResults.Clear();
-            RecognitionScanLogRows.Clear();
-            foreach (var taskResult in payload.TaskResults)
-            {
-                ResourceTaskResults.Add(taskResult);
-            }
-
-            foreach (var logRow in payload.LogRows)
-            {
-                RecognitionScanLogRows.Add(logRow);
-            }
-            TryLoadCapturePreviewFromPath(payload.FirstImagePath);
-
-            LastResourceTaskResultsPath = item.LogPath;
-            LastCandidateApplySummary = "履歴から読込";
-            RefreshResourceTaskDiagnostics();
-            RefreshInspectorRows();
+            LoadRecognitionPayload(payload, item.LogPath, "履歴から読込");
             StatusMessage = $"認識履歴を読み込みました: 候補{CandidateResults.Count}件 / task{ResourceTaskResults.Count}件 / log{RecognitionScanLogRows.Count}件";
             return Task.CompletedTask;
         });
+    }
+
+    private void LoadRecognitionPayload(
+        RhodesRecognitionScanHistoryPayload payload,
+        string logPath,
+        string candidateApplySummary)
+    {
+        CandidateResults.Clear();
+        foreach (var candidate in payload.Candidates)
+        {
+            CandidateResults.Add(candidate);
+        }
+
+        ResourceTaskResults.Clear();
+        RecognitionScanLogRows.Clear();
+        foreach (var taskResult in payload.TaskResults)
+        {
+            ResourceTaskResults.Add(taskResult);
+        }
+
+        foreach (var logRow in payload.LogRows)
+        {
+            RecognitionScanLogRows.Add(logRow);
+        }
+        TryLoadCapturePreviewFromPath(payload.FirstImagePath);
+
+        LastResourceTaskResultsPath = logPath;
+        LastCandidateApplySummary = candidateApplySummary;
+        RefreshResourceTaskDiagnostics();
+        RefreshInspectorRows();
+    }
+
+    private void ClearRecognitionPayload(string logPath, string candidateApplySummary)
+    {
+        CandidateResults.Clear();
+        ResourceTaskResults.Clear();
+        RecognitionScanLogRows.Clear();
+        LastResourceTaskResultsPath = logPath;
+        LastCandidateApplySummary = candidateApplySummary;
+        RefreshResourceTaskDiagnostics();
+        RefreshInspectorRows();
     }
 
     private Task OpenPreviewUrlAsync(object? parameter)
