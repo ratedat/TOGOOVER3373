@@ -10,6 +10,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA hit without detail falls back to a simple candidate", HitFallback),
     ("Candidate preview exposes stable debugger identity", CandidatePreviewIdentity),
     ("MAA candidate API extraction preserves structured ids", CandidateApiExtraction),
+    ("MAA candidate merger supplements missing local candidates safely", CandidateMergerSupplementsLocalCandidates),
     ("Local MAA candidate converter extracts run status candidates", LocalCandidateConverterRunStatus),
     ("Local MAA candidate converter extracts exact operator name candidates", LocalCandidateConverterOperators),
     ("Local MAA candidate converter extracts current campaign relic candidates", LocalCandidateConverterRelics),
@@ -196,6 +197,30 @@ static void CandidateApiExtraction()
     Equal("thought_a", candidates[1].ThoughtId, "thought id");
     Equal("thought_a", candidates[1].Identity, "thought identity");
     Equal("age_prime", candidates[2].AgeId, "age id");
+}
+
+static void CandidateMergerSupplementsLocalCandidates()
+{
+    var merged = RhodesMaaCandidateMerger.Merge(
+        [
+            new MaaCandidatePreview("runStatus", "希望", "3", "3", 0.94, Field: "hope"),
+            new MaaCandidatePreview("operator", "グム", "gummy", "グム", 0.91, OperatorId: "gummy"),
+            new MaaCandidatePreview("thought", "枯れ木と若枝", "fallback", "枯れ木と若枝", 0.91, CampaignId: "is5_sarkaz", ThoughtId: "thought_a"),
+        ],
+        [
+            new MaaCandidatePreview("runStatus", "希望", "3", "3", 0.99, Field: "hope"),
+            new MaaCandidatePreview("runStatus", "希望上限", "8", "8", 0.92, Field: "maxHope"),
+            new MaaCandidatePreview("operator", "グム", "gummy", "グム", 0.99, OperatorId: "gummy"),
+            new MaaCandidatePreview("operator", "セイリュウ", "purestream", "セイリュウ", 0.88, OperatorId: "purestream"),
+            new MaaCandidatePreview("thought", "枯れ木と若枝", "fallback", "枯れ木と若枝", 0.88, CampaignId: "is5_sarkaz", ThoughtId: "thought_a"),
+            new MaaCandidatePreview("thought", "走る都市", "fallback", "走る都市", 0.87, CampaignId: "is5_sarkaz", ThoughtId: "thought_b"),
+            new MaaCandidatePreview("age", "天災の時代（全盛期）", "age_prime", "天災の時代（全盛期）", 0.9, CampaignId: "is5_sarkaz", AgeId: "age_prime"),
+        ]);
+
+    Equal("hope|maxHope", string.Join("|", merged.Where(item => item.Kind == "runStatus").Select(item => item.Field)), "merged run status fields");
+    Equal("gummy|purestream", string.Join("|", merged.Where(item => item.Kind == "operator").Select(item => item.OperatorId)), "merged operators");
+    Equal("thought_a", string.Join("|", merged.Where(item => item.Kind == "thought").Select(item => item.ThoughtId)), "primary thought preserved without local duplicates");
+    Equal("age_prime", string.Join("|", merged.Where(item => item.Kind == "age").Select(item => item.AgeId)), "local age supplemented");
 }
 
 static void LocalCandidateConverterRunStatus()

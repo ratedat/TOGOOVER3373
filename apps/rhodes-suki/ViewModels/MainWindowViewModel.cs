@@ -1278,21 +1278,24 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RhodesApiUrl,
             CandidateApiProfileId(),
             ResourceTaskResults);
+        var localCandidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+            CandidateApiProfileId(),
+            ResourceTaskResults);
 
         if (apiResult.HasCandidates)
         {
-            foreach (var candidate in apiResult.Candidates)
+            var mergedCandidates = RhodesMaaCandidateMerger.Merge(apiResult.Candidates, localCandidates);
+            foreach (var candidate in mergedCandidates)
             {
                 CandidateResults.Add(candidate);
             }
             RefreshInspectorRows();
-            StatusMessage = $"候補化しました: {CandidateResults.Count}件";
+            var supplementalCount = CandidateResults.Count - apiResult.Candidates.Count;
+            StatusMessage = supplementalCount > 0
+                ? $"候補化しました: {CandidateResults.Count}件 (ローカル補完 +{supplementalCount})"
+                : $"候補化しました: {CandidateResults.Count}件";
             return;
         }
-
-        var localCandidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
-            CandidateApiProfileId(),
-            ResourceTaskResults);
         if (localCandidates.Count > 0)
         {
             foreach (var candidate in localCandidates)
