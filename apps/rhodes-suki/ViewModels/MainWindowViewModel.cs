@@ -911,6 +911,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RoiRescanEvidencePreviewText = string.IsNullOrWhiteSpace(value.PreviewText)
                 ? value.Detail
                 : value.PreviewText;
+            SelectEvidencePreviewNode(value);
         }
     }
 
@@ -2282,11 +2283,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 new MaaEvidencePreviewNode("Summary", "scan metadata", EvidenceSummary(root)),
             };
             if (includeCandidates)
-                nodes.Add(EvidenceSection("Candidates", candidates, CandidateEvidenceTitle));
+                nodes.Add(EvidenceSection("Candidates", candidates, CandidateEvidenceTitle, CandidateJsonKey, _ => ""));
             if (includeTasks)
-                nodes.Add(EvidenceSection("Resource task results", tasks, TaskEvidenceTitle));
+                nodes.Add(EvidenceSection("Resource task results", tasks, TaskEvidenceTitle, _ => "", item => JsonString(item, "entry")));
             if (includeLog)
-                nodes.Add(EvidenceSection("Log", logs, LogEvidenceTitle));
+                nodes.Add(EvidenceSection("Log", logs, LogEvidenceTitle, _ => "", item => JsonString(item, "entry")));
             return nodes;
         }
         catch (JsonException)
@@ -2318,7 +2319,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private static MaaEvidencePreviewNode EvidenceSection(
         string title,
         IReadOnlyList<JsonElement> items,
-        Func<JsonElement, int, string> titleFactory)
+        Func<JsonElement, int, string> titleFactory,
+        Func<JsonElement, string>? candidateKeyFactory = null,
+        Func<JsonElement, string>? taskEntryFactory = null)
     {
         const int maxChildren = 80;
         var options = new JsonSerializerOptions { WriteIndented = true };
@@ -2327,7 +2330,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             .Select((item, index) => new MaaEvidencePreviewNode(
                 titleFactory(item, index),
                 EvidenceNodeDetail(item),
-                JsonSerializer.Serialize(item, options)))
+                JsonSerializer.Serialize(item, options),
+                null,
+                candidateKeyFactory?.Invoke(item) ?? "",
+                taskEntryFactory?.Invoke(item) ?? ""))
             .ToList();
         if (items.Count > maxChildren)
         {
@@ -3911,6 +3917,41 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         StatusMessage = string.IsNullOrWhiteSpace(row.TaskEntry)
             ? $"比較差分の候補を選択しました: {selected.Label}"
             : $"比較差分の候補とtaskを選択しました: {selected.Label} / {row.TaskEntry}";
+    }
+
+    private void SelectEvidencePreviewNode(MaaEvidencePreviewNode node)
+    {
+        var selectedParts = new List<string>();
+        if (!string.IsNullOrWhiteSpace(node.CandidateKey))
+        {
+            var candidate = CandidateResults.FirstOrDefault(item =>
+                CandidateComparisonKey(item).Equals(node.CandidateKey, StringComparison.Ordinal));
+            if (candidate is not null)
+            {
+                SelectedCandidateResult = candidate;
+                selectedParts.Add($"candidate:{candidate.Label}");
+            }
+        }
+
+        if (!string.IsNullOrWhiteSpace(node.TaskEntry))
+        {
+            var task = ResourceTaskResults.FirstOrDefault(item => item.Entry.Equals(node.TaskEntry, StringComparison.Ordinal));
+            if (task is not null)
+            {
+                SelectedResourceTaskResult = task;
+                selectedParts.Add($"task:{task.Entry}");
+            }
+
+            var log = RecognitionScanLogRows.FirstOrDefault(item => item.Entry.Equals(node.TaskEntry, StringComparison.Ordinal));
+            if (log is not null)
+            {
+                SelectedRecognitionScanLogRow = log;
+                selectedParts.Add($"log:{log.DisplayName}");
+            }
+        }
+
+        if (selectedParts.Count > 0)
+            StatusMessage = $"証跡ノードを選択しました: {string.Join(" / ", selectedParts)}";
     }
 
     private static string BuildRoiRescanComparisonSummary(

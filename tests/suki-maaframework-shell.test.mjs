@@ -182,6 +182,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(models, /TaskEntry/);
   assert.match(models, /MaaEvidencePreviewNode/);
   assert.match(models, /SafeChildren/);
+  assert.match(models, /CandidateKey/);
+  assert.match(models, /TaskEntry/);
   assert.match(models, /ValueDiff/);
   assert.match(models, /IsIncluded/);
   assert.match(models, /StateLabel/);
@@ -332,6 +334,10 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RoiEvidenceShowTasks/);
   assert.match(viewModel, /RoiEvidenceShowLog/);
   assert.match(viewModel, /RefreshRoiRescanEvidencePreviewTree/);
+  assert.match(viewModel, /SelectEvidencePreviewNode/);
+  assert.match(viewModel, /SelectedCandidateResult = candidate/);
+  assert.match(viewModel, /SelectedResourceTaskResult = task/);
+  assert.match(viewModel, /SelectedRecognitionScanLogRow = log/);
   assert.match(viewModel, /EvidenceSection/);
   assert.match(viewModel, /FilterEvidenceCandidates/);
   assert.match(viewModel, /FilterEvidenceTasks/);

@@ -752,7 +752,9 @@ public sealed record MaaEvidencePreviewNode(
     string Title,
     string Detail,
     string PreviewText,
-    IReadOnlyList<MaaEvidencePreviewNode>? Children = null)
+    IReadOnlyList<MaaEvidencePreviewNode>? Children = null,
+    string CandidateKey = "",
+    string TaskEntry = "")
 {
     public IReadOnlyList<MaaEvidencePreviewNode> SafeChildren => Children ?? [];
 
