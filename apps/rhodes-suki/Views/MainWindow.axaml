@@ -789,6 +789,31 @@
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>
+                  <ItemsControl ItemsSource="{Binding SelectedRoiPreviewRows}" IsVisible="{Binding ShowRoiOverlay}" Width="1280" Height="720">
+                    <ItemsControl.ItemsPanel>
+                      <ItemsPanelTemplate>
+                        <Canvas Width="1280" Height="720" />
+                      </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate>
+                        <Border Canvas.Left="{Binding ResizeHandleX}"
+                                Canvas.Top="{Binding ResizeHandleY}"
+                                Width="24"
+                                Height="24"
+                                CornerRadius="3"
+                                BorderBrush="#111100"
+                                BorderThickness="2"
+                                Background="#EEFFD447"
+                                PointerPressed="RoiResizePointerPressed"
+                                PointerMoved="RoiResizePointerMoved"
+                                PointerReleased="RoiResizePointerReleased"
+                                PointerCaptureLost="RoiResizePointerCaptureLost">
+                          <TextBlock Text="↘" FontSize="16" Foreground="#111100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
                 </Canvas>
               </Viewbox>
             </Border>

@@ -59,6 +59,9 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private int[] _roiDragOrigin = [];
     private double _roiDragStartX;
     private double _roiDragStartY;
+    private int[] _roiResizeOrigin = [];
+    private double _roiResizeStartX;
+    private double _roiResizeStartY;
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
     private MaaRoiEditDraft _selectedRoiEditDraft = MaaRoiEditDraft.Empty;
     private MaaOcrDetailRow? _selectedOcrDetailRow;
@@ -2017,6 +2020,44 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
         _roiDragOrigin = [];
         StatusMessage = $"ROIドラッグ終了: {SelectedRoiEditDraft.RoiJson}";
+    }
+
+    public void BeginRoiResize(MaaRoiPreviewRow? row, double pointerX, double pointerY)
+    {
+        if (row is null)
+            return;
+
+        SelectedRoiPreviewRow = row;
+        if (!TryParseDraftRoi(SelectedRoiEditDraft.RoiJson, out var roi))
+            return;
+
+        _roiResizeOrigin = roi;
+        _roiResizeStartX = pointerX;
+        _roiResizeStartY = pointerY;
+        StatusMessage = $"ROIリサイズ開始: {row.DisplayTitle}";
+    }
+
+    public void UpdateRoiResize(double pointerX, double pointerY)
+    {
+        if (_roiResizeOrigin.Length != 4 || !SelectedRoiEditDraft.HasSelection)
+            return;
+
+        var adjusted = _roiResizeOrigin.ToArray();
+        adjusted[2] = Math.Max(1, adjusted[2] + (int)Math.Round(pointerX - _roiResizeStartX, MidpointRounding.AwayFromZero));
+        adjusted[3] = Math.Max(1, adjusted[3] + (int)Math.Round(pointerY - _roiResizeStartY, MidpointRounding.AwayFromZero));
+        SelectedRoiEditDraft = SelectedRoiEditDraft with { RoiJson = RoiJson(adjusted) };
+        UpdateSelectedRoiOverlay(adjusted);
+        UpdateRoiBatchDraftForSelected();
+        RoiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
+    }
+
+    public void EndRoiResize()
+    {
+        if (_roiResizeOrigin.Length == 0)
+            return;
+
+        _roiResizeOrigin = [];
+        StatusMessage = $"ROIリサイズ終了: {SelectedRoiEditDraft.RoiJson}";
     }
 
     private async Task AdjustSelectedRoiDraftAsync(string? operation)

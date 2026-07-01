@@ -156,6 +156,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(models, /MaaResourceProfilePreview/);
   assert.match(models, /EditKindLabel/);
   assert.match(models, /ProjectedRoiJson/);
+  assert.match(models, /ResizeHandleX/);
+  assert.match(models, /ResizeHandleY/);
   assert.match(models, /IsResourceRoiCandidate/);
   assert.match(models, /MaaRoiEditDraft/);
   assert.match(models, /MaaRoiDraftApplyResult/);
@@ -297,6 +299,9 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /BeginRoiDrag/);
   assert.match(viewModel, /UpdateRoiDrag/);
   assert.match(viewModel, /EndRoiDrag/);
+  assert.match(viewModel, /BeginRoiResize/);
+  assert.match(viewModel, /UpdateRoiResize/);
+  assert.match(viewModel, /EndRoiResize/);
   assert.match(viewModel, /AdjustSelectedRoiDraftCommand/);
   assert.match(viewModel, /AdjustSelectedRoiDraftAsync/);
   assert.match(viewModel, /UpdateSelectedRoiOverlay/);
@@ -330,6 +335,12 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(mainWindowCodeBehind, /viewModel\.BeginRoiDrag/);
   assert.match(mainWindowCodeBehind, /viewModel\.UpdateRoiDrag/);
   assert.match(mainWindowCodeBehind, /viewModel\.EndRoiDrag/);
+  assert.match(mainWindowCodeBehind, /RoiResizePointerPressed/);
+  assert.match(mainWindowCodeBehind, /RoiResizePointerMoved/);
+  assert.match(mainWindowCodeBehind, /RoiResizePointerReleased/);
+  assert.match(mainWindowCodeBehind, /viewModel\.BeginRoiResize/);
+  assert.match(mainWindowCodeBehind, /viewModel\.UpdateRoiResize/);
+  assert.match(mainWindowCodeBehind, /viewModel\.EndRoiResize/);
   assert.match(roiDraftSourceUpdater, /ApplyToScanProfilesJson/);
   assert.match(roiDraftSourceUpdater, /ApplyToSourceJson/);
   assert.match(roiDraftSourceUpdater, /templateOcrRegions/);
@@ -494,6 +505,11 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /PointerPressed="RoiOverlayPointerPressed"/);
   assert.match(xaml, /PointerMoved="RoiOverlayPointerMoved"/);
   assert.match(xaml, /PointerReleased="RoiOverlayPointerReleased"/);
+  assert.match(xaml, /ResizeHandleX/);
+  assert.match(xaml, /ResizeHandleY/);
+  assert.match(xaml, /PointerPressed="RoiResizePointerPressed"/);
+  assert.match(xaml, /PointerMoved="RoiResizePointerMoved"/);
+  assert.match(xaml, /PointerReleased="RoiResizePointerReleased"/);
   assert.match(xaml, /ExportSelectedRoiDraftCommand/);
   assert.match(xaml, /AdjustSelectedRoiDraftCommand/);
   assert.match(xaml, /CommandParameter="left"/);
