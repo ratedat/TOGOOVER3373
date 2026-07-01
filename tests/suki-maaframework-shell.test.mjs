@@ -328,6 +328,10 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /BuildRoiRescanEvidencePreviewNodes/);
   assert.match(viewModel, /RoiRescanEvidencePreviewNodes/);
   assert.match(viewModel, /SelectedRoiRescanEvidencePreviewNode/);
+  assert.match(viewModel, /RoiEvidenceShowCandidates/);
+  assert.match(viewModel, /RoiEvidenceShowTasks/);
+  assert.match(viewModel, /RoiEvidenceShowLog/);
+  assert.match(viewModel, /RefreshRoiRescanEvidencePreviewTree/);
   assert.match(viewModel, /EvidenceSection/);
   assert.match(viewModel, /FilterEvidenceCandidates/);
   assert.match(viewModel, /FilterEvidenceTasks/);
@@ -402,6 +406,9 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(mainWindowAxaml, /TreeDataTemplate/);
   assert.match(mainWindowAxaml, /RoiRescanEvidencePreviewNodes/);
   assert.match(mainWindowAxaml, /SelectedRoiRescanEvidencePreviewNode/);
+  assert.match(mainWindowAxaml, /RoiEvidenceShowCandidates/);
+  assert.match(mainWindowAxaml, /RoiEvidenceShowTasks/);
+  assert.match(mainWindowAxaml, /RoiEvidenceShowLog/);
   assert.match(mainWindowAxaml, /RoiRescanEvidencePreviewText/);
   assert.match(mainWindowAxaml, /CommandParameter="before"/);
   assert.match(mainWindowAxaml, /CommandParameter="after"/);

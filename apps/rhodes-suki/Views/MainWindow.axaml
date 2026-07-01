@@ -1047,6 +1047,9 @@
                     <WrapPanel Grid.Row="3" Grid.ColumnSpan="2">
                       <Button Content="before表示" Command="{Binding PreviewRoiRescanEvidenceCommand}" CommandParameter="before" Padding="7,2" Margin="0,0,6,0" />
                       <Button Content="after表示" Command="{Binding PreviewRoiRescanEvidenceCommand}" CommandParameter="after" Padding="7,2" Margin="0,0,6,0" />
+                      <CheckBox Content="候補" IsChecked="{Binding RoiEvidenceShowCandidates, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                      <CheckBox Content="task" IsChecked="{Binding RoiEvidenceShowTasks, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,6,0" />
+                      <CheckBox Content="log" IsChecked="{Binding RoiEvidenceShowLog, Mode=TwoWay}" VerticalAlignment="Center" Margin="0,0,8,0" />
                       <TextBlock Text="{Binding RoiRescanEvidencePreviewTitle}" FontFamily="Consolas" FontSize="10" VerticalAlignment="Center" Opacity="0.62" />
                     </WrapPanel>
                     <ListBox Grid.Row="4" Grid.ColumnSpan="2" ItemsSource="{Binding RoiRescanComparisonRows}" SelectedItem="{Binding SelectedRoiRescanComparisonRow, Mode=TwoWay}" MaxHeight="132" Background="Transparent" BorderThickness="0" Padding="0">

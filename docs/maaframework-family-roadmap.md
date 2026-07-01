@@ -110,7 +110,8 @@ flowchart LR
 - 接続済み: 再スキャン比較のbefore/after証跡JSONをSuki内の読み取り専用プレビューで確認できる。
 - 接続済み: 証跡JSONプレビューを選択中差分行のcandidate key/task entryへ絞り込める。
 - 接続済み: 絞り込み済み証跡ビューを専用ツリー表示にし、候補/Resource task/ログを折りたたみ表示できる。
-- 残作業: 証跡ツリー上で候補/Resource task/logの表示対象を切り替える小型フィルターを追加する。
+- 接続済み: 証跡ツリー上で候補/Resource task/logの表示対象を切り替える小型フィルターを追加した。
+- 残作業: 証跡ツリーのcandidate/task/logノードから対応する既存一覧の選択状態を双方向に同期する。
 
 ## First Milestone
 - SukiUI shell が起動する

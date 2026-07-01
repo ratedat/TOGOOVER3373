@@ -43,9 +43,13 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _roiRescanComparisonEvidenceSummary = "比較証跡未保存";
     private string _roiRescanEvidencePreviewTitle = "比較証跡未表示";
     private string _roiRescanEvidencePreviewText = "";
+    private string _roiRescanEvidencePreviewJson = "";
     private string _lastRoiRescanBeforePath = "";
     private string _lastRoiRescanAfterPath = "";
     private MaaEvidencePreviewNode? _selectedRoiRescanEvidencePreviewNode;
+    private bool _roiEvidenceShowCandidates = true;
+    private bool _roiEvidenceShowTasks = true;
+    private bool _roiEvidenceShowLog = true;
     private MaaRoiDraftApplyResult _roiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
     private MaaRoiBatchApplyResult _roiBatchApplyResult = MaaRoiBatchApplyResult.Failed("未確認");
     private MaaResourceGenerationResult _maaResourceGenerationResult = MaaResourceGenerationResult.Failed("未実行");
@@ -907,6 +911,39 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RoiRescanEvidencePreviewText = string.IsNullOrWhiteSpace(value.PreviewText)
                 ? value.Detail
                 : value.PreviewText;
+        }
+    }
+
+    public bool RoiEvidenceShowCandidates
+    {
+        get => _roiEvidenceShowCandidates;
+        set
+        {
+            if (!SetProperty(ref _roiEvidenceShowCandidates, value))
+                return;
+            RefreshRoiRescanEvidencePreviewTree();
+        }
+    }
+
+    public bool RoiEvidenceShowTasks
+    {
+        get => _roiEvidenceShowTasks;
+        set
+        {
+            if (!SetProperty(ref _roiEvidenceShowTasks, value))
+                return;
+            RefreshRoiRescanEvidencePreviewTree();
+        }
+    }
+
+    public bool RoiEvidenceShowLog
+    {
+        get => _roiEvidenceShowLog;
+        set
+        {
+            if (!SetProperty(ref _roiEvidenceShowLog, value))
+                return;
+            RefreshRoiRescanEvidencePreviewTree();
         }
     }
 
@@ -2134,6 +2171,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             RoiRescanEvidencePreviewTitle = $"{normalizedSide}比較証跡なし";
             RoiRescanEvidencePreviewText = "";
+            _roiRescanEvidencePreviewJson = "";
             SelectedRoiRescanEvidencePreviewNode = null;
             ReplaceCollection(RoiRescanEvidencePreviewNodes, Array.Empty<MaaEvidencePreviewNode>());
             StatusMessage = $"{normalizedSide}比較証跡が見つかりません。";
@@ -2141,11 +2179,26 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
 
         var text = await File.ReadAllTextAsync(path);
+        _roiRescanEvidencePreviewJson = text;
         RoiRescanEvidencePreviewTitle = $"{normalizedSide}: {path}";
         RoiRescanEvidencePreviewText = BuildRoiRescanEvidencePreview(text, SelectedRoiRescanComparisonRow);
-        SelectedRoiRescanEvidencePreviewNode = null;
-        ReplaceCollection(RoiRescanEvidencePreviewNodes, BuildRoiRescanEvidencePreviewNodes(text, SelectedRoiRescanComparisonRow));
+        RefreshRoiRescanEvidencePreviewTree();
         StatusMessage = $"比較証跡をプレビューしました: {path}";
+    }
+
+    private void RefreshRoiRescanEvidencePreviewTree()
+    {
+        SelectedRoiRescanEvidencePreviewNode = null;
+        ReplaceCollection(
+            RoiRescanEvidencePreviewNodes,
+            string.IsNullOrWhiteSpace(_roiRescanEvidencePreviewJson)
+                ? []
+                : BuildRoiRescanEvidencePreviewNodes(
+                    _roiRescanEvidencePreviewJson,
+                    SelectedRoiRescanComparisonRow,
+                    RoiEvidenceShowCandidates,
+                    RoiEvidenceShowTasks,
+                    RoiEvidenceShowLog));
     }
 
     private static string BuildRoiRescanEvidencePreview(string json, MaaRoiRescanComparisonRow? selectedRow)
@@ -2212,7 +2265,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private static IReadOnlyList<MaaEvidencePreviewNode> BuildRoiRescanEvidencePreviewNodes(
         string json,
-        MaaRoiRescanComparisonRow? selectedRow)
+        MaaRoiRescanComparisonRow? selectedRow,
+        bool includeCandidates = true,
+        bool includeTasks = true,
+        bool includeLog = true)
     {
         try
         {
@@ -2221,13 +2277,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             var candidates = FilterEvidenceCandidates(JsonArray(root, "candidates"), selectedRow);
             var tasks = FilterEvidenceTasks(EvidenceTaskResults(root), selectedRow);
             var logs = FilterEvidenceTasks(JsonArray(root, "log"), selectedRow);
-            return
-            [
+            var nodes = new List<MaaEvidencePreviewNode>
+            {
                 new MaaEvidencePreviewNode("Summary", "scan metadata", EvidenceSummary(root)),
-                EvidenceSection("Candidates", candidates, CandidateEvidenceTitle),
-                EvidenceSection("Resource task results", tasks, TaskEvidenceTitle),
-                EvidenceSection("Log", logs, LogEvidenceTitle),
-            ];
+            };
+            if (includeCandidates)
+                nodes.Add(EvidenceSection("Candidates", candidates, CandidateEvidenceTitle));
+            if (includeTasks)
+                nodes.Add(EvidenceSection("Resource task results", tasks, TaskEvidenceTitle));
+            if (includeLog)
+                nodes.Add(EvidenceSection("Log", logs, LogEvidenceTitle));
+            return nodes;
         }
         catch (JsonException)
         {
@@ -3730,6 +3790,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         SetRoiRescanComparisonEvidence("", "");
         RoiRescanEvidencePreviewTitle = "比較証跡未表示";
         RoiRescanEvidencePreviewText = "";
+        _roiRescanEvidencePreviewJson = "";
         SelectedRoiRescanEvidencePreviewNode = null;
         ReplaceCollection(RoiRescanEvidencePreviewNodes, Array.Empty<MaaEvidencePreviewNode>());
     }
