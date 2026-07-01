@@ -58,6 +58,27 @@ public static class RhodesRunStateStore
         }
     }
 
+    public static async Task<SukiCandidateApplySummary> SaveCandidatesAsync(
+        IEnumerable<MaaCandidatePreview> candidates,
+        string? statePath = null,
+        DateTimeOffset? now = null)
+    {
+        var path = string.IsNullOrWhiteSpace(statePath) ? ResolveDefaultStatePath() : statePath;
+        await WriteLock.WaitAsync();
+        try
+        {
+            var state = await LoadStateNodeAsync(path);
+            var summary = RhodesRecognitionCandidateApplier.ApplyRunStatus(state, candidates, now ?? DateTimeOffset.UtcNow);
+            if (summary.AppliedCount > 0)
+                await WriteJsonAtomicAsync(path, state);
+            return summary;
+        }
+        finally
+        {
+            WriteLock.Release();
+        }
+    }
+
     public static JsonObject ApplyChoices(
         JsonObject state,
         IEnumerable<SukiChoiceItem> operators,

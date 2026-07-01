@@ -657,7 +657,10 @@
           <Grid RowDefinitions="Auto,155,Auto,*,Auto,*" RowSpacing="10">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="8">
               <TextBlock Text="プレビュー / 結果" FontSize="18" FontWeight="SemiBold" />
-              <TextBlock Grid.Column="1" Text="ADB撮影" FontSize="12" VerticalAlignment="Center" Opacity="0.58" />
+              <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Content="基本値へ反映" Command="{Binding ApplyCandidateResultsCommand}" Padding="8,4" />
+                <TextBlock Text="ADB撮影" FontSize="12" VerticalAlignment="Center" Opacity="0.58" />
+              </StackPanel>
             </Grid>
 
             <Border Grid.Row="1" CornerRadius="7" Padding="8" Background="#0C1011" BorderBrush="#2B3638" BorderThickness="1">
@@ -675,7 +678,7 @@
                         <TextBlock Grid.Column="1" Text="{Binding Label}" FontSize="13" FontWeight="SemiBold" />
                         <TextBlock Grid.Column="2" Text="{Binding Confidence}" FontFamily="Consolas" FontSize="11" HorizontalAlignment="Right" Opacity="0.65" />
                         <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding Value}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap" />
-                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding RawText}" FontSize="11" HorizontalAlignment="Right" Opacity="0.55" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding Field}" FontSize="11" HorizontalAlignment="Right" Opacity="0.55" />
                       </Grid>
                     </Border>
                   </DataTemplate>

@@ -161,6 +161,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
+        ApplyCandidateResultsCommand = new AsyncRelayCommand(ApplyCandidateResultsAsync);
         RunProbeCommand = new AsyncRelayCommand(parameter => RunProbeAsync(parameter as MaaProbePayloadPreview));
         RunResourceTaskCommand = new AsyncRelayCommand(parameter => RunResourceTaskAsync(parameter as MaaResourceTaskPreview));
         SetWorkspaceCommand = new AsyncRelayCommand(SetWorkspaceAsync);
@@ -756,6 +757,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand ConvertResourceTaskResultsCommand { get; }
 
+    public ICommand ApplyCandidateResultsCommand { get; }
+
     public ICommand RunProbeCommand { get; }
 
     public ICommand RunResourceTaskCommand { get; }
@@ -1192,6 +1195,29 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private async Task ConvertResourceTaskResultsAsync()
     {
         await RunBusyAsync(ConvertResourceTaskResultsCoreAsync);
+    }
+
+    private async Task ApplyCandidateResultsAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (!CandidateResults.Any())
+            {
+                StatusMessage = "反映する候補がありません。";
+                return;
+            }
+
+            var summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
+            if (summary.AppliedCount <= 0)
+            {
+                StatusMessage = $"基本値へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
+                return;
+            }
+
+            _runState = RhodesRunCatalog.LoadDefault().Current;
+            RefreshRunStatePreviews();
+            StatusMessage = $"基本値へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
+        });
     }
 
     private async Task RunSelectedProfileRecognitionAsync()
@@ -1673,7 +1699,12 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 string.IsNullOrWhiteSpace(label) ? field : label,
                 string.IsNullOrWhiteSpace(value) ? name : value,
                 rawText,
-                confidence));
+                confidence,
+                field,
+                JsonString(candidate, "operatorId"),
+                JsonString(candidate, "relicId"),
+                JsonString(candidate, "campaignId"),
+                JsonString(candidate, "recognitionKey")));
         }
         return previews;
     }

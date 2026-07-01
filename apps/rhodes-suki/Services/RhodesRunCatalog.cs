@@ -553,11 +553,20 @@ public static class RhodesRunCatalog
 
     private static string JsonString(JsonElement element, string propertyName, string fallback = "")
     {
-        return element.ValueKind == JsonValueKind.Object
-            && element.TryGetProperty(propertyName, out var property)
-            && property.ValueKind == JsonValueKind.String
-            ? property.GetString() ?? fallback
-            : fallback;
+        if (element.ValueKind != JsonValueKind.Object
+            || !element.TryGetProperty(propertyName, out var property))
+        {
+            return fallback;
+        }
+
+        return property.ValueKind switch
+        {
+            JsonValueKind.String => property.GetString() ?? fallback,
+            JsonValueKind.Number => property.GetRawText(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            _ => fallback,
+        };
     }
 
     private static int JsonInt(JsonElement element, string propertyName)

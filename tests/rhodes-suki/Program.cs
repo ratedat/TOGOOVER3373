@@ -18,6 +18,7 @@ var tests = new (string Name, Action Run)[]
     ("Operator taxonomy keeps Integrated Strategies class and branch order", OperatorTaxonomyOrder),
     ("Run state store persists selected choices and display preferences", ChoicePersistence),
     ("Run state store switches current campaign without stale run values", RunContextPersistence),
+    ("Recognition candidate applier persists safe run status fields", CandidateRunStatusApply),
     ("Choice rows group filtered items into up to four panes", ChoiceRows),
 };
 
@@ -470,6 +471,50 @@ static void RunContextPersistence()
     var sameCampaign = JsonNode.Parse("""{ "run": { "campaignId": "is5_sarkaz", "hope": 3 } }""")!.AsObject();
     RhodesRunStateStore.ApplyRunContext(sameCampaign, "is5_sarkaz", DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
     Equal(3, sameCampaign["run"]!.AsObject()["hope"]!.GetValue<int>(), "same campaign keeps run values");
+}
+
+static void CandidateRunStatusApply()
+{
+    var state = JsonNode.Parse(
+        """
+        {
+          "run": {
+            "campaignId": "is5_sarkaz",
+            "hope": 0,
+            "special": { "is5_sarkaz": { "idea": 0 } }
+          },
+          "operators": ["gummy"]
+        }
+        """)!.AsObject();
+    var candidates = new[]
+    {
+        new MaaCandidatePreview("runStatus", "希望", "3", "3", 0.94, Field: "hope"),
+        new MaaCandidatePreview("runStatus", "希望上限", "8", "8", 0.95, Field: "maxHope"),
+        new MaaCandidatePreview("runStatus", "源石錐", "20", "20", 0.96, Field: "ingot"),
+        new MaaCandidatePreview("runStatus", "指揮Lv", "0", "0", 0.80, Field: "commandLevel"),
+        new MaaCandidatePreview("runStatus", "等級", "18", "18", 0.88, Field: "difficulty"),
+        new MaaCandidatePreview("runStatus", "構想", "7", "7", 0.86, Field: "idea", CampaignId: "is5_sarkaz"),
+        new MaaCandidatePreview("operator", "グム", "gummy", "グム", 0.91, OperatorId: "gummy"),
+        new MaaCandidatePreview("runStatus", "壊れた値", "abc", "abc", 0.20, Field: "shield"),
+    };
+
+    var summary = RhodesRecognitionCandidateApplier.ApplyRunStatus(
+        state,
+        candidates,
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
+
+    Equal(6, summary.AppliedCount, "applied count");
+    Equal(2, summary.IgnoredCount, "ignored count");
+    Equal("hope|maxHope|ingot|commandLevel|difficulty|idea", string.Join("|", summary.AppliedFields), "applied fields");
+    var run = state["run"]!.AsObject();
+    Equal(3, run["hope"]!.GetValue<int>(), "hope");
+    Equal(8, run["maxHope"]!.GetValue<int>(), "max hope");
+    Equal(20, run["ingot"]!.GetValue<int>(), "ingot");
+    Equal(1, run["commandLevel"]!.GetValue<int>(), "command clamped");
+    Equal(18, run["difficulty"]!.GetValue<int>(), "difficulty");
+    Equal(7, run["special"]!.AsObject()["is5_sarkaz"]!.AsObject()["idea"]!.GetValue<int>(), "idea");
+    Equal("gummy", state["operators"]!.AsArray()[0]!.GetValue<string>(), "unrelated selections preserved");
+    Equal("2026-07-01T00:00:00.0000000Z", state["updatedAt"]!.GetValue<string>(), "updatedAt");
 }
 
 static void Equal<T>(T expected, T actual, string label)

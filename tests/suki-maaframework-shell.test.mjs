@@ -57,6 +57,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const choiceRows = await fs.readFile("apps/rhodes-suki/Services/RhodesChoiceRows.cs", "utf8");
   const operatorTaxonomy = await fs.readFile("apps/rhodes-suki/Services/RhodesOperatorTaxonomy.cs", "utf8");
   const runStateStore = await fs.readFile("apps/rhodes-suki/Services/RhodesRunStateStore.cs", "utf8");
+  const candidateApplier = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionCandidateApplier.cs", "utf8");
   const models = await fs.readFile("apps/rhodes-suki/Models/MaaSessionModels.cs", "utf8");
   const runModels = await fs.readFile("apps/rhodes-suki/Models/RunCatalogModels.cs", "utf8");
   const viewModel = await fs.readFile("apps/rhodes-suki/ViewModels/MainWindowViewModel.cs", "utf8");
@@ -118,12 +119,18 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(operatorTaxonomy, /"執行者"/);
   assert.match(runStateStore, /SaveChoicesAsync/);
   assert.match(runStateStore, /SaveRunContextAsync/);
+  assert.match(runStateStore, /SaveCandidatesAsync/);
   assert.match(runStateStore, /SemaphoreSlim/);
   assert.match(runStateStore, /operatorExcludedIds/);
   assert.match(runStateStore, /operatorGridColumns/);
+  assert.match(candidateApplier, /ApplyRunStatus/);
+  assert.match(candidateApplier, /commandLevel/);
+  assert.match(candidateApplier, /squadId/);
+  assert.match(candidateApplier, /idea/);
   assert.match(models, /MaaTaskDetailSnapshot/);
   assert.match(models, /MaaResourceProfilePreview/);
   assert.match(models, /MaaCandidatePreview/);
+  assert.match(models, /SukiCandidateApplySummary/);
   assert.match(models, /ProfileIds/);
   assert.match(models, /SourceSummary/);
   assert.match(models, /RecognitionDetailJson/);
@@ -153,6 +160,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /SelectedResourceProfile/);
   assert.match(viewModel, /RefreshResourceTasks/);
   assert.match(viewModel, /ConvertResourceTaskResultsCommand/);
+  assert.match(viewModel, /ApplyCandidateResultsCommand/);
   assert.match(viewModel, /api\/recognition\/maa-resource/);
   assert.match(viewModel, /CandidateApiProfileId/);
   assert.doesNotMatch(viewModel, /SelectedResourceProfile\?\.Id == "all" \? "runStatusFull"/);
@@ -183,6 +191,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RhodesOperatorTaxonomy\.SortClasses/);
   assert.match(viewModel, /RhodesOperatorTaxonomy\.SortBranches/);
   assert.match(viewModel, /RhodesRunStateStore\.SaveChoicesAsync/);
+  assert.match(viewModel, /RhodesRunStateStore\.SaveCandidatesAsync/);
   assert.match(viewModel, /SetCurrentCampaignCommand/);
   assert.match(viewModel, /SequenceEqual\(items\)/);
   assert.match(mainWindowCodeBehind, /CloseOpenComboBoxesOnOutsidePress/);

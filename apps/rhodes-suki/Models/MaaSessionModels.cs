@@ -147,4 +147,17 @@ public sealed record MaaCandidatePreview(
     string Label,
     string Value,
     string RawText,
-    double? Confidence);
+    double? Confidence,
+    string Field = "",
+    string OperatorId = "",
+    string RelicId = "",
+    string CampaignId = "",
+    string RecognitionKey = "");
+
+public sealed record SukiCandidateApplySummary(
+    int AppliedCount,
+    int IgnoredCount,
+    IReadOnlyList<string> AppliedFields)
+{
+    public static SukiCandidateApplySummary Empty { get; } = new(0, 0, []);
+}
