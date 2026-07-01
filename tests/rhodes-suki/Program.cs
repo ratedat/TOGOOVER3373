@@ -1161,6 +1161,8 @@ static void RecognitionScanHistoryLoadsUnifiedLogs()
         Equal(2, apiPayload.LogRows.Count, "api payload log rows");
         Equal("capture", apiPayload.LogRows[0].DisplayName, "api payload log event");
         Equal("O:/debug/shot.png", apiPayload.LogRows[0].Path, "api payload log path");
+        Equal(true, apiPayload.LogRows[0].HasImagePath, "api payload image path");
+        Equal("O:/debug/shot.png", apiPayload.FirstImagePath, "api payload first image path");
     }
     finally
     {

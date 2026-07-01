@@ -1766,6 +1766,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 {
                     RecognitionScanLogRows.Add(logRow);
                 }
+                TryLoadCapturePreviewFromPath(savedPayload.FirstImagePath);
             }
             var syncSummary = string.IsNullOrWhiteSpace(syncError)
                 ? "API状態同期済み"
@@ -1849,6 +1850,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             {
                 RecognitionScanLogRows.Add(logRow);
             }
+            TryLoadCapturePreviewFromPath(payload.FirstImagePath);
 
             LastResourceTaskResultsPath = item.LogPath;
             LastCandidateApplySummary = "履歴から読込";
@@ -2352,6 +2354,25 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         using var stream = new MemoryStream(encodedImage);
         return new Bitmap(stream);
+    }
+
+    private void TryLoadCapturePreviewFromPath(string path)
+    {
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            return;
+
+        try
+        {
+            var bytes = File.ReadAllBytes(path);
+            _lastCapture = bytes;
+            LastCaptureImage = CreateCaptureBitmap(bytes);
+            LastCapturePath = path;
+            CaptureState = $"履歴から読込: {path}";
+        }
+        catch
+        {
+            // 履歴の画像が消えていても、候補・ログの復元は継続する。
+        }
     }
 
     private MaaSessionOptions BuildSessionOptions()

@@ -215,12 +215,15 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /LoadRecognitionScanHistoryCommand/);
   assert.match(viewModel, /RhodesRecognitionScanHistory\.LoadRecent/);
   assert.match(viewModel, /RhodesRecognitionScanHistory\.LoadPayload/);
+  assert.match(viewModel, /TryLoadCapturePreviewFromPath/);
   assert.match(viewModel, /RhodesSukiDebugPaths\.RecognitionScansDirectory/);
   assert.match(viewModel, /RhodesMaaRecognitionEvidenceLog\.SaveAsync/);
   assert.match(scanHistory, /recognition-\*\.json/);
   assert.match(scanHistory, /LoadPayload/);
   assert.match(scanHistory, /ExtractTaskResults/);
   assert.match(scanHistory, /ExtractLogRows/);
+  assert.match(models, /FirstImagePath/);
+  assert.match(models, /HasImagePath/);
   assert.match(scanHistory, /ResourceTaskCount/);
   assert.match(scanHistory, /CandidateCount/);
   assert.match(debugPaths, /Recognition Scans/);

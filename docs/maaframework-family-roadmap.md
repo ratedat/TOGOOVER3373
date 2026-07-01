@@ -66,7 +66,8 @@ flowchart LR
 - 接続済み: MAAFramework native `Tasker` 結果を既存 recognition scan 形状の証跡JSONとして保存し、候補化後の candidate も同じ証跡へ含める。
 - 接続済み: MAAFramework native `Tasker` 実行履歴と Node API 経由スキャン履歴を、UI上の同一スキャン履歴ビューへ統合し、候補/task結果を再読込できる。
 - 接続済み: スキャン履歴の `log[]` イベントを詳細パネルへ復元し、capture/recognize/tap等のイベント、スクリーンショットパス、OCR詳細を追える。
-- 残作業: スキャン履歴のスクリーンショットプレビュー、ROIオーバーレイ、raw OCR detail整形ビューを追加する。
+- 接続済み: スキャン履歴の `log[].path` がPNG/JPGの場合、読込時に右側プレビューへスクリーンショットを復元する。
+- 残作業: スキャン履歴のROIオーバーレイ、raw OCR detail整形ビューを追加する。
 
 ## First Milestone
 - SukiUI shell が起動する

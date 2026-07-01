@@ -319,6 +319,8 @@ public sealed record RhodesRecognitionScanHistoryPayload(
     string Error)
 {
     public bool Succeeded => string.IsNullOrWhiteSpace(Error);
+
+    public string FirstImagePath => LogRows.FirstOrDefault(row => row.HasImagePath)?.Path ?? "";
 }
 
 public sealed record RhodesRecognitionScanLogRow(
@@ -334,6 +336,10 @@ public sealed record RhodesRecognitionScanLogRow(
     public string Context => string.Join(" / ", new[] { Stage, Label }.Where(value => !string.IsNullOrWhiteSpace(value)));
 
     public string Summary => string.IsNullOrWhiteSpace(Context) ? Detail : $"{Context} / {Detail}";
+
+    public bool HasImagePath => Path.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
+        || Path.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase)
+        || Path.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase);
 }
 
 public sealed record MaaCandidatePreview(
