@@ -182,6 +182,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RoiPreviewRows = [];
         SelectedRoiPreviewRows = [];
         RoiBatchDrafts = [];
+        RoiAdjustmentSessions = [];
         RecognitionScanHistory = [];
         RecognitionScanLogRows = [];
         BaseResolution = Services.RhodesMaaPaths.BaseResolution;
@@ -213,6 +214,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         ExportSelectedRoiDraftCommand = new AsyncRelayCommand(ExportSelectedRoiDraftAsync);
         ExportRoiAdjustmentSessionCommand = new AsyncRelayCommand(ExportRoiAdjustmentSessionAsync);
+        RefreshRoiAdjustmentSessionsCommand = new AsyncRelayCommand(RefreshRoiAdjustmentSessionsAsync);
+        LoadRoiAdjustmentSessionCommand = new AsyncRelayCommand(parameter => LoadRoiAdjustmentSessionAsync(parameter as MaaRoiAdjustmentSessionItem));
         PreviewSelectedRoiDraftApplyCommand = new AsyncRelayCommand(PreviewSelectedRoiDraftApplyAsync);
         ApplySelectedRoiDraftCommand = new AsyncRelayCommand(ApplySelectedRoiDraftAsync);
         PreviewVisibleRoiDraftsApplyCommand = new AsyncRelayCommand(PreviewVisibleRoiDraftsApplyAsync);
@@ -239,6 +242,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RefreshCampaignPreviews();
         RefreshSpecialValuePreviews();
         RefreshRecognitionScanHistory();
+        RefreshRoiAdjustmentSessions();
         RefreshInspectorRows();
         LoadSettings();
     }
@@ -318,6 +322,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaRoiPreviewRow> SelectedRoiPreviewRows { get; }
 
     public ObservableCollection<MaaRoiBatchDraftPreview> RoiBatchDrafts { get; }
+
+    public ObservableCollection<MaaRoiAdjustmentSessionItem> RoiAdjustmentSessions { get; }
 
     public ObservableCollection<RhodesRecognitionScanHistoryItem> RecognitionScanHistory { get; }
 
@@ -1026,6 +1032,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand ExportRoiAdjustmentSessionCommand { get; }
 
+    public ICommand RefreshRoiAdjustmentSessionsCommand { get; }
+
+    public ICommand LoadRoiAdjustmentSessionCommand { get; }
+
     public ICommand PreviewSelectedRoiDraftApplyCommand { get; }
 
     public ICommand ApplySelectedRoiDraftCommand { get; }
@@ -1309,7 +1319,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             yield return new SukiInspectorRow(
                 "ROIセッション",
                 string.IsNullOrWhiteSpace(LastRoiSessionPath) ? $"{RoiBatchDrafts.Count}候補" : LastRoiSessionPath,
-                RoiBatchApplyResult.Summary);
+                $"{RoiBatchApplyResult.Summary} / 保存{RoiAdjustmentSessions.Count}件");
             yield return new SukiInspectorRow("MAA Resource", MaaResourceGenerationResult.Message, MaaResourceGenerationResult.OutputPath);
             yield return new SukiInspectorRow(
                 "結果JSON",
@@ -1843,7 +1853,50 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 LastCapturePath,
                 RoiBatchApplyResult,
                 RhodesSukiDebugPaths.RoiSessionsDirectory);
+            RefreshRoiAdjustmentSessions();
             StatusMessage = $"ROI調整セッションを保存しました: {LastRoiSessionPath}";
+        });
+    }
+
+    private async Task RefreshRoiAdjustmentSessionsAsync()
+    {
+        await RunBusyAsync(() =>
+        {
+            RefreshRoiAdjustmentSessions();
+            StatusMessage = $"ROI調整セッションを更新しました: {RoiAdjustmentSessions.Count}件";
+            return Task.CompletedTask;
+        });
+    }
+
+    private async Task LoadRoiAdjustmentSessionAsync(MaaRoiAdjustmentSessionItem? item)
+    {
+        if (item is null)
+            return;
+
+        await RunBusyAsync(() =>
+        {
+            var payload = RhodesMaaRoiAdjustmentSessionLog.Load(item.SessionPath);
+            if (payload.SchemaVersion != 1 || payload.Kind != "maa-roi-adjustment-session")
+            {
+                StatusMessage = $"ROI調整セッションを読み込めません: {item.SessionPath}";
+                return Task.CompletedTask;
+            }
+
+            if (!string.IsNullOrWhiteSpace(payload.ProfileId))
+            {
+                SelectedResourceProfile = ResourceProfiles.FirstOrDefault(profile => string.Equals(profile.Id, payload.ProfileId, StringComparison.Ordinal))
+                    ?? SelectedResourceProfile;
+            }
+
+            LastRoiSessionPath = item.SessionPath;
+            LastResourceTaskResultsPath = payload.ScanLogPath;
+            if (!string.IsNullOrWhiteSpace(payload.CapturePath))
+                TryLoadCapturePreviewFromPath(payload.CapturePath);
+            RoiBatchApplyResult = payload.BatchResult ?? MaaRoiBatchApplyResult.Failed("未確認");
+            ReplaceCollection(RoiBatchDrafts, payload.Drafts.Select(draft => draft.ToPreview()));
+            RefreshRoiAdjustmentSessions();
+            StatusMessage = $"ROI調整セッションを再開しました: {item.SessionPath}";
+            return Task.CompletedTask;
         });
     }
 
@@ -2242,6 +2295,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             RhodesRecognitionScanHistory.LoadRecent(
                 RhodesSukiDebugPaths.RecognitionScansDirectory,
                 [LastResourceTaskResultsPath]));
+        RefreshInspectorRows();
+    }
+
+    private void RefreshRoiAdjustmentSessions()
+    {
+        ReplaceCollection(
+            RoiAdjustmentSessions,
+            RhodesMaaRoiAdjustmentSessionLog.LoadRecent(RhodesSukiDebugPaths.RoiSessionsDirectory));
         RefreshInspectorRows();
     }
 
