@@ -474,6 +474,19 @@
       "scale": 2
     },
     {
+      "id": "is4.revelation_list_text",
+      "profileIds": [
+        "is4RevelationFull"
+      ],
+      "roi": [
+        90,
+        84,
+        1100,
+        540
+      ],
+      "scale": 2
+    },
+    {
       "id": "is5.thought_list_text",
       "profileIds": [
         "is5ThoughtFull"
@@ -483,6 +496,19 @@
         84,
         1100,
         540
+      ],
+      "scale": 2
+    },
+    {
+      "id": "is6.coin_list_text",
+      "profileIds": [
+        "is6CoinsFull"
+      ],
+      "roi": [
+        120,
+        96,
+        1040,
+        500
       ],
       "scale": 2
     },

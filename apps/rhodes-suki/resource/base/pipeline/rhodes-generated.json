@@ -651,6 +651,27 @@
       "scale": 2
     }
   },
+  "RhodesOcrRegion_is4_revelation_list_text": {
+    "recognition": "OCR",
+    "roi": [
+      90,
+      84,
+      1100,
+      540
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "is4.revelation_list_text",
+      "profileIds": [
+        "is4RevelationFull"
+      ],
+      "scale": 2
+    }
+  },
   "RhodesOcrRegion_is5_thought_list_text": {
     "recognition": "OCR",
     "roi": [
@@ -668,6 +689,27 @@
       "id": "is5.thought_list_text",
       "profileIds": [
         "is5ThoughtFull"
+      ],
+      "scale": 2
+    }
+  },
+  "RhodesOcrRegion_is6_coin_list_text": {
+    "recognition": "OCR",
+    "roi": [
+      120,
+      96,
+      1040,
+      500
+    ],
+    "only_rec": true,
+    "threshold": 0.3,
+    "action": "DoNothing",
+    "attach": {
+      "generated": true,
+      "source": "maa-tasks.ocrRegions",
+      "id": "is6.coin_list_text",
+      "profileIds": [
+        "is6CoinsFull"
       ],
       "scale": 2
     }

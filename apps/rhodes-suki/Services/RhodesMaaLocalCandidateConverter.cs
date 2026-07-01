@@ -44,6 +44,12 @@ public static class RhodesMaaLocalCandidateConverter
         if (string.Equals(profileId, "is5AgeFull", StringComparison.Ordinal))
             return AgeCandidates(taskResults).ToArray();
 
+        if (string.Equals(profileId, "is4RevelationFull", StringComparison.Ordinal))
+            return RevelationCandidates(taskResults).ToArray();
+
+        if (string.Equals(profileId, "is6CoinsFull", StringComparison.Ordinal))
+            return CoinCandidates(taskResults).ToArray();
+
         return [];
     }
 
@@ -54,7 +60,9 @@ public static class RhodesMaaLocalCandidateConverter
             .Concat(OperatorCandidates(results))
             .Concat(RelicCandidates(results))
             .Concat(ThoughtCandidates(results))
-            .Concat(AgeCandidates(results));
+            .Concat(AgeCandidates(results))
+            .Concat(RevelationCandidates(results))
+            .Concat(CoinCandidates(results));
         return RhodesMaaCandidateMerger.Merge([], candidates);
     }
 
@@ -316,6 +324,89 @@ public static class RhodesMaaLocalCandidateConverter
         }
     }
 
+    private static IEnumerable<MaaCandidatePreview> RevelationCandidates(IEnumerable<MaaTaskRunResult> taskResults)
+    {
+        var effects = LoadSelectableEffects()
+            .Where(effect => effect.Slot == "revelationBoard" && effect.CampaignId == "is4_sami")
+            .Select(effect => (Effect: effect, SlotKind: RevelationSlotKind(effect.GroupLabel)))
+            .Where(item => !string.IsNullOrWhiteSpace(item.SlotKind))
+            .ToArray();
+        var byNormalizedName = effects
+            .GroupBy(item => NormalizeChoiceName(item.Effect.Name), StringComparer.Ordinal)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key) && group.Count() == 1)
+            .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
+        var order = 0;
+
+        foreach (var taskResult in taskResults)
+        {
+            if (!taskResult.Succeeded || !IsRevelationNameEntry(taskResult.Entry))
+                continue;
+
+            foreach (var textResult in PrimaryTextResults(taskResult.RecognitionDetailJson))
+            {
+                foreach (var token in ChoiceNameTokens(textResult.Text))
+                {
+                    if (!byNormalizedName.TryGetValue(token.Normalized, out var matched))
+                        continue;
+
+                    yield return new MaaCandidatePreview(
+                        "revelation",
+                        matched.Effect.Name,
+                        matched.Effect.Id,
+                        token.Raw,
+                        Math.Max(0.68, textResult.Confidence ?? 0),
+                        CampaignId: matched.Effect.CampaignId,
+                        RecognitionKey: $"maa-local:revelation:{matched.Effect.Id}:{order}",
+                        FieldId: "revelation",
+                        SlotKind: matched.SlotKind,
+                        EffectId: matched.Effect.Id,
+                        Count: 1);
+                    order++;
+                }
+            }
+        }
+    }
+
+    private static IEnumerable<MaaCandidatePreview> CoinCandidates(IEnumerable<MaaTaskRunResult> taskResults)
+    {
+        var coins = LoadSelectableEffects()
+            .Where(effect => effect.Slot == "coin" && effect.CampaignId == "is6_sui")
+            .ToArray();
+        var byNormalizedName = coins
+            .GroupBy(item => NormalizeChoiceName(item.Name), StringComparer.Ordinal)
+            .Where(group => !string.IsNullOrWhiteSpace(group.Key) && group.Count() == 1)
+            .ToDictionary(group => group.Key, group => group.Single(), StringComparer.Ordinal);
+        var order = 0;
+
+        foreach (var taskResult in taskResults)
+        {
+            if (!taskResult.Succeeded || !IsCoinNameEntry(taskResult.Entry))
+                continue;
+
+            foreach (var textResult in PrimaryTextResults(taskResult.RecognitionDetailJson))
+            {
+                foreach (var token in ChoiceNameTokens(textResult.Text))
+                {
+                    if (!byNormalizedName.TryGetValue(token.Normalized, out var coin))
+                        continue;
+
+                    yield return new MaaCandidatePreview(
+                        "coin",
+                        coin.Name,
+                        coin.Id,
+                        token.Raw,
+                        Math.Max(0.68, textResult.Confidence ?? 0),
+                        CampaignId: coin.CampaignId,
+                        RecognitionKey: $"maa-local:coin:{coin.Id}:{order}",
+                        FieldId: "coins",
+                        CoinId: coin.Id,
+                        Count: 1);
+                    order++;
+                }
+            }
+        }
+    }
+
     private static bool IsOperatorNameEntry(string entry)
     {
         return entry.Equals("RhodesOperatorNameOcr", StringComparison.Ordinal)
@@ -342,6 +433,29 @@ public static class RhodesMaaLocalCandidateConverter
     {
         return entry.Equals("RhodesOcrRegion_is5_thought_list_text", StringComparison.Ordinal)
             || entry.Contains("is5.thought_list_text", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsRevelationNameEntry(string entry)
+    {
+        return entry.Equals("RhodesOcrRegion_is4_revelation_list_text", StringComparison.Ordinal)
+            || entry.Contains("is4.revelation_list_text", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsCoinNameEntry(string entry)
+    {
+        return entry.Equals("RhodesOcrRegion_is6_coin_list_text", StringComparison.Ordinal)
+            || entry.Contains("is6.coin_list_text", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string RevelationSlotKind(string groupLabel)
+    {
+        if (groupLabel.Contains("本因", StringComparison.Ordinal))
+            return "cause";
+        if (groupLabel.Contains("構成", StringComparison.Ordinal))
+            return "structure";
+        if (groupLabel.Contains("修辞", StringComparison.Ordinal))
+            return "rhetoric";
+        return "";
     }
 
     private static IEnumerable<string> AgeAliases(SelectableEffectCandidate effect)

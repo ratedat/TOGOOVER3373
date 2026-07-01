@@ -17,6 +17,8 @@ var tests = new (string Name, Action Run)[]
     ("Local MAA candidate converter extracts current campaign relic candidates", LocalCandidateConverterRelics),
     ("Local MAA candidate converter preserves duplicate IS5 thought candidates", LocalCandidateConverterThoughts),
     ("Local MAA candidate converter extracts IS5 age candidates", LocalCandidateConverterAge),
+    ("Local MAA candidate converter extracts IS4 revelation candidates", LocalCandidateConverterRevelation),
+    ("Local MAA candidate converter extracts IS6 coin candidates", LocalCandidateConverterCoins),
     ("Local MAA candidate converter dispatches all profile task results", LocalCandidateConverterAllProfiles),
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
@@ -455,6 +457,83 @@ static void LocalCandidateConverterAge()
     }
 }
 
+static void LocalCandidateConverterRevelation()
+{
+    var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+        "is4RevelationFull",
+        [
+            M(
+                "RhodesOcrRegion_is4_revelation_list_text",
+                [
+                    ("歌唱", 0.91),
+                    ("追放者", 0.88),
+                    ("存続", 0.86),
+                ]),
+        ]);
+
+    Equal(
+        "is4_sami_selectable_revelationBoard_is4_kvama1|is4_sami_selectable_revelationBoard_is4_aestar1|is4_sami_selectable_revelationBoard_is4_rhetoric1",
+        string.Join("|", candidates.Select(item => item.EffectId)),
+        "revelation effect ids");
+    Equal("cause|structure|rhetoric", string.Join("|", candidates.Select(item => item.SlotKind)), "revelation slot kinds");
+    Equal("revelation|revelation|revelation", string.Join("|", candidates.Select(item => item.Kind)), "revelation kinds");
+    Equal("is4_sami", candidates[0].CampaignId, "revelation campaign id");
+    Equal("revelation", candidates[0].FieldId, "revelation field id");
+    Equal("maa-local:revelation:is4_sami_selectable_revelationBoard_is4_kvama1:0", candidates[0].RecognitionKey, "revelation recognition key");
+
+    static MaaTaskRunResult M(string entry, IReadOnlyList<(string Text, double Score)> rows)
+    {
+        var resultRows = rows.Select(row =>
+            $"{{\"text\":{System.Text.Json.JsonSerializer.Serialize(row.Text)},\"score\":{row.Score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}");
+        return new MaaTaskRunResult(
+            entry,
+            "Succeeded",
+            true,
+            "detail",
+            $"{{\"filtered_results\":[{string.Join(",", resultRows)}]}}",
+            "OCR",
+            true);
+    }
+}
+
+static void LocalCandidateConverterCoins()
+{
+    var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
+        "is6CoinsFull",
+        [
+            M(
+                "RhodesOcrRegion_is6_coin_list_text",
+                [
+                    ("大炎通宝", 0.91),
+                    ("苦寒", 0.88),
+                ]),
+        ]);
+
+    Equal(
+        "is6_sui_selectable_coin_is6_copper_b01|is6_sui_selectable_coin_is6_copper_f01",
+        string.Join("|", candidates.Select(item => item.CoinId)),
+        "coin ids");
+    Equal("coin|coin", string.Join("|", candidates.Select(item => item.Kind)), "coin kinds");
+    Equal("is6_sui", candidates[0].CampaignId, "coin campaign id");
+    Equal("coins", candidates[0].FieldId, "coin field id");
+    Equal(1, candidates[0].Count, "coin count");
+    Equal("maa-local:coin:is6_sui_selectable_coin_is6_copper_b01:0", candidates[0].RecognitionKey, "coin recognition key");
+
+    static MaaTaskRunResult M(string entry, IReadOnlyList<(string Text, double Score)> rows)
+    {
+        var resultRows = rows.Select(row =>
+            $"{{\"text\":{System.Text.Json.JsonSerializer.Serialize(row.Text)},\"score\":{row.Score.ToString(System.Globalization.CultureInfo.InvariantCulture)}}}");
+        return new MaaTaskRunResult(
+            entry,
+            "Succeeded",
+            true,
+            "detail",
+            $"{{\"filtered_results\":[{string.Join(",", resultRows)}]}}",
+            "OCR",
+            true);
+    }
+}
+
 static void LocalCandidateConverterAllProfiles()
 {
     var catalog = RhodesRunCatalog.LoadDefault();
@@ -466,15 +545,19 @@ static void LocalCandidateConverterAllProfiles()
             M("RhodesOcrRegion_run_hope_max", "8", 0.92),
             M("RhodesOcrRegion_operator_name_left_1", "グム", 0.91),
             M("RhodesOcrRegion_relic_list_text", relic.Name, 0.90),
+            M("RhodesOcrRegion_is4_revelation_list_text", "歌唱", 0.89),
             M("RhodesOcrRegion_is5_thought_list_text", "走る都市", 0.89),
             M("RhodesOcrRegion_is5_age_detail_text", "天災の時代（全盛期）", 0.88),
+            M("RhodesOcrRegion_is6_coin_list_text", "大炎通宝", 0.87),
         ]);
 
     Equal("hope|maxHope", string.Join("|", candidates.Where(item => item.Kind == "runStatus").Select(item => item.Field)), "all profile run fields");
     Equal("gummy", string.Join("|", candidates.Where(item => item.Kind == "operator").Select(item => item.OperatorId)), "all profile operator");
     Equal(relic.Id, string.Join("|", candidates.Where(item => item.Kind == "relic").Select(item => item.RelicId)), "all profile relic");
+    Equal("is4_sami_selectable_revelationBoard_is4_kvama1", string.Join("|", candidates.Where(item => item.Kind == "revelation").Select(item => item.EffectId)), "all profile revelation");
     Equal("is5_sarkaz_selectable_thought_insp_20", string.Join("|", candidates.Where(item => item.Kind == "thought").Select(item => item.ThoughtId)), "all profile thought");
     Equal("is5_sarkaz_selectable_age_is5_age_01_prime", string.Join("|", candidates.Where(item => item.Kind == "age").Select(item => item.AgeId)), "all profile age");
+    Equal("is6_sui_selectable_coin_is6_copper_b01", string.Join("|", candidates.Where(item => item.Kind == "coin").Select(item => item.CoinId)), "all profile coin");
 
     static MaaTaskRunResult M(string entry, string text, double score)
     {
