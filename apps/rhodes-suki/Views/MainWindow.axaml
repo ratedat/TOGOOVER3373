@@ -439,7 +439,7 @@
             </Grid>
           </Grid>
 
-          <Grid RowDefinitions="Auto,Auto,Auto,*" RowSpacing="10" IsVisible="{Binding IsRecognitionWorkspaceVisible}">
+          <Grid RowDefinitions="Auto,Auto,Auto,160,*" RowSpacing="10" IsVisible="{Binding IsRecognitionWorkspaceVisible}">
             <Grid ColumnDefinitions="*,Auto" ColumnSpacing="12">
               <StackPanel Spacing="2">
                 <TextBlock Text="認識ワークフロー" FontSize="20" FontWeight="SemiBold" />
@@ -450,6 +450,7 @@
                 <Button Content="認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
                 <Button Content="ADB API" Command="{Binding RunSelectedProfileAdbScanCommand}" />
                 <Button Content="進捗" Command="{Binding RefreshRecognitionScanStatusCommand}" />
+                <Button Content="履歴更新" Command="{Binding RefreshRecognitionScanHistoryCommand}" />
                 <Button Content="全実行" Command="{Binding RunAllResourceTasksCommand}" />
                 <Button Content="JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
               </StackPanel>
@@ -473,7 +474,31 @@
               </StackPanel>
             </Grid>
 
-            <ScrollViewer Grid.Row="3" VerticalScrollBarVisibility="Auto">
+            <Grid Grid.Row="3" RowDefinitions="Auto,*" RowSpacing="6">
+              <Grid ColumnDefinitions="*,Auto">
+                <TextBlock Text="スキャン履歴" FontSize="13" FontWeight="SemiBold" />
+                <TextBlock Grid.Column="1" Text="{Binding RecognitionScanHistory.Count}" FontFamily="Consolas" FontSize="12" Opacity="0.62" />
+              </Grid>
+              <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                <ItemsControl ItemsSource="{Binding RecognitionScanHistory}">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                      <Border CornerRadius="7" Padding="8" Margin="0,0,0,6" Background="#101617" BorderBrush="#2B3638" BorderThickness="1">
+                        <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="10" RowSpacing="3">
+                          <TextBlock Text="{Binding DisplayProfile}" FontSize="13" FontWeight="SemiBold" />
+                          <TextBlock Grid.Column="1" Text="{Binding StatusLabel}" FontFamily="Consolas" FontSize="11" Opacity="0.72" />
+                          <TextBlock Grid.Row="1" Text="{Binding Summary}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap" Opacity="0.66" />
+                          <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding TimestampLabel}" FontFamily="Consolas" FontSize="11" Opacity="0.55" />
+                          <TextBlock Grid.Row="2" Grid.ColumnSpan="2" Text="{Binding Detail}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.48" />
+                        </Grid>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </ScrollViewer>
+            </Grid>
+
+            <ScrollViewer Grid.Row="4" VerticalScrollBarVisibility="Auto">
               <ItemsControl ItemsSource="{Binding ResourceTasks}">
                 <ItemsControl.ItemTemplate>
                   <DataTemplate>

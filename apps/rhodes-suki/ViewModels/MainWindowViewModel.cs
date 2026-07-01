@@ -163,6 +163,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ResourceTasks = [];
         ResourceTaskResults = [];
         CandidateResults = [];
+        RecognitionScanHistory = [];
         BaseResolution = Services.RhodesMaaPaths.BaseResolution;
         ResourceRoot = sessionSnapshot.ResourceRoot;
         AgentBinaryRoot = sessionSnapshot.AgentBinaryRoot;
@@ -185,6 +186,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunSelectedProfileRecognitionAndApplyCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAndApplyAsync);
         RunSelectedProfileAdbScanCommand = new AsyncRelayCommand(RunSelectedProfileAdbScanAsync);
         RefreshRecognitionScanStatusCommand = new AsyncRelayCommand(RefreshRecognitionScanStatusAsync);
+        RefreshRecognitionScanHistoryCommand = new AsyncRelayCommand(RefreshRecognitionScanHistoryAsync);
         OpenPreviewUrlCommand = new AsyncRelayCommand(OpenPreviewUrlAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
@@ -206,6 +208,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RefreshChoiceLists();
         RefreshCampaignPreviews();
         RefreshSpecialValuePreviews();
+        RefreshRecognitionScanHistory();
         RefreshInspectorRows();
         LoadSettings();
     }
@@ -275,6 +278,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<MaaTaskRunResult> ResourceTaskResults { get; }
 
     public ObservableCollection<MaaCandidatePreview> CandidateResults { get; }
+
+    public ObservableCollection<RhodesRecognitionScanHistoryItem> RecognitionScanHistory { get; }
 
     public MaaTaskDiagnosticsSnapshot ResourceTaskDiagnostics
     {
@@ -720,7 +725,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             if (!SetProperty(ref _lastResourceTaskResultsPath, value ?? ""))
                 return;
-            RefreshInspectorRows();
+            RefreshRecognitionScanHistory();
         }
     }
 
@@ -833,6 +838,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand RunSelectedProfileAdbScanCommand { get; }
 
     public ICommand RefreshRecognitionScanStatusCommand { get; }
+
+    public ICommand RefreshRecognitionScanHistoryCommand { get; }
 
     public ICommand OpenPreviewUrlCommand { get; }
 
@@ -1096,6 +1103,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         {
             yield return new SukiInspectorRow("認識プロファイル", SelectedResourceProfile?.DisplayName ?? "-", SelectedResourceProfile?.ProfileSummary ?? "");
             yield return new SukiInspectorRow("API進捗", RecognitionScanStatus.Summary, RecognitionScanStatus.Detail);
+            yield return new SukiInspectorRow(
+                "履歴",
+                $"{RecognitionScanHistory.Count}件",
+                RecognitionScanHistory.FirstOrDefault()?.Detail ?? RhodesSukiDebugPaths.RecognitionScansDirectory);
             yield return new SukiInspectorRow("候補", $"{CandidateResults.Count}件", ResourceTaskDiagnostics.Summary);
             yield return new SukiInspectorRow("適用", LastCandidateApplySummary, "data/current-state.json");
             yield return new SukiInspectorRow(
@@ -1760,11 +1771,35 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 ? new SukiOptionalRuntimeStatus("RHODES API", "接続済み", "scan status取得済み", true, false)
                 : new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", RecognitionScanStatus.Error, false, false);
             RefreshRuntimeCapabilities();
+            if (!string.IsNullOrWhiteSpace(RecognitionScanStatus.LastLogPath))
+                LastResourceTaskResultsPath = RecognitionScanStatus.LastLogPath;
+            else
+                RefreshRecognitionScanHistory();
             RefreshInspectorRows();
             StatusMessage = RecognitionScanStatus.Succeeded
                 ? $"認識スキャン進捗: {RecognitionScanStatus.Summary}"
                 : $"認識スキャン進捗取得失敗: {RecognitionScanStatus.Error}";
         });
+    }
+
+    private async Task RefreshRecognitionScanHistoryAsync()
+    {
+        await RunBusyAsync(() =>
+        {
+            RefreshRecognitionScanHistory();
+            StatusMessage = $"認識履歴を更新しました: {RecognitionScanHistory.Count}件";
+            return Task.CompletedTask;
+        });
+    }
+
+    private void RefreshRecognitionScanHistory()
+    {
+        ReplaceCollection(
+            RecognitionScanHistory,
+            RhodesRecognitionScanHistory.LoadRecent(
+                RhodesSukiDebugPaths.RecognitionScansDirectory,
+                [LastResourceTaskResultsPath]));
+        RefreshInspectorRows();
     }
 
     private Task OpenPreviewUrlAsync(object? parameter)
@@ -2283,12 +2318,11 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         string? profileId,
         IEnumerable<MaaCandidatePreview>? candidates = null)
     {
-        var directory = Path.Combine(AppContext.BaseDirectory, "RHODES OBS COMMANDER3373 Debug Logs", "recognition-scans");
         return await RhodesMaaRecognitionEvidenceLog.SaveAsync(
             taskResults,
             candidates ?? [],
             profileId,
-            directory);
+            RhodesSukiDebugPaths.RecognitionScansDirectory);
     }
 
     private async Task RunBusyAsync(Func<Task> action)

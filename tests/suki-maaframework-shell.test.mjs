@@ -63,6 +63,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   const candidateApplier = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionCandidateApplier.cs", "utf8");
   const candidateApiClient = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaCandidateApiClient.cs", "utf8");
   const scanApiClient = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionScanApiClient.cs", "utf8");
+  const scanHistory = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionScanHistory.cs", "utf8");
+  const debugPaths = await fs.readFile("apps/rhodes-suki/Services/RhodesSukiDebugPaths.cs", "utf8");
   const stateApiClient = await fs.readFile("apps/rhodes-suki/Services/RhodesStateApiClient.cs", "utf8");
   const models = await fs.readFile("apps/rhodes-suki/Models/MaaSessionModels.cs", "utf8");
   const runModels = await fs.readFile("apps/rhodes-suki/Models/RunCatalogModels.cs", "utf8");
@@ -207,8 +209,15 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RhodesMaaResultPreview\.FromTaskResults/);
   assert.match(viewModel, /CandidateResults/);
   assert.match(viewModel, /RunResourceTaskCommand/);
-  assert.match(viewModel, /recognition-scans/);
+  assert.match(viewModel, /RecognitionScanHistory/);
+  assert.match(viewModel, /RefreshRecognitionScanHistoryCommand/);
+  assert.match(viewModel, /RhodesRecognitionScanHistory\.LoadRecent/);
+  assert.match(viewModel, /RhodesSukiDebugPaths\.RecognitionScansDirectory/);
   assert.match(viewModel, /RhodesMaaRecognitionEvidenceLog\.SaveAsync/);
+  assert.match(scanHistory, /recognition-\*\.json/);
+  assert.match(scanHistory, /ResourceTaskCount/);
+  assert.match(scanHistory, /CandidateCount/);
+  assert.match(debugPaths, /Recognition Scans/);
   assert.match(viewModel, /Campaigns/);
   assert.match(viewModel, /SelectedCampaign/);
   assert.match(viewModel, /構想/);
@@ -312,6 +321,9 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /CommandParameter="is5ThoughtFull"/);
   assert.match(xaml, /RunAllResourceTasksCommand/);
   assert.match(xaml, /ExportResourceTaskResultsCommand/);
+  assert.match(xaml, /RefreshRecognitionScanHistoryCommand/);
+  assert.match(xaml, /RecognitionScanHistory/);
+  assert.match(xaml, /スキャン履歴/);
   assert.match(xaml, /SelectedResourceProfile/);
   assert.match(xaml, /ResourceProfiles/);
   assert.match(xaml, /ProfileSummary/);

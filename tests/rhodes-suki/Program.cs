@@ -35,6 +35,7 @@ var tests = new (string Name, Action Run)[]
     ("MAAFramework runtime probe reports native and VC++ diagnostics", MaaFrameworkRuntimeDiagnostics),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("MAA native resource task evidence uses recognition scan shape", MaaNativeEvidenceLog),
+    ("Recognition scan history loads API and MAA native evidence logs", RecognitionScanHistoryLoadsUnifiedLogs),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
     ("Resource profile groups keep operational recognition order", ResourceProfileOrder),
     ("Run catalog loads campaigns, operators, relics, and current selections", RunCatalogLoadsChoices),
@@ -1087,6 +1088,63 @@ static void MaaNativeEvidenceLog()
     var evidence = root["evidence"]!.AsObject();
     Equal("maa-resource-task-results", evidence["kind"]!.GetValue<string>(), "evidence kind");
     Equal(2, evidence["diagnostics"]!.AsObject()["total"]!.GetValue<int>(), "evidence diagnostics");
+}
+
+static void RecognitionScanHistoryLoadsUnifiedLogs()
+{
+    var directory = Path.Combine(Path.GetTempPath(), $"rhodes-suki-history-{Guid.NewGuid():N}");
+    Directory.CreateDirectory(directory);
+    try
+    {
+        File.WriteAllText(
+            Path.Combine(directory, "recognition-2026-07-01T00-00-00-000Z-relicsFull-api.json"),
+            """
+            {
+              "schemaVersion": 1,
+              "requestId": "api-request",
+              "scanId": "api-scan",
+              "profileId": "relicsFull",
+              "profileLabel": "秘宝スキャン",
+              "source": "adb",
+              "status": "completed",
+              "startedAt": "2026-07-01T00:00:00.000Z",
+              "completedAt": "2026-07-01T00:00:01.000Z",
+              "counts": { "candidates": 2, "suggestions": 0, "autoApplied": 0, "log": 4 },
+              "candidates": [],
+              "log": []
+            }
+            """);
+        File.WriteAllText(
+            Path.Combine(directory, "recognition-2026-07-01T00-00-02-000Z-operatorsFull-native.json"),
+            RhodesMaaRecognitionEvidenceLog.BuildJson(
+                [
+                    new MaaTaskRunResult("RhodesOcrRegion_operator_name", "Succeeded", true, "", """{"filtered_results":[{"text":"グム","score":0.91}]}""", "OCR", true),
+                ],
+                [
+                    new MaaCandidatePreview("operator", "グム", "gummy", "グム", 0.91, OperatorId: "gummy"),
+                ],
+                "operatorsFull",
+                DateTimeOffset.Parse("2026-07-01T00:00:02Z"),
+                DateTimeOffset.Parse("2026-07-01T00:00:03Z"),
+                "native-request",
+                "native-scan"));
+        File.WriteAllText(Path.Combine(directory, "recognition-broken.json"), "{");
+
+        var history = RhodesRecognitionScanHistory.LoadRecent(directory, limit: 8);
+
+        Equal(2, history.Count, "history count");
+        Equal("operatorsFull", history[0].ProfileId, "newest profile");
+        Equal("suki-maa-native", history[0].Source, "native source");
+        Equal(1, history[0].CandidateCount, "native candidate count");
+        Equal(1, history[0].ResourceTaskCount, "native task count");
+        Equal("秘宝スキャン", history[1].DisplayProfile, "api profile label");
+        Equal(2, history[1].CandidateCount, "api candidate count");
+        Equal(4, history[1].LogCount, "api log count");
+    }
+    finally
+    {
+        Directory.Delete(directory, recursive: true);
+    }
 }
 
 static void ResourceTaskSummary()

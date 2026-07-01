@@ -279,6 +279,39 @@ public sealed record RhodesRecognitionScanStatusPreview(
             : LastLogPath;
 }
 
+public sealed record RhodesRecognitionScanHistoryItem(
+    string ProfileId,
+    string ProfileLabel,
+    string Source,
+    string Status,
+    string StartedAt,
+    string CompletedAt,
+    int CandidateCount,
+    int LogCount,
+    int ResourceTaskCount,
+    string LogPath,
+    string Error,
+    DateTimeOffset SortTimestamp)
+{
+    public string DisplayProfile => string.IsNullOrWhiteSpace(ProfileLabel)
+        ? string.IsNullOrWhiteSpace(ProfileId) ? "profile不明" : ProfileId
+        : ProfileLabel;
+
+    public string SourceLabel => string.IsNullOrWhiteSpace(Source) ? "source不明" : Source;
+
+    public string StatusLabel => string.IsNullOrWhiteSpace(Status) ? "status不明" : Status;
+
+    public string TimestampLabel => SortTimestamp.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+
+    public string Summary => ResourceTaskCount > 0
+        ? $"{SourceLabel} / candidates={CandidateCount} / tasks={ResourceTaskCount} / log={LogCount}"
+        : $"{SourceLabel} / candidates={CandidateCount} / log={LogCount}";
+
+    public string Detail => string.IsNullOrWhiteSpace(Error)
+        ? LogPath
+        : $"{Error} / {LogPath}";
+}
+
 public sealed record MaaCandidatePreview(
     string Kind,
     string Label,
