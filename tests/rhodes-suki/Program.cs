@@ -24,6 +24,7 @@ var tests = new (string Name, Action Run)[]
     ("ADB presets include MuMu and Google Play Games developer defaults", AdbPresets),
     ("ADB device output parses serials and usable state", AdbDeviceParsing),
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
+    ("Optional runtime probe parses GLM and Ollama status payloads", OptionalRuntimeStatusParsing),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
     ("Resource profile groups keep operational recognition order", ResourceProfileOrder),
@@ -659,6 +660,27 @@ static void SukiSettingsStore()
     {
         Directory.Delete(directory, true);
     }
+}
+
+static void OptionalRuntimeStatusParsing()
+{
+    var installed = RhodesOptionalRuntimeProbe.ParseStatusJson(
+        """{"status":"ready","installed":true,"installing":false,"installRoot":"D:/state/glm-ocr-runtime"}""",
+        "GLM-OCR");
+    var missing = RhodesOptionalRuntimeProbe.ParseStatusJson(
+        """{"status":"missing","installed":false,"installing":false,"installRoot":"D:/state/ollama-runtime"}""",
+        "Ollama");
+    var installing = RhodesOptionalRuntimeProbe.ParseStatusJson(
+        """{"status":"installing","installed":false,"installing":true}""",
+        "GLM-OCR");
+
+    Equal("導入済み", installed.State, "installed state");
+    Equal(true, installed.Installed, "installed flag");
+    Equal(true, installed.Detail.Contains("D:/state/glm-ocr-runtime", StringComparison.Ordinal), "installed detail");
+    Equal("未導入", missing.State, "missing state");
+    Equal(false, missing.Installed, "missing flag");
+    Equal("導入中", installing.State, "installing state");
+    Equal(true, installing.Installing, "installing flag");
 }
 
 static void TaskDiagnostics()

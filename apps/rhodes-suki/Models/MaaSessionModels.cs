@@ -142,6 +142,17 @@ public sealed record MaaTaskDiagnosticsSnapshot(
         ["MAA Resource taskを実行すると診断サマリを表示します。"]);
 }
 
+public sealed record SukiOptionalRuntimeStatus(
+    string Label,
+    string State,
+    string Detail,
+    bool Installed,
+    bool Installing);
+
+public sealed record SukiOptionalRuntimeProbeSnapshot(
+    SukiOptionalRuntimeStatus Glm,
+    SukiOptionalRuntimeStatus Ollama);
+
 public sealed record MaaCandidatePreview(
     string Kind,
     string Label,

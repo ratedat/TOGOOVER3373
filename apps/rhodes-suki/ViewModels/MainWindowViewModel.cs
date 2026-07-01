@@ -38,6 +38,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _rhodesApiUrl = "http://127.0.0.1:5173";
     private string _statusMessage = "MAAFramework の検証準備ができています。";
     private string _lastCandidateApplySummary = "候補未反映";
+    private SukiOptionalRuntimeStatus _glmRuntimeStatus = new("GLM-OCR", "未確認", "状態確認を実行してください。", false, false);
+    private SukiOptionalRuntimeStatus _ollamaRuntimeStatus = new("Ollama", "未確認", "状態確認を実行してください。", false, false);
     private Bitmap? _lastCaptureImage;
     private MaaAdbPresetPreview? _selectedAdbPreset;
     private MaaResourceProfilePreview? _selectedResourceProfile;
@@ -156,6 +158,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ApplyAdbPresetCommand = new AsyncRelayCommand(parameter => ApplyAdbPresetAsync(parameter as MaaAdbPresetPreview));
         RefreshAdbDevicesCommand = new AsyncRelayCommand(RefreshAdbDevicesAsync);
         ApplyAdbDeviceCommand = new AsyncRelayCommand(parameter => ApplyAdbDeviceAsync(parameter as MaaAdbDevicePreview));
+        RefreshOptionalRuntimesCommand = new AsyncRelayCommand(RefreshOptionalRuntimesAsync);
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
         RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
@@ -765,6 +768,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand ApplyAdbDeviceCommand { get; }
 
+    public ICommand RefreshOptionalRuntimesCommand { get; }
+
     public ICommand CaptureCommand { get; }
 
     public ICommand RunAllProbesCommand { get; }
@@ -862,18 +867,18 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             "glm",
             "GLM-OCR",
             "OPTIONAL",
-            "任意導入",
-            "高精度検証用。一般配布では任意DLで扱う",
+            _glmRuntimeStatus.State,
+            _glmRuntimeStatus.Detail,
             "状態確認",
-            true);
+            !_glmRuntimeStatus.Installed);
         yield return new SukiRuntimeCapabilityPreview(
             "ollama",
             "Ollama",
             "OPTIONAL",
-            "任意導入",
-            "GLM-OCRローカル実行の補助ランタイム",
+            _ollamaRuntimeStatus.State,
+            _ollamaRuntimeStatus.Detail,
             "状態確認",
-            true);
+            !_ollamaRuntimeStatus.Installed);
         yield return new SukiRuntimeCapabilityPreview(
             "hyperv",
             "Hyper-V",
@@ -1206,6 +1211,20 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 : $"ADB端末を取得しました: {devices.Count}件";
             RefreshRuntimeCapabilities();
             RefreshInspectorRows();
+        });
+    }
+
+    private async Task RefreshOptionalRuntimesAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            StatusMessage = "任意ランタイム状態を確認しています。";
+            var snapshot = await RhodesOptionalRuntimeProbe.ProbeAsync(RhodesApiUrl);
+            _glmRuntimeStatus = snapshot.Glm;
+            _ollamaRuntimeStatus = snapshot.Ollama;
+            RefreshRuntimeCapabilities();
+            RefreshInspectorRows();
+            StatusMessage = $"任意ランタイム状態: GLM={snapshot.Glm.State}, Ollama={snapshot.Ollama.State}";
         });
     }
 

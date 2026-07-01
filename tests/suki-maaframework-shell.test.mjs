@@ -44,6 +44,7 @@ test("Suki service tests cover MAA Resource detail conversion behavior", async (
 
 test("Suki shell keeps MAA session and probe code in thin RHODES-owned services", async () => {
   const session = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaSession.cs", "utf8");
+  const optionalRuntimeProbe = await fs.readFile("apps/rhodes-suki/Services/RhodesOptionalRuntimeProbe.cs", "utf8");
   const probe = await fs.readFile("apps/rhodes-suki/Services/RhodesRecognitionProbe.cs", "utf8");
   const catalog = await fs.readFile("apps/rhodes-suki/Services/RhodesMaaResourceCatalog.cs", "utf8");
   const adbPresets = await fs.readFile("apps/rhodes-suki/Services/RhodesAdbPresetCatalog.cs", "utf8");
@@ -133,6 +134,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(candidateApplier, /relic/);
   assert.match(models, /MaaTaskDetailSnapshot/);
   assert.match(models, /MaaResourceProfilePreview/);
+  assert.match(models, /SukiOptionalRuntimeStatus/);
   assert.match(models, /MaaCandidatePreview/);
   assert.match(models, /SukiCandidateApplySummary/);
   assert.match(models, /ProfileIds/);
@@ -154,6 +156,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /ApplyAdbPresetCommand/);
   assert.match(viewModel, /RefreshAdbDevicesCommand/);
   assert.match(viewModel, /ApplyAdbDeviceCommand/);
+  assert.match(viewModel, /RefreshOptionalRuntimesCommand/);
+  assert.match(viewModel, /RhodesOptionalRuntimeProbe\.ProbeAsync/);
   assert.match(viewModel, /SaveSettingsCommand/);
   assert.match(viewModel, /LoadSettings/);
   assert.match(viewModel, /ResourceTaskDiagnostics/);
@@ -217,6 +221,8 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(projectInterface, /"interface_version": 2/);
   assert.match(projectInterface, /"entry": "RhodesOperatorNameOcr"/);
   assert.match(resource, /RhodesProbe/);
+  assert.match(optionalRuntimeProbe, /api\/ocr\/glm\/status/);
+  assert.match(optionalRuntimeProbe, /api\/ocr\/glm\/ollama\/status/);
 });
 
 test("MAA resource generator converts RHODES recognition definitions into pipeline nodes", async () => {
@@ -251,6 +257,7 @@ test("Suki shell exposes manual MAA ADB and probe controls", async () => {
   assert.match(xaml, /ApplyAdbPresetCommand/);
   assert.match(xaml, /RefreshAdbDevicesCommand/);
   assert.match(xaml, /ApplyAdbDeviceCommand/);
+  assert.match(xaml, /RefreshOptionalRuntimesCommand/);
   assert.match(xaml, /SaveSettingsCommand/);
   assert.match(xaml, /ConnectCommand/);
   assert.match(xaml, /CaptureCommand/);
