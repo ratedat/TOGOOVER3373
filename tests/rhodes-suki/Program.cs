@@ -13,6 +13,7 @@ var tests = new (string Name, Action Run)[]
     ("Suki settings store round-trips ADB and profile values", SukiSettingsStore),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
+    ("Resource profile groups keep operational recognition order", ResourceProfileOrder),
     ("Run catalog loads campaigns, operators, relics, and current selections", RunCatalogLoadsChoices),
     ("Choice filters support selected-first, hidden exclusions, and selected-only", ChoiceFilters),
     ("Operator taxonomy keeps Integrated Strategies class and branch order", OperatorTaxonomyOrder),
@@ -235,6 +236,22 @@ static void ResourceTaskSummary()
     Equal("profiles: manual", manual.ProfileSummary, "manual profiles");
     Equal("source: maa-tasks.ocrRegions", generated.SourceSummary, "generated source");
     Equal("profiles: runStatusFull, operatorsFull", generated.ProfileSummary, "generated profiles");
+}
+
+static void ResourceProfileOrder()
+{
+    var tasks = new[]
+    {
+        new MaaResourceTaskPreview("relic", "秘宝", "", ["relicsFull"]),
+        new MaaResourceTaskPreview("age", "時代", "", ["is5AgeFull"]),
+        new MaaResourceTaskPreview("operator", "オペレーター", "", ["operatorsFull"]),
+        new MaaResourceTaskPreview("unknown", "将来追加", "", ["futureProfile"]),
+        new MaaResourceTaskPreview("run", "基礎情報", "", ["runStatusFull"]),
+        new MaaResourceTaskPreview("thought", "思案", "", ["is5ThoughtFull"]),
+    };
+
+    var profiles = RhodesMaaResourceCatalog.ProfileGroups(tasks).Select(profile => profile.Id).ToArray();
+    Equal("all|runStatusFull|operatorsFull|relicsFull|is5ThoughtFull|is5AgeFull|futureProfile", string.Join("|", profiles), "profile order");
 }
 
 static void RunCatalogLoadsChoices()

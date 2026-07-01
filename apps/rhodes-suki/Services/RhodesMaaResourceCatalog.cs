@@ -17,6 +17,17 @@ public static class RhodesMaaResourceCatalog
         ["is6CoinsFull"] = "通宝",
     };
 
+    private static readonly IReadOnlyDictionary<string, int> ProfileOrder = new Dictionary<string, int>(StringComparer.Ordinal)
+    {
+        ["runStatusFull"] = 10,
+        ["operatorsFull"] = 20,
+        ["relicsFull"] = 30,
+        ["is4RevelationFull"] = 40,
+        ["is5ThoughtFull"] = 50,
+        ["is5AgeFull"] = 60,
+        ["is6CoinsFull"] = 70,
+    };
+
     public static IReadOnlyList<MaaResourceTaskPreview> DefaultTasks()
     {
         var tasks = new Dictionary<string, MaaResourceTaskPreview>(StringComparer.Ordinal);
@@ -38,7 +49,8 @@ public static class RhodesMaaResourceCatalog
                 id,
                 ProfileLabels.TryGetValue(id, out var label) ? label : id,
                 tasks.Count(task => TaskAppliesToProfile(task, id))))
-            .OrderBy(group => group.Label, StringComparer.Ordinal)
+            .OrderBy(group => ProfileOrder.TryGetValue(group.Id, out var order) ? order : int.MaxValue)
+            .ThenBy(group => group.Label, StringComparer.Ordinal)
             .ToList();
 
         groups.Insert(0, new MaaResourceProfilePreview("all", ProfileLabels["all"], tasks.Count));
