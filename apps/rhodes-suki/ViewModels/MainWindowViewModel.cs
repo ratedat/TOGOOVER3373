@@ -37,6 +37,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private string _lastCapturePath = "";
     private string _lastResourceTaskResultsPath = "";
     private string _lastRoiDraftPath = "";
+    private string _lastRoiSessionPath = "";
     private MaaRoiDraftApplyResult _roiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
     private MaaRoiBatchApplyResult _roiBatchApplyResult = MaaRoiBatchApplyResult.Failed("未確認");
     private MaaResourceGenerationResult _maaResourceGenerationResult = MaaResourceGenerationResult.Failed("未実行");
@@ -211,6 +212,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         ExportSelectedRoiDraftCommand = new AsyncRelayCommand(ExportSelectedRoiDraftAsync);
+        ExportRoiAdjustmentSessionCommand = new AsyncRelayCommand(ExportRoiAdjustmentSessionAsync);
         PreviewSelectedRoiDraftApplyCommand = new AsyncRelayCommand(PreviewSelectedRoiDraftApplyAsync);
         ApplySelectedRoiDraftCommand = new AsyncRelayCommand(ApplySelectedRoiDraftAsync);
         PreviewVisibleRoiDraftsApplyCommand = new AsyncRelayCommand(PreviewVisibleRoiDraftsApplyAsync);
@@ -780,6 +782,17 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    public string LastRoiSessionPath
+    {
+        get => _lastRoiSessionPath;
+        private set
+        {
+            if (!SetProperty(ref _lastRoiSessionPath, value))
+                return;
+            RefreshInspectorRows();
+        }
+    }
+
     public Bitmap? LastCaptureImage
     {
         get => _lastCaptureImage;
@@ -1010,6 +1023,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ExportResourceTaskResultsCommand { get; }
 
     public ICommand ExportSelectedRoiDraftCommand { get; }
+
+    public ICommand ExportRoiAdjustmentSessionCommand { get; }
 
     public ICommand PreviewSelectedRoiDraftApplyCommand { get; }
 
@@ -1291,6 +1306,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 "ROIドラフト",
                 string.IsNullOrWhiteSpace(LastRoiDraftPath) ? SelectedRoiEditDraft.StatusLabel : LastRoiDraftPath,
                 $"{SelectedRoiEditDraft.Detail} / {RoiDraftApplyResult.Message}");
+            yield return new SukiInspectorRow(
+                "ROIセッション",
+                string.IsNullOrWhiteSpace(LastRoiSessionPath) ? $"{RoiBatchDrafts.Count}候補" : LastRoiSessionPath,
+                RoiBatchApplyResult.Summary);
             yield return new SukiInspectorRow("MAA Resource", MaaResourceGenerationResult.Message, MaaResourceGenerationResult.OutputPath);
             yield return new SukiInspectorRow(
                 "結果JSON",
@@ -1804,6 +1823,27 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 SelectedResourceProfile?.Id,
                 RhodesSukiDebugPaths.RoiDraftsDirectory);
             StatusMessage = $"ROIドラフトを保存しました: {LastRoiDraftPath}";
+        });
+    }
+
+    private async Task ExportRoiAdjustmentSessionAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            if (RoiBatchDrafts.Count == 0)
+            {
+                StatusMessage = "保存できるROI調整候補がありません。";
+                return;
+            }
+
+            LastRoiSessionPath = await RhodesMaaRoiAdjustmentSessionLog.SaveAsync(
+                RoiBatchDrafts,
+                SelectedResourceProfile?.Id,
+                LastResourceTaskResultsPath,
+                LastCapturePath,
+                RoiBatchApplyResult,
+                RhodesSukiDebugPaths.RoiSessionsDirectory);
+            StatusMessage = $"ROI調整セッションを保存しました: {LastRoiSessionPath}";
         });
     }
 

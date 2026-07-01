@@ -859,15 +859,16 @@
                 </Border>
 
                 <Border CornerRadius="7" Padding="9" Background="#121A1C" BorderBrush="#2E4448" BorderThickness="1">
-                  <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="3">
+                  <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnDefinitions="*,Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="3">
                     <TextBlock Text="表示中ROI一括" FontSize="13" FontWeight="SemiBold" />
                     <Button Grid.Column="1" Content="全選択" Command="{Binding IncludeAllRoiBatchDraftsCommand}" Padding="8,3" />
                     <Button Grid.Column="2" Content="全解除" Command="{Binding ExcludeAllRoiBatchDraftsCommand}" Padding="8,3" />
                     <Button Grid.Column="3" Content="全候補確認" Command="{Binding PreviewVisibleRoiDraftsApplyCommand}" Padding="8,3" />
                     <Button Grid.Column="4" Content="全候補適用" Command="{Binding ApplyVisibleRoiDraftsCommand}" Padding="8,3" />
-                    <TextBlock Grid.Row="1" Grid.ColumnSpan="5" Text="{Binding RoiBatchApplyResult.Summary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.66" />
-                    <TextBlock Grid.Row="2" Grid.ColumnSpan="5" Text="{Binding RoiBatchApplyResult.BackupSummary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.50" />
-                    <ListBox Grid.Row="3" Grid.ColumnSpan="5" ItemsSource="{Binding RoiBatchDrafts}" MaxHeight="118" Background="Transparent" BorderThickness="0" Padding="0">
+                    <Button Grid.Column="5" Content="セッション保存" Command="{Binding ExportRoiAdjustmentSessionCommand}" Padding="8,3" />
+                    <TextBlock Grid.Row="1" Grid.ColumnSpan="6" Text="{Binding RoiBatchApplyResult.Summary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.66" />
+                    <TextBlock Grid.Row="2" Grid.ColumnSpan="6" Text="{Binding RoiBatchApplyResult.BackupSummary}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.50" />
+                    <ListBox Grid.Row="3" Grid.ColumnSpan="6" ItemsSource="{Binding RoiBatchDrafts}" MaxHeight="118" Background="Transparent" BorderThickness="0" Padding="0">
                       <ListBox.ItemTemplate>
                         <DataTemplate>
                           <Grid ColumnDefinitions="Auto,*" ColumnSpacing="8" Margin="0,4,0,0">
@@ -882,7 +883,7 @@
                         </DataTemplate>
                       </ListBox.ItemTemplate>
                     </ListBox>
-                    <ListBox Grid.Row="4" Grid.ColumnSpan="5" ItemsSource="{Binding RoiBatchApplyResult.Results}" MaxHeight="132" Background="Transparent" BorderThickness="0" Padding="0">
+                    <ListBox Grid.Row="4" Grid.ColumnSpan="6" ItemsSource="{Binding RoiBatchApplyResult.Results}" MaxHeight="132" Background="Transparent" BorderThickness="0" Padding="0">
                       <ListBox.ItemTemplate>
                         <DataTemplate>
                           <Grid RowDefinitions="Auto,Auto" Margin="0,4,0,0">
