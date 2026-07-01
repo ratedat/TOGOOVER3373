@@ -32,6 +32,7 @@ var tests = new (string Name, Action Run)[]
     ("Run state store persists selected choices and display preferences", ChoicePersistence),
     ("Run state store switches current campaign without stale run values", RunContextPersistence),
     ("Recognition candidate applier persists safe run status fields", CandidateRunStatusApply),
+    ("Recognition candidate applier applies campaign before dependent run fields", CandidateCampaignApplyFirst),
     ("Recognition candidate applier keeps the best duplicate run status candidate", CandidateRunStatusApplyBestDuplicate),
     ("Recognition candidate applier can select operator and relic candidates", CandidateChoiceApply),
     ("Recognition candidate applier can apply IS5 thought and age candidates", CandidateIs5SpecialApply),
@@ -271,6 +272,7 @@ static void LocalCandidateConverterRunStatus()
     var candidates = RhodesMaaLocalCandidateConverter.FromTaskResults(
         "runStatusFull",
         [
+            M("RhodesCandidate_is5_sarkaz_map_select_campaign", "サルカズの炉辺奇談", 0.98),
             M("RhodesOcrRegion_run_hope_current", "3", 0.94),
             M("RhodesOcrRegion_run_hope_max", "8", 0.95),
             M("RhodesTemplate_runStatusFull_run_ingot", "2O", 0.96),
@@ -281,9 +283,10 @@ static void LocalCandidateConverterRunStatus()
             M("RhodesOcrRegion_operator_name", "グム", 0.99),
         ]);
 
-    Equal("hope|maxHope|ingot|lifePoints|shield|commandLevel|idea", string.Join("|", candidates.Select(item => item.Field)), "local run fields");
-    Equal("3|8|20|4|2|1|7", string.Join("|", candidates.Select(item => item.Value)), "local run values");
+    Equal("campaignId|hope|maxHope|ingot|lifePoints|shield|commandLevel|idea", string.Join("|", candidates.Select(item => item.Field)), "local run fields");
+    Equal("is5_sarkaz|3|8|20|4|2|1|7", string.Join("|", candidates.Select(item => item.Value)), "local run values");
     Equal("is5_sarkaz", candidates.Single(item => item.Field == "idea").CampaignId, "idea campaign id");
+    Equal("maa-local:static:is5.sarkaz.map_select.campaign", candidates.Single(item => item.Field == "campaignId").RecognitionKey, "campaign recognition key");
     Equal("maa-local:ingot:run.ingot", candidates.Single(item => item.Field == "ingot").RecognitionKey, "local recognition key");
 
     static MaaTaskRunResult M(string entry, string text, double score)
@@ -987,6 +990,43 @@ static void CandidateRunStatusApply()
     Equal(7, run["special"]!.AsObject()["is5_sarkaz"]!.AsObject()["idea"]!.GetValue<int>(), "idea");
     Equal("gummy", state["operators"]!.AsArray()[0]!.GetValue<string>(), "unrelated selections preserved");
     Equal("2026-07-01T00:00:00.0000000Z", state["updatedAt"]!.GetValue<string>(), "updatedAt");
+}
+
+static void CandidateCampaignApplyFirst()
+{
+    var state = JsonNode.Parse(
+        """
+        {
+          "run": {
+            "campaignId": "is3_mizuki",
+            "hope": 99,
+            "special": { "is3_mizuki": { "light": 20 } }
+          },
+          "operators": ["gummy"],
+          "relics": ["is3_relic_001"]
+        }
+        """)!.AsObject();
+    var candidates = new[]
+    {
+        new MaaCandidatePreview("runStatus", "希望", "3", "3", 0.94, Field: "hope"),
+        new MaaCandidatePreview("runStatus", "統合戦略", "is5_sarkaz", "サルカズの炉辺奇談", 0.99, Field: "campaignId"),
+        new MaaCandidatePreview("runStatus", "構想", "7", "7", 0.86, Field: "idea", CampaignId: "is5_sarkaz"),
+    };
+
+    var summary = RhodesRecognitionCandidateApplier.ApplyRunStatus(
+        state,
+        candidates,
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
+
+    Equal(3, summary.AppliedCount, "campaign apply count");
+    Equal("campaignId|hope|idea", string.Join("|", summary.AppliedFields), "campaign applied before dependents");
+    var run = state["run"]!.AsObject();
+    Equal("is5_sarkaz", run["campaignId"]!.GetValue<string>(), "campaign id");
+    Equal(3, run["hope"]!.GetValue<int>(), "hope after campaign reset");
+    Equal(false, run["special"]!.AsObject().ContainsKey("is3_mizuki"), "old special reset");
+    Equal(7, run["special"]!.AsObject()["is5_sarkaz"]!.AsObject()["idea"]!.GetValue<int>(), "new campaign idea");
+    Equal("gummy", state["operators"]!.AsArray()[0]!.GetValue<string>(), "operators preserved");
+    Equal("is3_relic_001", state["relics"]!.AsArray()[0]!.GetValue<string>(), "relics preserved");
 }
 
 static void CandidateRunStatusApplyBestDuplicate()

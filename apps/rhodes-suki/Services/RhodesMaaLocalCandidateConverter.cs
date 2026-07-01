@@ -7,6 +7,9 @@ namespace RhodesSuki.Services;
 
 public static class RhodesMaaLocalCandidateConverter
 {
+    private static readonly Lazy<IReadOnlyDictionary<string, IReadOnlyList<MaaCandidatePreview>>> StaticCandidatePreviewsByEntry =
+        new(LoadRecognitionStaticCandidates);
+
     private static readonly IReadOnlyDictionary<string, (string Field, string Label, int Min, int Max, double Confidence)> RunStatusFields =
         new Dictionary<string, (string Field, string Label, int Min, int Max, double Confidence)>(StringComparer.Ordinal)
         {
@@ -97,6 +100,11 @@ public static class RhodesMaaLocalCandidateConverter
             if (!taskResult.Succeeded)
                 continue;
 
+            foreach (var staticCandidate in StaticCandidates(taskResult))
+            {
+                yield return staticCandidate;
+            }
+
             var regionId = RunStatusRegionId(taskResult.Entry);
             if (string.IsNullOrWhiteSpace(regionId) || !RunStatusFields.TryGetValue(regionId, out var field))
                 continue;
@@ -138,6 +146,21 @@ public static class RhodesMaaLocalCandidateConverter
             "RhodesOcrRegion_run_idea_current" or "RhodesTemplate_runStatusFull_run_idea_current" => "run.idea.current",
             _ => "",
         };
+    }
+
+    private static IEnumerable<MaaCandidatePreview> StaticCandidates(MaaTaskRunResult taskResult)
+    {
+        if (!StaticCandidatePreviewsByEntry.Value.TryGetValue(taskResult.Entry, out var candidates))
+            yield break;
+
+        var rawText = PrimaryTextResult(taskResult.RecognitionDetailJson).Text;
+        foreach (var candidate in candidates)
+        {
+            yield return candidate with
+            {
+                RawText = string.IsNullOrWhiteSpace(rawText) ? candidate.RawText : rawText,
+            };
+        }
     }
 
     private static IEnumerable<MaaCandidatePreview> OperatorCandidates(IEnumerable<MaaTaskRunResult> taskResults)
@@ -708,6 +731,122 @@ public static class RhodesMaaLocalCandidateConverter
         return null;
     }
 
+    private static string JsonValueText(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out var property))
+            return "";
+
+        return property.ValueKind switch
+        {
+            JsonValueKind.String => property.GetString() ?? "",
+            JsonValueKind.Number => property.GetRawText(),
+            JsonValueKind.True => "true",
+            JsonValueKind.False => "false",
+            _ => "",
+        };
+    }
+
+    private static int JsonInt(JsonElement element, string propertyName)
+    {
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(propertyName, out var property))
+            return 0;
+
+        if (property.ValueKind == JsonValueKind.Number && property.TryGetInt32(out var number))
+            return number;
+
+        return property.ValueKind == JsonValueKind.String
+            && int.TryParse(property.GetString(), NumberStyles.Integer, CultureInfo.InvariantCulture, out number)
+            ? number
+            : 0;
+    }
+
+    private static IReadOnlyDictionary<string, IReadOnlyList<MaaCandidatePreview>> LoadRecognitionStaticCandidates()
+    {
+        var path = ResolveDataPath("recognition", "maa-tasks.json");
+        if (string.IsNullOrWhiteSpace(path))
+            return new Dictionary<string, IReadOnlyList<MaaCandidatePreview>>(StringComparer.Ordinal);
+
+        using var document = JsonDocument.Parse(File.ReadAllText(path));
+        var root = document.RootElement;
+        if (!root.TryGetProperty("candidates", out var candidates) || candidates.ValueKind != JsonValueKind.Array)
+            return new Dictionary<string, IReadOnlyList<MaaCandidatePreview>>(StringComparer.Ordinal);
+
+        var previewsByEntry = new Dictionary<string, List<MaaCandidatePreview>>(StringComparer.Ordinal);
+        foreach (var item in candidates.EnumerateArray())
+        {
+            if (!item.TryGetProperty("candidate", out var candidate) || candidate.ValueKind != JsonValueKind.Object)
+                continue;
+
+            var id = JsonString(item, "id");
+            if (string.IsNullOrWhiteSpace(id))
+                continue;
+
+            var entry = GeneratedNodeName("RhodesCandidate", id);
+            var field = JsonString(candidate, "field");
+            var label = JsonString(candidate, "label");
+            var name = JsonString(candidate, "name");
+            var value = JsonValueText(candidate, "value");
+            var recognitionKey = JsonString(candidate, "recognitionKey");
+            var preview = new MaaCandidatePreview(
+                JsonString(candidate, "kind"),
+                string.IsNullOrWhiteSpace(label) ? field : label,
+                string.IsNullOrWhiteSpace(value) ? name : value,
+                "",
+                JsonNumber(candidate, "confidence"),
+                field,
+                JsonString(candidate, "operatorId"),
+                JsonString(candidate, "relicId"),
+                JsonString(candidate, "campaignId"),
+                string.IsNullOrWhiteSpace(recognitionKey) ? $"maa-local:static:{id}" : recognitionKey,
+                JsonString(candidate, "thoughtId"),
+                JsonString(candidate, "ageId"),
+                JsonString(candidate, "fieldId"),
+                JsonString(candidate, "slotKind"),
+                JsonString(candidate, "effectId"),
+                JsonString(candidate, "stateId"),
+                JsonString(candidate, "coinId"),
+                JsonString(candidate, "statusId"),
+                JsonString(candidate, "face"),
+                JsonInt(candidate, "count"));
+
+            if (!previewsByEntry.TryGetValue(entry, out var list))
+            {
+                list = [];
+                previewsByEntry[entry] = list;
+            }
+            list.Add(preview);
+        }
+
+        return previewsByEntry.ToDictionary(
+            pair => pair.Key,
+            pair => (IReadOnlyList<MaaCandidatePreview>)pair.Value.ToArray(),
+            StringComparer.Ordinal);
+    }
+
+    private static string GeneratedNodeName(string prefix, string id)
+    {
+        var builder = new StringBuilder(prefix);
+        builder.Append('_');
+        var pendingSeparator = false;
+        foreach (var ch in id)
+        {
+            if (ch is >= 'A' and <= 'Z' or >= 'a' and <= 'z' or >= '0' and <= '9')
+            {
+                if (pendingSeparator && builder[^1] != '_')
+                    builder.Append('_');
+                builder.Append(ch);
+                pendingSeparator = false;
+                continue;
+            }
+
+            pendingSeparator = builder[^1] != '_';
+        }
+
+        if (builder[^1] == '_')
+            builder.Length--;
+        return builder.ToString();
+    }
+
     private static IReadOnlyList<SelectableEffectCandidate> LoadSelectableEffects()
     {
         var path = ResolveDataPath("selectable-effects.json");
@@ -732,11 +871,11 @@ public static class RhodesMaaLocalCandidateConverter
             .ToArray();
     }
 
-    private static string ResolveDataPath(string fileName)
+    private static string ResolveDataPath(params string[] segments)
     {
         foreach (var dataRoot in DataRootCandidates().Distinct(StringComparer.OrdinalIgnoreCase))
         {
-            var path = Path.Combine(dataRoot, fileName);
+            var path = segments.Aggregate(dataRoot, Path.Combine);
             if (File.Exists(path))
                 return path;
         }

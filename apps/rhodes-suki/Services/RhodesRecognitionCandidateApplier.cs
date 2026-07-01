@@ -9,6 +9,14 @@ public static class RhodesRecognitionCandidateApplier
     private const string Is4CampaignId = "is4_sami";
     private const string Is5CampaignId = "is5_sarkaz";
     private const string Is6CampaignId = "is6_sui";
+    private static readonly HashSet<string> KnownCampaignIds =
+    [
+        "is2_phantom",
+        "is3_mizuki",
+        Is4CampaignId,
+        Is5CampaignId,
+        Is6CampaignId,
+    ];
 
     public static SukiCandidateApplySummary ApplyRunStatus(
         JsonObject state,
@@ -34,9 +42,9 @@ public static class RhodesRecognitionCandidateApplier
     {
         var candidateList = NormalizeCandidatesForApply(candidates);
         var applied = new List<string>();
-        var handledIndexes = runStatusOnly
-            ? new HashSet<int>()
-            : ApplyIs5SpecialCandidates(state, candidateList, applied);
+        var handledIndexes = ApplyCampaignCandidates(state, candidateList, applied);
+        if (!runStatusOnly)
+            handledIndexes.UnionWith(ApplyIs5SpecialCandidates(state, candidateList, applied));
         var ignored = 0;
         for (var index = 0; index < candidateList.Count; index++)
         {
@@ -89,6 +97,24 @@ public static class RhodesRecognitionCandidateApplier
         }
 
         return normalized;
+    }
+
+    private static HashSet<int> ApplyCampaignCandidates(
+        JsonObject state,
+        IReadOnlyList<MaaCandidatePreview> candidates,
+        ICollection<string> applied)
+    {
+        var handled = new HashSet<int>();
+        for (var index = 0; index < candidates.Count; index++)
+        {
+            var candidate = candidates[index];
+            if (!CandidateIsKind(candidate, "runStatus") || !candidate.Field.Equals("campaignId", StringComparison.Ordinal))
+                continue;
+
+            if (ApplyCampaignContextCandidate(state, candidate, applied))
+                handled.Add(index);
+        }
+        return handled;
     }
 
     private static bool ApplyCandidate(
@@ -153,6 +179,8 @@ public static class RhodesRecognitionCandidateApplier
                 return ApplyString(run, field, candidate.Value, applied, clearSquad: true);
             case "squadRandomEffectOptionId":
                 return ApplyString(run, field, candidate.Value, applied);
+            case "campaignId":
+                return ApplyCampaignContextCandidate(state, candidate, applied);
             case "idea":
                 return ApplyIdea(run, candidate, applied);
             default:
@@ -183,6 +211,22 @@ public static class RhodesRecognitionCandidateApplier
             run["squadRandomEffectOptionId"] = null;
         }
         applied.Add(field);
+        return true;
+    }
+
+    private static bool ApplyCampaignContextCandidate(JsonObject state, MaaCandidatePreview candidate, ICollection<string> applied)
+    {
+        var campaignId = CandidateId(candidate.Value, candidate.CampaignId);
+        if (string.IsNullOrWhiteSpace(campaignId) || !KnownCampaignIds.Contains(campaignId))
+            return false;
+
+        var run = EnsureObject(state, "run");
+        var previousCampaignId = JsonString(run, "campaignId");
+        run["campaignId"] = campaignId;
+        if (!string.Equals(previousCampaignId, campaignId, StringComparison.Ordinal))
+            ResetRunValues(run);
+
+        applied.Add("campaignId");
         return true;
     }
 
@@ -560,6 +604,27 @@ public static class RhodesRecognitionCandidateApplier
     private static string CoinEntryKey(string coinId, string? statusId, string face)
     {
         return $"{coinId}\u001f{statusId ?? ""}\u001f{face}";
+    }
+
+    private static void ResetRunValues(JsonObject run)
+    {
+        foreach (var propertyName in new[]
+        {
+            "squad",
+            "difficulty",
+            "hope",
+            "maxHope",
+            "ingot",
+            "lifePoints",
+            "shield",
+            "idea",
+            "special",
+        })
+        {
+            run.Remove(propertyName);
+        }
+
+        run["commandLevel"] = 1;
     }
 
     private static int JsonInt(JsonObject parent, string propertyName)
