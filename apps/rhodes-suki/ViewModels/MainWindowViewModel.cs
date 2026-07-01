@@ -157,6 +157,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         CaptureCommand = new AsyncRelayCommand(CaptureAsync);
         RunAllProbesCommand = new AsyncRelayCommand(RunAllProbesAsync);
         RunSelectedProfileRecognitionCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAsync);
+        RunSelectedProfileRecognitionAndApplyCommand = new AsyncRelayCommand(RunSelectedProfileRecognitionAndApplyAsync);
         RunAllResourceTasksCommand = new AsyncRelayCommand(RunAllResourceTasksAsync);
         ExportResourceTaskResultsCommand = new AsyncRelayCommand(ExportResourceTaskResultsAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
@@ -750,6 +751,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand RunSelectedProfileRecognitionCommand { get; }
 
+    public ICommand RunSelectedProfileRecognitionAndApplyCommand { get; }
+
     public ICommand RunAllResourceTasksCommand { get; }
 
     public ICommand ExportResourceTaskResultsCommand { get; }
@@ -904,6 +907,16 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         foreach (var item in _allRelics)
             item.IsSelected = state.SelectedRelicIds.Contains(item.Id);
         RefreshChoiceLists();
+    }
+
+    private void ReloadRunStateFromStore()
+    {
+        _runState = RhodesRunCatalog.LoadDefault().Current;
+        var campaign = Campaigns.FirstOrDefault(item => string.Equals(item.Id, _runState.CampaignId, StringComparison.Ordinal));
+        if (campaign is not null && !string.Equals(campaign.Id, SelectedCampaign?.Id, StringComparison.Ordinal))
+            SelectedCampaign = campaign;
+        RefreshChoicesFromRunState(_runState);
+        RefreshRunStatePreviews();
     }
 
     private IEnumerable<SukiSpecialValuePreview> BuildSpecialValuePreviews()
@@ -1208,26 +1221,26 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private async Task ApplyCandidateResultsAsync()
     {
-        await RunBusyAsync(async () =>
+        await RunBusyAsync(ApplyCandidateResultsCoreAsync);
+    }
+
+    private async Task ApplyCandidateResultsCoreAsync()
+    {
+        if (!CandidateResults.Any())
         {
-            if (!CandidateResults.Any())
-            {
-                StatusMessage = "反映する候補がありません。";
-                return;
-            }
+            StatusMessage = "反映する候補がありません。";
+            return;
+        }
 
-            var summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
-            if (summary.AppliedCount <= 0)
-            {
-                StatusMessage = $"状態へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
-                return;
-            }
+        var summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
+        if (summary.AppliedCount <= 0)
+        {
+            StatusMessage = $"状態へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
+            return;
+        }
 
-            _runState = RhodesRunCatalog.LoadDefault().Current;
-            RefreshChoicesFromRunState(_runState);
-            RefreshRunStatePreviews();
-            StatusMessage = $"状態へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
-        });
+        ReloadRunStateFromStore();
+        StatusMessage = $"状態へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
     }
 
     private async Task RunSelectedProfileRecognitionAsync()
@@ -1241,6 +1254,21 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
             await RunAllResourceTasksCoreAsync();
             await ConvertResourceTaskResultsCoreAsync();
+        });
+    }
+
+    private async Task RunSelectedProfileRecognitionAndApplyAsync()
+    {
+        await RunBusyAsync(async () =>
+        {
+            StatusMessage = "選択プロファイルの認識と反映を開始します。";
+            var capture = await CaptureCoreAsync();
+            if (capture?.Succeeded != true)
+                return;
+
+            await RunAllResourceTasksCoreAsync();
+            await ConvertResourceTaskResultsCoreAsync();
+            await ApplyCandidateResultsCoreAsync();
         });
     }
 

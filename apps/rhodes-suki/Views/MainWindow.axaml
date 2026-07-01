@@ -426,6 +426,7 @@
                 <TextBlock Text="MAA Resource task、候補化API、ローカルプレビューをここに集約します。" FontSize="12" Opacity="0.62" />
               </StackPanel>
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
+                <Button Content="認識+反映" Command="{Binding RunSelectedProfileRecognitionAndApplyCommand}" />
                 <Button Content="認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
                 <Button Content="全実行" Command="{Binding RunAllResourceTasksCommand}" />
                 <Button Content="JSON保存" Command="{Binding ExportResourceTaskResultsCommand}" />
