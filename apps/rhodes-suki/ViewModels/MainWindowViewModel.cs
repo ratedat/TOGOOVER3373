@@ -166,6 +166,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RunResourceTaskCommand = new AsyncRelayCommand(parameter => RunResourceTaskAsync(parameter as MaaResourceTaskPreview));
         SetWorkspaceCommand = new AsyncRelayCommand(SetWorkspaceAsync);
         SetChoiceTabCommand = new AsyncRelayCommand(SetChoiceTabAsync);
+        OpenRecognitionProfileCommand = new AsyncRelayCommand(OpenRecognitionProfileAsync);
         SetCurrentCampaignCommand = new AsyncRelayCommand(SetCurrentCampaignAsync);
         ToggleChoiceSelectedCommand = new AsyncRelayCommand(ToggleChoiceSelectedAsync);
         ToggleChoiceExcludedCommand = new AsyncRelayCommand(ToggleChoiceExcludedAsync);
@@ -769,6 +770,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     public ICommand SetChoiceTabCommand { get; }
 
+    public ICommand OpenRecognitionProfileCommand { get; }
+
     public ICommand SetCurrentCampaignCommand { get; }
 
     public ICommand ToggleChoiceSelectedCommand { get; }
@@ -1042,6 +1045,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         ChoiceTab = tab is "operators" or "relics" or "recognition" ? tab : "operators";
         WorkspaceTab = ChoiceTab == "recognition" ? "recognition" : "choices";
         StatusMessage = $"{ChoicePanelTitle}を表示しています。";
+        return Task.CompletedTask;
+    }
+
+    private Task OpenRecognitionProfileAsync(object? parameter)
+    {
+        var profileId = parameter as string;
+        if (!string.IsNullOrWhiteSpace(profileId))
+        {
+            var profile = ResourceProfiles.FirstOrDefault(item => string.Equals(item.Id, profileId, StringComparison.Ordinal));
+            if (profile is not null)
+                SelectedResourceProfile = profile;
+        }
+
+        ChoiceTab = "recognition";
+        WorkspaceTab = "recognition";
+        StatusMessage = $"{SelectedResourceProfile?.DisplayName ?? "認識"}を表示しています。";
         return Task.CompletedTask;
     }
 

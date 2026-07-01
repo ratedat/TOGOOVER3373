@@ -213,7 +213,7 @@
                 <TextBlock Text="ラン基本値" FontSize="20" FontWeight="SemiBold" />
                 <TextBlock Text="runStatusFull と IS固有値をここでレビューします。" FontSize="12" Opacity="0.62" />
               </StackPanel>
-              <Button Grid.Column="1" Content="基本値を認識" Command="{Binding SetChoiceTabCommand}" CommandParameter="recognition" VerticalAlignment="Center" />
+              <Button Grid.Column="1" Content="基本値を認識" Command="{Binding OpenRecognitionProfileCommand}" CommandParameter="runStatusFull" VerticalAlignment="Center" />
             </Grid>
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
@@ -260,7 +260,7 @@
                         </ItemsControl.ItemTemplate>
                       </ItemsControl>
                       <StackPanel Orientation="Horizontal" Spacing="8">
-                        <Button Content="思案認識" Command="{Binding RunSelectedProfileRecognitionCommand}" />
+                        <Button Content="思案認識" Command="{Binding OpenRecognitionProfileCommand}" CommandParameter="is5ThoughtFull" />
                         <Button Content="認識へ移動" Command="{Binding SetWorkspaceCommand}" CommandParameter="recognition" />
                       </StackPanel>
                     </StackPanel>
@@ -307,6 +307,8 @@
               <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">
                 <Button Content="オペレーター" Command="{Binding SetChoiceTabCommand}" CommandParameter="operators" />
                 <Button Content="秘宝" Command="{Binding SetChoiceTabCommand}" CommandParameter="relics" />
+                <Button Content="オペ認識" Command="{Binding OpenRecognitionProfileCommand}" CommandParameter="operatorsFull" />
+                <Button Content="秘宝認識" Command="{Binding OpenRecognitionProfileCommand}" CommandParameter="relicsFull" />
                 <Button Content="表示中の選択解除" Command="{Binding ClearVisibleChoicesCommand}" />
               </StackPanel>
             </Grid>
