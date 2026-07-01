@@ -902,6 +902,7 @@
                       <Button Content="1px" Command="{Binding SetRoiSnapStepCommand}" CommandParameter="1" Padding="7,2" Margin="0,0,6,6" />
                       <Button Content="4px" Command="{Binding SetRoiSnapStepCommand}" CommandParameter="4" Padding="7,2" Margin="0,0,6,6" />
                       <Button Content="8px" Command="{Binding SetRoiSnapStepCommand}" CommandParameter="8" Padding="7,2" Margin="0,0,10,6" />
+                      <Button Content="元に戻す" Command="{Binding ResetSelectedRoiDraftCommand}" Padding="7,2" Margin="0,0,10,6" />
                       <Button Content="左" Command="{Binding AdjustSelectedRoiDraftCommand}" CommandParameter="left" Padding="7,2" Margin="0,0,6,6" />
                       <Button Content="右" Command="{Binding AdjustSelectedRoiDraftCommand}" CommandParameter="right" Padding="7,2" Margin="0,0,6,6" />
                       <Button Content="上" Command="{Binding AdjustSelectedRoiDraftCommand}" CommandParameter="up" Padding="7,2" Margin="0,0,6,6" />

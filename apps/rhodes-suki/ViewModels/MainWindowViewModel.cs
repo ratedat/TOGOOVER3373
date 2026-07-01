@@ -228,6 +228,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         LoadRoiAdjustmentSessionCommand = new AsyncRelayCommand(parameter => LoadRoiAdjustmentSessionAsync(parameter as MaaRoiAdjustmentSessionItem));
         SelectRoiPreviewCommand = new AsyncRelayCommand(parameter => SelectRoiPreviewAsync(parameter as MaaRoiPreviewRow));
         SetRoiSnapStepCommand = new AsyncRelayCommand(parameter => SetRoiSnapStepAsync(parameter as string));
+        ResetSelectedRoiDraftCommand = new AsyncRelayCommand(ResetSelectedRoiDraftAsync);
         AdjustSelectedRoiDraftCommand = new AsyncRelayCommand(parameter => AdjustSelectedRoiDraftAsync(parameter as string));
         PreviewSelectedRoiDraftApplyCommand = new AsyncRelayCommand(PreviewSelectedRoiDraftApplyAsync);
         ApplySelectedRoiDraftCommand = new AsyncRelayCommand(ApplySelectedRoiDraftAsync);
@@ -1066,6 +1067,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand SelectRoiPreviewCommand { get; }
 
     public ICommand SetRoiSnapStepCommand { get; }
+
+    public ICommand ResetSelectedRoiDraftCommand { get; }
 
     public ICommand AdjustSelectedRoiDraftCommand { get; }
 
@@ -2101,6 +2104,26 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         });
     }
 
+    private async Task ResetSelectedRoiDraftAsync()
+    {
+        await RunBusyAsync(() =>
+        {
+            if (_selectedRoiPreviewRow is null)
+            {
+                RoiDraftApplyResult = MaaRoiDraftApplyResult.Failed("ROI行を選択してください。");
+                StatusMessage = RoiDraftApplyResult.Message;
+                return Task.CompletedTask;
+            }
+
+            SelectedRoiEditDraft = MaaRoiEditDraft.FromPreview(_selectedRoiPreviewRow);
+            ReplaceCollection(SelectedRoiPreviewRows, [_selectedRoiPreviewRow]);
+            UpdateRoiBatchDraftForSelected("未確認", "元ROIへ戻しました。");
+            RoiDraftApplyResult = MaaRoiDraftApplyResult.Failed("未確認");
+            StatusMessage = $"ROIを元に戻しました: {SelectedRoiEditDraft.RoiJson}";
+            return Task.CompletedTask;
+        });
+    }
+
     private async Task AdjustSelectedRoiDraftAsync(string? operation)
     {
         await RunBusyAsync(() =>
@@ -2832,7 +2855,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             }]);
     }
 
-    private void UpdateRoiBatchDraftForSelected()
+    private void UpdateRoiBatchDraftForSelected(string stateLabel = "調整済み", string? stateDetail = null)
     {
         if (!SelectedRoiEditDraft.HasSelection || RoiBatchDrafts.Count == 0)
             return;
@@ -2840,7 +2863,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         var updated = RoiBatchDrafts
             .Select(item => item.Entry.Equals(SelectedRoiEditDraft.Entry, StringComparison.Ordinal)
                 && item.Draft.Source.Equals(SelectedRoiEditDraft.Source, StringComparison.Ordinal)
-                    ? new MaaRoiBatchDraftPreview(SelectedRoiEditDraft, item.IsIncluded, "調整済み", item.StateDetail)
+                    ? new MaaRoiBatchDraftPreview(SelectedRoiEditDraft, item.IsIncluded, stateLabel, stateDetail ?? item.StateDetail)
                     : item)
             .ToArray();
         ReplaceCollection(RoiBatchDrafts, updated);
