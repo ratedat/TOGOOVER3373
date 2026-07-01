@@ -19,6 +19,7 @@ var tests = new (string Name, Action Run)[]
     ("Run state store persists selected choices and display preferences", ChoicePersistence),
     ("Run state store switches current campaign without stale run values", RunContextPersistence),
     ("Recognition candidate applier persists safe run status fields", CandidateRunStatusApply),
+    ("Recognition candidate applier can select operator and relic candidates", CandidateChoiceApply),
     ("Choice rows group filtered items into up to four panes", ChoiceRows),
 };
 
@@ -515,6 +516,38 @@ static void CandidateRunStatusApply()
     Equal(7, run["special"]!.AsObject()["is5_sarkaz"]!.AsObject()["idea"]!.GetValue<int>(), "idea");
     Equal("gummy", state["operators"]!.AsArray()[0]!.GetValue<string>(), "unrelated selections preserved");
     Equal("2026-07-01T00:00:00.0000000Z", state["updatedAt"]!.GetValue<string>(), "updatedAt");
+}
+
+static void CandidateChoiceApply()
+{
+    var state = JsonNode.Parse(
+        """
+        {
+          "run": { "campaignId": "is5_sarkaz" },
+          "operators": ["gummy"],
+          "relics": ["is5_sarkaz_relic_001"]
+        }
+        """)!.AsObject();
+    var candidates = new[]
+    {
+        new MaaCandidatePreview("operator", "レイン", "rain", "レイン", 0.92, OperatorId: "rain"),
+        new MaaCandidatePreview("operator", "重複", "gummy", "グム", 0.91, OperatorId: "gummy"),
+        new MaaCandidatePreview("relic", "秘宝B", "is5_sarkaz_relic_002", "秘宝B", 0.86, RelicId: "is5_sarkaz_relic_002", CampaignId: "is5_sarkaz"),
+        new MaaCandidatePreview("relic", "別IS秘宝", "is3_relic_001", "別IS秘宝", 0.86, RelicId: "is3_relic_001", CampaignId: "is3_mizuki"),
+        new MaaCandidatePreview("thought", "思案", "thought_001", "思案", 0.86),
+    };
+
+    var summary = RhodesRecognitionCandidateApplier.Apply(
+        state,
+        candidates,
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
+
+    Equal(2, summary.AppliedCount, "applied choice count");
+    Equal(3, summary.IgnoredCount, "ignored choice count");
+    Equal("operator:rain|relic:is5_sarkaz_relic_002", string.Join("|", summary.AppliedFields), "applied choices");
+    Equal("gummy|rain", string.Join("|", state["operators"]!.AsArray().Select(item => item!.GetValue<string>())), "operators");
+    Equal("is5_sarkaz_relic_001|is5_sarkaz_relic_002", string.Join("|", state["relics"]!.AsArray().Select(item => item!.GetValue<string>())), "relics");
+    Equal("2026-07-01T00:00:00.0000000Z", state["updatedAt"]!.GetValue<string>(), "choice updatedAt");
 }
 
 static void Equal<T>(T expected, T actual, string label)

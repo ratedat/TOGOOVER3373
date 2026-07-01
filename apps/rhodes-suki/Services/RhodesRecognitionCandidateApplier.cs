@@ -13,12 +13,28 @@ public static class RhodesRecognitionCandidateApplier
         IEnumerable<MaaCandidatePreview> candidates,
         DateTimeOffset now)
     {
+        return Apply(state, candidates, now, runStatusOnly: true);
+    }
+
+    public static SukiCandidateApplySummary Apply(
+        JsonObject state,
+        IEnumerable<MaaCandidatePreview> candidates,
+        DateTimeOffset now)
+    {
+        return Apply(state, candidates, now, runStatusOnly: false);
+    }
+
+    private static SukiCandidateApplySummary Apply(
+        JsonObject state,
+        IEnumerable<MaaCandidatePreview> candidates,
+        DateTimeOffset now,
+        bool runStatusOnly)
+    {
         var applied = new List<string>();
         var ignored = 0;
         foreach (var candidate in candidates)
         {
-            if (!candidate.Kind.Equals("runStatus", StringComparison.OrdinalIgnoreCase)
-                || !ApplyRunStatusCandidate(state, candidate, applied))
+            if (!ApplyCandidate(state, candidate, applied, runStatusOnly))
             {
                 ignored++;
             }
@@ -28,6 +44,27 @@ public static class RhodesRecognitionCandidateApplier
             state["updatedAt"] = now.UtcDateTime.ToString("O");
 
         return new SukiCandidateApplySummary(applied.Count, ignored, applied);
+    }
+
+    private static bool ApplyCandidate(
+        JsonObject state,
+        MaaCandidatePreview candidate,
+        ICollection<string> applied,
+        bool runStatusOnly)
+    {
+        if (candidate.Kind.Equals("runStatus", StringComparison.OrdinalIgnoreCase))
+            return ApplyRunStatusCandidate(state, candidate, applied);
+
+        if (runStatusOnly)
+            return false;
+
+        if (candidate.Kind.Equals("operator", StringComparison.OrdinalIgnoreCase))
+            return ApplyStringSetCandidate(state, "operators", candidate.OperatorId, candidate.Value, applied, "operator");
+
+        if (candidate.Kind.Equals("relic", StringComparison.OrdinalIgnoreCase))
+            return ApplyRelicCandidate(state, candidate, applied);
+
+        return false;
     }
 
     private static bool ApplyRunStatusCandidate(JsonObject state, MaaCandidatePreview candidate, ICollection<string> applied)
@@ -103,6 +140,54 @@ public static class RhodesRecognitionCandidateApplier
         var campaign = EnsureObject(special, Is5CampaignId);
         campaign["idea"] = Math.Min(999, value);
         applied.Add("idea");
+        return true;
+    }
+
+    private static bool ApplyRelicCandidate(JsonObject state, MaaCandidatePreview candidate, ICollection<string> applied)
+    {
+        var run = EnsureObject(state, "run");
+        var currentCampaignId = JsonString(run, "campaignId");
+        if (!string.IsNullOrWhiteSpace(candidate.CampaignId)
+            && !string.IsNullOrWhiteSpace(currentCampaignId)
+            && !candidate.CampaignId.Equals(currentCampaignId, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        return ApplyStringSetCandidate(state, "relics", candidate.RelicId, candidate.Value, applied, "relic");
+    }
+
+    private static bool ApplyStringSetCandidate(
+        JsonObject state,
+        string propertyName,
+        string primaryValue,
+        string fallbackValue,
+        ICollection<string> applied,
+        string appliedPrefix)
+    {
+        var value = string.IsNullOrWhiteSpace(primaryValue) ? fallbackValue.Trim() : primaryValue.Trim();
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var values = new HashSet<string>(StringComparer.Ordinal);
+        var array = new JsonArray();
+        if (state[propertyName] is JsonArray existing)
+        {
+            foreach (var item in existing)
+            {
+                var text = item?.GetValue<string>();
+                if (string.IsNullOrWhiteSpace(text) || !values.Add(text))
+                    continue;
+                array.Add(text);
+            }
+        }
+
+        if (!values.Add(value))
+            return false;
+
+        array.Add(value);
+        state[propertyName] = array;
+        applied.Add($"{appliedPrefix}:{value}");
         return true;
     }
 

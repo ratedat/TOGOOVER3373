@@ -897,6 +897,15 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         RefreshInspectorRows();
     }
 
+    private void RefreshChoicesFromRunState(SukiRunStateSnapshot state)
+    {
+        foreach (var item in _allOperators)
+            item.IsSelected = state.SelectedOperatorIds.Contains(item.Id);
+        foreach (var item in _allRelics)
+            item.IsSelected = state.SelectedRelicIds.Contains(item.Id);
+        RefreshChoiceLists();
+    }
+
     private IEnumerable<SukiSpecialValuePreview> BuildSpecialValuePreviews()
     {
         var campaignId = SelectedCampaign?.Id ?? _runState.CampaignId;
@@ -1210,13 +1219,14 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             var summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
             if (summary.AppliedCount <= 0)
             {
-                StatusMessage = $"基本値へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
+                StatusMessage = $"状態へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
                 return;
             }
 
             _runState = RhodesRunCatalog.LoadDefault().Current;
+            RefreshChoicesFromRunState(_runState);
             RefreshRunStatePreviews();
-            StatusMessage = $"基本値へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
+            StatusMessage = $"状態へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
         });
     }
 

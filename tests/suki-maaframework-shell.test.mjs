@@ -124,9 +124,12 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(runStateStore, /operatorExcludedIds/);
   assert.match(runStateStore, /operatorGridColumns/);
   assert.match(candidateApplier, /ApplyRunStatus/);
+  assert.match(candidateApplier, /ApplyStringSetCandidate/);
   assert.match(candidateApplier, /commandLevel/);
   assert.match(candidateApplier, /squadId/);
   assert.match(candidateApplier, /idea/);
+  assert.match(candidateApplier, /operator/);
+  assert.match(candidateApplier, /relic/);
   assert.match(models, /MaaTaskDetailSnapshot/);
   assert.match(models, /MaaResourceProfilePreview/);
   assert.match(models, /MaaCandidatePreview/);
@@ -161,6 +164,7 @@ test("Suki shell keeps MAA session and probe code in thin RHODES-owned services"
   assert.match(viewModel, /RefreshResourceTasks/);
   assert.match(viewModel, /ConvertResourceTaskResultsCommand/);
   assert.match(viewModel, /ApplyCandidateResultsCommand/);
+  assert.match(viewModel, /RefreshChoicesFromRunState/);
   assert.match(viewModel, /api\/recognition\/maa-resource/);
   assert.match(viewModel, /CandidateApiProfileId/);
   assert.doesNotMatch(viewModel, /SelectedResourceProfile\?\.Id == "all" \? "runStatusFull"/);

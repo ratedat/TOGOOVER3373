@@ -68,7 +68,7 @@ public static class RhodesRunStateStore
         try
         {
             var state = await LoadStateNodeAsync(path);
-            var summary = RhodesRecognitionCandidateApplier.ApplyRunStatus(state, candidates, now ?? DateTimeOffset.UtcNow);
+            var summary = RhodesRecognitionCandidateApplier.Apply(state, candidates, now ?? DateTimeOffset.UtcNow);
             if (summary.AppliedCount > 0)
                 await WriteJsonAtomicAsync(path, state);
             return summary;
