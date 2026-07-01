@@ -242,6 +242,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         IncludeAllRoiBatchDraftsCommand = new AsyncRelayCommand(_ => SetAllRoiBatchDraftsIncludedAsync(true));
         ExcludeAllRoiBatchDraftsCommand = new AsyncRelayCommand(_ => SetAllRoiBatchDraftsIncludedAsync(false));
         RunRoiRescanComparisonCommand = new AsyncRelayCommand(RunRoiRescanComparisonAsync);
+        OpenRoiRescanEvidenceCommand = new AsyncRelayCommand(OpenRoiRescanEvidenceAsync);
         RegenerateMaaResourceCommand = new AsyncRelayCommand(RegenerateMaaResourceAsync);
         SyncRunStateFromApiCommand = new AsyncRelayCommand(SyncRunStateFromApiAsync);
         ConvertResourceTaskResultsCommand = new AsyncRelayCommand(ConvertResourceTaskResultsAsync);
@@ -1110,6 +1111,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     public ICommand ExcludeAllRoiBatchDraftsCommand { get; }
 
     public ICommand RunRoiRescanComparisonCommand { get; }
+
+    public ICommand OpenRoiRescanEvidenceCommand { get; }
 
     public ICommand RegenerateMaaResourceCommand { get; }
 
@@ -2029,6 +2032,37 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             StatusMessage = RoiRescanComparisonSummary;
             RefreshInspectorRows();
         });
+    }
+
+    private Task OpenRoiRescanEvidenceAsync(object? parameter)
+    {
+        var side = parameter as string;
+        var path = string.Equals(side, "after", StringComparison.OrdinalIgnoreCase)
+            ? _lastRoiRescanAfterPath
+            : _lastRoiRescanBeforePath;
+        if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+        {
+            StatusMessage = string.Equals(side, "after", StringComparison.OrdinalIgnoreCase)
+                ? "after比較証跡が見つかりません。"
+                : "before比較証跡が見つかりません。";
+            return Task.CompletedTask;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = path,
+                UseShellExecute = true,
+            });
+            StatusMessage = $"比較証跡を開きました: {path}";
+        }
+        catch (Exception ex)
+        {
+            StatusMessage = $"比較証跡を開けませんでした: {ex.Message}";
+        }
+
+        return Task.CompletedTask;
     }
 
     private async Task PreviewSelectedRoiDraftApplyAsync()
