@@ -69,6 +69,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private double _roiResizeStartY;
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
     private MaaRoiEditDraft _selectedRoiEditDraft = MaaRoiEditDraft.Empty;
+    private MaaRoiRescanComparisonRow? _selectedRoiRescanComparisonRow;
+    private MaaCandidatePreview? _selectedCandidateResult;
     private MaaOcrDetailRow? _selectedOcrDetailRow;
     private MaaTaskRunResult? _selectedResourceTaskResult;
     private RhodesRecognitionScanLogRow? _selectedRecognitionScanLogRow;
@@ -916,6 +918,23 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     {
         get => _selectedRoiEditDraft;
         private set => SetProperty(ref _selectedRoiEditDraft, value);
+    }
+
+    public MaaRoiRescanComparisonRow? SelectedRoiRescanComparisonRow
+    {
+        get => _selectedRoiRescanComparisonRow;
+        set
+        {
+            if (!SetProperty(ref _selectedRoiRescanComparisonRow, value))
+                return;
+            SelectCandidateForComparison(value);
+        }
+    }
+
+    public MaaCandidatePreview? SelectedCandidateResult
+    {
+        get => _selectedCandidateResult;
+        set => SetProperty(ref _selectedCandidateResult, value);
     }
 
     public MaaRoiDraftApplyResult RoiDraftApplyResult
@@ -3377,6 +3396,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private void ClearRoiRescanComparison(string summary = "再スキャン比較未実行")
     {
+        SelectedRoiRescanComparisonRow = null;
         ReplaceCollection(RoiRescanComparisonRows, Array.Empty<MaaRoiRescanComparisonRow>());
         RoiRescanComparisonSummary = summary;
         SetRoiRescanComparisonEvidence("", "");
@@ -3415,7 +3435,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                     afterItem.Label,
                     "-",
                     afterItem.DisplayValue,
-                    afterItem.Detail));
+                    afterItem.Detail,
+                    key));
                 continue;
             }
 
@@ -3426,7 +3447,8 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                     beforeItem.Label,
                     beforeItem.DisplayValue,
                     "-",
-                    beforeItem.Detail));
+                    beforeItem.Detail,
+                    key));
                 continue;
             }
 
@@ -3438,10 +3460,28 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 afterItem.Label,
                 beforeItem.DisplayValue,
                 afterItem.DisplayValue,
-                $"{beforeItem.Detail} / after: {afterItem.Detail}"));
+                $"{beforeItem.Detail} / after: {afterItem.Detail}",
+                key));
         }
 
         return rows;
+    }
+
+    private void SelectCandidateForComparison(MaaRoiRescanComparisonRow? row)
+    {
+        if (row is null || string.IsNullOrWhiteSpace(row.CandidateKey))
+            return;
+
+        var selected = CandidateResults.FirstOrDefault(candidate =>
+            CandidateComparisonKey(candidate).Equals(row.CandidateKey, StringComparison.Ordinal));
+        if (selected is null)
+        {
+            StatusMessage = $"比較差分に対応する候補は現在の候補一覧にありません: {row.Label}";
+            return;
+        }
+
+        SelectedCandidateResult = selected;
+        StatusMessage = $"比較差分の候補を選択しました: {selected.Label}";
     }
 
     private static string BuildRoiRescanComparisonSummary(

@@ -105,7 +105,8 @@ flowchart LR
 - 接続済み: ROI調整セッション保存時に再スキャン比較サマリと差分行を紐付け、セッション再開時に復元できる。
 - 接続済み: 再スキャン比較のbefore/after task/candidate証跡JSONを保存し、ROI調整セッションへ証跡パスを保持できる。
 - 接続済み: 再スキャン比較の差分行からbefore/after証跡JSONを開ける。
-- 残作業: 再スキャン比較の差分行ごとに該当candidate/task entryをハイライトして、証跡内の該当箇所へ絞り込む。
+- 接続済み: 再スキャン比較の差分行にcandidate keyを保持し、現在の候補一覧に対応候補がある場合は選択状態へ連動できる。
+- 残作業: 再スキャン比較の差分行ごとに該当task entryも保持し、証跡内の該当箇所へ絞り込む。
 
 ## First Milestone
 - SukiUI shell が起動する
