@@ -1609,19 +1609,54 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
-        var summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
+        var (summary, apiError) = await SaveCandidateResultsToApiStateAsync();
+        if (!string.IsNullOrWhiteSpace(apiError))
+            summary = await RhodesRunStateStore.SaveCandidatesAsync(CandidateResults);
+
         if (summary.AppliedCount <= 0)
         {
             LastCandidateApplySummary = $"反映なし: 無視 {summary.IgnoredCount}件";
-            StatusMessage = $"状態へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件";
+            StatusMessage = string.IsNullOrWhiteSpace(apiError)
+                ? $"状態へ反映できる候補はありませんでした。無視: {summary.IgnoredCount}件"
+                : $"状態へ反映できる候補はありませんでした。API同期は失敗: {apiError}";
             RefreshInspectorRows();
             return;
         }
 
         ReloadRunStateFromStore();
         LastCandidateApplySummary = $"{summary.AppliedCount}件: {string.Join(", ", summary.AppliedFields)}";
-        StatusMessage = $"状態へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})";
+        StatusMessage = string.IsNullOrWhiteSpace(apiError)
+            ? $"状態へ反映し、APIへ同期しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)})"
+            : $"状態へ反映しました: {summary.AppliedCount}件 ({string.Join(", ", summary.AppliedFields)}) / API同期失敗: {apiError}";
         RefreshInspectorRows();
+    }
+
+    private async Task<(SukiCandidateApplySummary Summary, string Error)> SaveCandidateResultsToApiStateAsync()
+    {
+        var fetched = await RhodesStateApiClient.FetchAsync(RhodesApiUrl);
+        if (!fetched.Succeeded)
+        {
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", fetched.Error, false, false);
+            RefreshRuntimeCapabilities();
+            return (SukiCandidateApplySummary.Empty, fetched.Error);
+        }
+
+        var applied = RhodesStateApiClient.ApplyCandidatesToStateJson(fetched.StateJson, CandidateResults);
+        if (applied.Summary.AppliedCount <= 0)
+            return (applied.Summary, "");
+
+        var saved = await RhodesStateApiClient.SaveAsync(RhodesApiUrl, applied.StateJson);
+        if (!saved.Succeeded)
+        {
+            _rhodesApiStatus = new SukiOptionalRuntimeStatus("RHODES API", "接続失敗", saved.Error, false, false);
+            RefreshRuntimeCapabilities();
+            return (SukiCandidateApplySummary.Empty, saved.Error);
+        }
+
+        await RhodesRunStateStore.ReplaceStateJsonAsync(saved.StateJson);
+        _rhodesApiStatus = RhodesApiStatusProbe.ParseStateJson(saved.StateJson);
+        RefreshRuntimeCapabilities();
+        return (applied.Summary, "");
     }
 
     private async Task RunSelectedProfileRecognitionAsync()

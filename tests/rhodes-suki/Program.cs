@@ -44,6 +44,7 @@ var tests = new (string Name, Action Run)[]
     ("State API client can apply Suki display preferences into current state JSON", StateApiSukiPreferencesApply),
     ("State API client can apply selected choices into current state JSON", StateApiChoicesApply),
     ("State API client can apply current campaign into current state JSON", StateApiRunContextApply),
+    ("State API client can apply recognition candidates into current state JSON", StateApiCandidatesApply),
     ("Run state store switches current campaign without stale run values", RunContextPersistence),
     ("Recognition candidate applier persists safe run status fields", CandidateRunStatusApply),
     ("Recognition candidate applier applies campaign before dependent run fields", CandidateCampaignApplyFirst),
@@ -1514,6 +1515,33 @@ static void StateApiRunContextApply()
     Equal("gummy", updated["operators"]!.AsArray()[0]!.GetValue<string>(), "api operators preserved");
     Equal("glm-ocr", updated["preferences"]!.AsObject()["ocrEngine"]!.GetValue<string>(), "api preferences preserved");
     Equal("2026-07-01T00:00:00.0000000Z", updated["updatedAt"]!.GetValue<string>(), "api updatedAt");
+}
+
+static void StateApiCandidatesApply()
+{
+    var result = RhodesStateApiClient.ApplyCandidatesToStateJson(
+        """
+        {
+          "version": 1,
+          "run": {
+            "campaignId": "is5_sarkaz",
+            "hope": 0,
+            "special": { "is5_sarkaz": { "idea": 0 } }
+          },
+          "operators": []
+        }
+        """,
+        [
+            new MaaCandidatePreview("runStatus", "希望", "7", "7", 0.9, Field: "hope", CampaignId: "is5_sarkaz"),
+            new MaaCandidatePreview("runStatus", "構想", "3", "3", 0.9, Field: "idea", CampaignId: "is5_sarkaz"),
+        ],
+        DateTimeOffset.Parse("2026-07-01T00:00:00Z"));
+
+    var updated = JsonNode.Parse(result.StateJson)!.AsObject();
+    Equal(2, result.Summary.AppliedCount, "api candidates applied count");
+    Equal(7, updated["run"]!.AsObject()["hope"]!.GetValue<int>(), "api candidate hope");
+    Equal(3, updated["run"]!.AsObject()["special"]!.AsObject()["is5_sarkaz"]!.AsObject()["idea"]!.GetValue<int>(), "api candidate idea");
+    Equal("2026-07-01T00:00:00.0000000Z", updated["updatedAt"]!.GetValue<string>(), "api candidate updatedAt");
 }
 
 static void CandidateRunStatusApply()

@@ -12,6 +12,10 @@ public sealed record RhodesStateApiResult(
     public bool Succeeded => string.IsNullOrWhiteSpace(Error);
 }
 
+public sealed record RhodesCandidateStateApplyResult(
+    string StateJson,
+    SukiCandidateApplySummary Summary);
+
 public static class RhodesStateApiClient
 {
     public static async Task<RhodesStateApiResult> FetchAsync(
@@ -113,6 +117,16 @@ public static class RhodesStateApiClient
         var root = JsonNode.Parse(string.IsNullOrWhiteSpace(stateJson) ? "{}" : stateJson)?.AsObject() ?? [];
         RhodesRunStateStore.ApplyChoices(root, operators, relics, choiceOptions, now ?? DateTimeOffset.UtcNow);
         return root.ToJsonString();
+    }
+
+    public static RhodesCandidateStateApplyResult ApplyCandidatesToStateJson(
+        string stateJson,
+        IEnumerable<MaaCandidatePreview> candidates,
+        DateTimeOffset? now = null)
+    {
+        var root = JsonNode.Parse(string.IsNullOrWhiteSpace(stateJson) ? "{}" : stateJson)?.AsObject() ?? [];
+        var summary = RhodesRecognitionCandidateApplier.Apply(root, candidates, now ?? DateTimeOffset.UtcNow);
+        return new RhodesCandidateStateApplyResult(root.ToJsonString(), summary);
     }
 
     public static string ApplySukiPreferencesToStateJson(
