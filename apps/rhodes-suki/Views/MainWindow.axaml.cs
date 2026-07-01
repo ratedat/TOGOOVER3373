@@ -87,7 +87,7 @@ public partial class MainWindow : SukiWindow
             return;
         }
 
-        viewModel.BeginRoiResize(row, RoiPointerX(e), RoiPointerY(e));
+        viewModel.BeginRoiResize(row, RoiPointerX(e), RoiPointerY(e), control.Tag as string);
         _roiResizeSource = control;
         e.Pointer.Capture(control);
         e.Handled = true;

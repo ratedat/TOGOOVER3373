@@ -797,7 +797,23 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                       <DataTemplate>
-                        <Border Canvas.Left="{Binding ResizeHandleX}"
+                        <Canvas Width="1280" Height="720">
+                          <Border Canvas.Left="{Binding TopLeftHandleX}"
+                                  Canvas.Top="{Binding TopLeftHandleY}"
+                                  Width="24"
+                                  Height="24"
+                                  CornerRadius="3"
+                                  BorderBrush="#111100"
+                                  BorderThickness="2"
+                                  Background="#EEFFD447"
+                                  Tag="topLeft"
+                                  PointerPressed="RoiResizePointerPressed"
+                                  PointerMoved="RoiResizePointerMoved"
+                                  PointerReleased="RoiResizePointerReleased"
+                                  PointerCaptureLost="RoiResizePointerCaptureLost">
+                            <TextBlock Text="↖" FontSize="16" Foreground="#111100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          </Border>
+                          <Border Canvas.Left="{Binding ResizeHandleX}"
                                 Canvas.Top="{Binding ResizeHandleY}"
                                 Width="24"
                                 Height="24"
@@ -805,12 +821,14 @@
                                 BorderBrush="#111100"
                                 BorderThickness="2"
                                 Background="#EEFFD447"
+                                Tag="bottomRight"
                                 PointerPressed="RoiResizePointerPressed"
                                 PointerMoved="RoiResizePointerMoved"
                                 PointerReleased="RoiResizePointerReleased"
                                 PointerCaptureLost="RoiResizePointerCaptureLost">
-                          <TextBlock Text="↘" FontSize="16" Foreground="#111100" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
+                            <TextBlock Text="↘" FontSize="16" Foreground="#111100" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                          </Border>
+                        </Canvas>
                       </DataTemplate>
                     </ItemsControl.ItemTemplate>
                   </ItemsControl>

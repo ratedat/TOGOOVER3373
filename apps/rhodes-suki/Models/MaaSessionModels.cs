@@ -245,6 +245,10 @@ public sealed record MaaRoiPreviewRow(
 {
     public string BoundsLabel => $"{X:0.#},{Y:0.#} {Width:0.#}x{Height:0.#}";
 
+    public double TopLeftHandleX => Math.Max(0, X - 12);
+
+    public double TopLeftHandleY => Math.Max(0, Y - 12);
+
     public double ResizeHandleX => Math.Max(0, X + Width - 12);
 
     public double ResizeHandleY => Math.Max(0, Y + Height - 12);

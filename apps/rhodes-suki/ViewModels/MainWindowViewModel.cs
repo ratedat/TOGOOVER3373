@@ -60,6 +60,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private double _roiDragStartX;
     private double _roiDragStartY;
     private int[] _roiResizeOrigin = [];
+    private string _roiResizeMode = "";
     private double _roiResizeStartX;
     private double _roiResizeStartY;
     private MaaRoiPreviewRow? _selectedRoiPreviewRow;
@@ -2022,7 +2023,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
         StatusMessage = $"ROIドラッグ終了: {SelectedRoiEditDraft.RoiJson}";
     }
 
-    public void BeginRoiResize(MaaRoiPreviewRow? row, double pointerX, double pointerY)
+    public void BeginRoiResize(MaaRoiPreviewRow? row, double pointerX, double pointerY, string? mode)
     {
         if (row is null)
             return;
@@ -2032,9 +2033,10 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             return;
 
         _roiResizeOrigin = roi;
+        _roiResizeMode = string.IsNullOrWhiteSpace(mode) ? "bottomRight" : mode;
         _roiResizeStartX = pointerX;
         _roiResizeStartY = pointerY;
-        StatusMessage = $"ROIリサイズ開始: {row.DisplayTitle}";
+        StatusMessage = $"ROIリサイズ開始: {row.DisplayTitle} / {_roiResizeMode}";
     }
 
     public void UpdateRoiResize(double pointerX, double pointerY)
@@ -2043,8 +2045,22 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             return;
 
         var adjusted = _roiResizeOrigin.ToArray();
-        adjusted[2] = Math.Max(1, adjusted[2] + (int)Math.Round(pointerX - _roiResizeStartX, MidpointRounding.AwayFromZero));
-        adjusted[3] = Math.Max(1, adjusted[3] + (int)Math.Round(pointerY - _roiResizeStartY, MidpointRounding.AwayFromZero));
+        var dx = (int)Math.Round(pointerX - _roiResizeStartX, MidpointRounding.AwayFromZero);
+        var dy = (int)Math.Round(pointerY - _roiResizeStartY, MidpointRounding.AwayFromZero);
+        if (_roiResizeMode.Equals("topLeft", StringComparison.Ordinal))
+        {
+            var nextX = Math.Clamp(adjusted[0] + dx, 0, adjusted[0] + adjusted[2] - 1);
+            var nextY = Math.Clamp(adjusted[1] + dy, 0, adjusted[1] + adjusted[3] - 1);
+            adjusted[2] = Math.Max(1, adjusted[2] - (nextX - adjusted[0]));
+            adjusted[3] = Math.Max(1, adjusted[3] - (nextY - adjusted[1]));
+            adjusted[0] = nextX;
+            adjusted[1] = nextY;
+        }
+        else
+        {
+            adjusted[2] = Math.Max(1, adjusted[2] + dx);
+            adjusted[3] = Math.Max(1, adjusted[3] + dy);
+        }
         SelectedRoiEditDraft = SelectedRoiEditDraft with { RoiJson = RoiJson(adjusted) };
         UpdateSelectedRoiOverlay(adjusted);
         UpdateRoiBatchDraftForSelected();
@@ -2057,6 +2073,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             return;
 
         _roiResizeOrigin = [];
+        _roiResizeMode = "";
         StatusMessage = $"ROIリサイズ終了: {SelectedRoiEditDraft.RoiJson}";
     }
 
