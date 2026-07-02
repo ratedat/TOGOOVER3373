@@ -756,11 +756,17 @@ public sealed record MaaEvidencePreviewNode(
     string PreviewText,
     IReadOnlyList<MaaEvidencePreviewNode>? Children = null,
     string CandidateKey = "",
-    string TaskEntry = "")
+    string TaskEntry = "",
+    string NodeKind = "item",
+    bool ShowDetailByDefault = true)
 {
     public IReadOnlyList<MaaEvidencePreviewNode> SafeChildren => Children ?? [];
 
     public bool HasChildren => SafeChildren.Count > 0;
+
+    public string CountLabel => HasChildren ? SafeChildren.Count.ToString() : "";
+
+    public bool HasVisibleDetail => ShowDetailByDefault && !string.IsNullOrWhiteSpace(Detail);
 }
 
 public sealed record SukiCandidateApplySummary(

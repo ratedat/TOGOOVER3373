@@ -2187,16 +2187,21 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
     private void RefreshRoiRescanEvidencePreviewTree()
     {
         SelectedRoiRescanEvidencePreviewNode = null;
+        IReadOnlyList<MaaEvidencePreviewNode> nodes = string.IsNullOrWhiteSpace(_roiRescanEvidencePreviewJson)
+            ? []
+            : BuildRoiRescanEvidencePreviewNodes(
+                _roiRescanEvidencePreviewJson,
+                SelectedRoiRescanComparisonRow,
+                RoiEvidenceShowCandidates,
+                RoiEvidenceShowTasks,
+                RoiEvidenceShowLog);
         ReplaceCollection(
             RoiRescanEvidencePreviewNodes,
-            string.IsNullOrWhiteSpace(_roiRescanEvidencePreviewJson)
-                ? []
-                : BuildRoiRescanEvidencePreviewNodes(
-                    _roiRescanEvidencePreviewJson,
-                    SelectedRoiRescanComparisonRow,
-                    RoiEvidenceShowCandidates,
-                    RoiEvidenceShowTasks,
-                    RoiEvidenceShowLog));
+            nodes);
+
+        var defaultNode = DefaultEvidencePreviewNode(nodes, SelectedRoiRescanComparisonRow);
+        if (defaultNode is not null)
+            SelectedRoiRescanEvidencePreviewNode = defaultNode;
     }
 
     private static string BuildRoiRescanEvidencePreview(string json, MaaRoiRescanComparisonRow? selectedRow)
@@ -2277,19 +2282,19 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
             var logs = FilterEvidenceTasks(JsonArray(root, "log"), selectedRow);
             var nodes = new List<MaaEvidencePreviewNode>
             {
-                new MaaEvidencePreviewNode("Summary", "scan metadata", EvidenceSummary(root)),
+                new MaaEvidencePreviewNode("Summary", "scan metadata", EvidenceSummary(root), NodeKind: "summary"),
             };
             if (includeCandidates)
-                nodes.Add(EvidenceSection("Candidates", candidates, CandidateEvidenceTitle, CandidateJsonKey, _ => ""));
+                nodes.Add(EvidenceSection("Candidates", "candidate", candidates, CandidateEvidenceTitle, CandidateJsonKey, _ => ""));
             if (includeTasks)
-                nodes.Add(EvidenceSection("Resource task results", tasks, TaskEvidenceTitle, _ => "", item => JsonString(item, "entry")));
+                nodes.Add(EvidenceSection("Resource task results", "task", tasks, TaskEvidenceTitle, _ => "", item => JsonString(item, "entry")));
             if (includeLog)
-                nodes.Add(EvidenceSection("Log", logs, LogEvidenceTitle, _ => "", item => JsonString(item, "entry")));
+                nodes.Add(EvidenceSection("Log", "log", logs, LogEvidenceTitle, _ => "", item => JsonString(item, "entry")));
             return nodes;
         }
         catch (JsonException)
         {
-            return [new MaaEvidencePreviewNode("Raw JSON", "JSON parse failed", TruncateEvidencePreview(json))];
+            return [new MaaEvidencePreviewNode("Raw JSON", "JSON parse failed", TruncateEvidencePreview(json), NodeKind: "raw")];
         }
     }
 
@@ -2315,6 +2320,7 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
 
     private static MaaEvidencePreviewNode EvidenceSection(
         string title,
+        string nodeKind,
         IReadOnlyList<JsonElement> items,
         Func<JsonElement, int, string> titleFactory,
         Func<JsonElement, string>? candidateKeyFactory = null,
@@ -2330,17 +2336,56 @@ public sealed class MainWindowViewModel : INotifyPropertyChanged, IDisposable
                 JsonSerializer.Serialize(item, options),
                 null,
                 candidateKeyFactory?.Invoke(item) ?? "",
-                taskEntryFactory?.Invoke(item) ?? ""))
+                taskEntryFactory?.Invoke(item) ?? "",
+                nodeKind,
+                true))
             .ToList();
         if (items.Count > maxChildren)
         {
             children.Add(new MaaEvidencePreviewNode(
                 "truncated",
                 $"{items.Count - maxChildren} items hidden",
-                $"The preview tree shows the first {maxChildren} of {items.Count} items."));
+                $"The preview tree shows the first {maxChildren} of {items.Count} items.",
+                NodeKind: "truncated"));
         }
 
-        return new MaaEvidencePreviewNode(title, $"{items.Count} item(s)", "", children);
+        return new MaaEvidencePreviewNode(
+            $"{title} · {items.Count}",
+            $"{items.Count} item(s)",
+            "",
+            children,
+            NodeKind: "section",
+            ShowDetailByDefault: false);
+    }
+
+    private static MaaEvidencePreviewNode? DefaultEvidencePreviewNode(
+        IEnumerable<MaaEvidencePreviewNode> nodes,
+        MaaRoiRescanComparisonRow? selectedRow)
+    {
+        var nodeList = nodes as IReadOnlyList<MaaEvidencePreviewNode> ?? nodes.ToArray();
+        if (selectedRow is not null)
+        {
+            if (!string.IsNullOrWhiteSpace(selectedRow.CandidateKey))
+            {
+                var candidateNode = FindEvidenceNode(nodeList, node =>
+                    !node.HasChildren
+                    && node.CandidateKey.Equals(selectedRow.CandidateKey, StringComparison.Ordinal));
+                if (candidateNode is not null)
+                    return candidateNode;
+            }
+
+            if (!string.IsNullOrWhiteSpace(selectedRow.TaskEntry))
+            {
+                var taskNode = FindEvidenceNode(nodeList, node =>
+                    !node.HasChildren
+                    && node.TaskEntry.Equals(selectedRow.TaskEntry, StringComparison.Ordinal));
+                if (taskNode is not null)
+                    return taskNode;
+            }
+        }
+
+        return FindEvidenceNode(nodeList, node => node.NodeKind.Equals("summary", StringComparison.Ordinal))
+            ?? nodeList.FirstOrDefault();
     }
 
     private static string EvidenceSummary(JsonElement root)

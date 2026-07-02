@@ -15,14 +15,16 @@ public static class RhodesRecognitionProbe
 
     public static IReadOnlyList<MaaProbePayloadPreview> DefaultPayloads()
     {
-        var statusRoi = new MaaRoi(0, 0, RhodesMaaPaths.BaseResolution.Width, RhodesMaaPaths.BaseResolution.Height);
-        var topBarRoi = new MaaRoi(820, 0, 440, 92);
+        var fullFrameRoi = new MaaRoi(0, 0, RhodesMaaPaths.BaseResolution.Width, RhodesMaaPaths.BaseResolution.Height);
+        var ingotNumberRoi = new MaaRoi(1160, 0, 90, 56);
+        var ideaNumberRoi = new MaaRoi(818, 655, 44, 34);
         var operatorNameRoi = new MaaRoi(900, 260, 260, 56);
 
         return
         [
-            new MaaProbePayloadPreview("FullFrame OCR", "スクショ全体のMAA-OCR疎通確認", BuildOcrPayload(statusRoi, onlyRecognition: true)),
-            new MaaProbePayloadPreview("TopBar OCR", "希望/源石錐/構想などの上部情報確認", BuildOcrPayload(topBarRoi, onlyRecognition: true)),
+            new MaaProbePayloadPreview("FullFrame OCR", "スクショ全体のMAA-OCR疎通確認", BuildOcrPayload(fullFrameRoi, onlyRecognition: true)),
+            new MaaProbePayloadPreview("Ingot OCR", "源石錐の数値ROI確認", BuildOcrPayload(ingotNumberRoi, onlyRecognition: true)),
+            new MaaProbePayloadPreview("IS#5 Idea OCR", "構想アイコン直下の数値ROI確認", BuildOcrPayload(ideaNumberRoi, onlyRecognition: true)),
             new MaaProbePayloadPreview("Operator Name OCR", "招集カード名のROI確認", BuildOcrPayload(operatorNameRoi, onlyRecognition: true)),
             new MaaProbePayloadPreview("TemplateMatch", "ユーザー切り出し基準点の検出確認", BuildTemplateMatchPayload(new MaaRoi(0, 0, 1280, 720), "template.png")),
         ];

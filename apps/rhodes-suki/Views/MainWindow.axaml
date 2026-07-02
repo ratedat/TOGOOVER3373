@@ -1074,8 +1074,8 @@
                         <TreeDataTemplate ItemsSource="{Binding SafeChildren}">
                           <Grid RowDefinitions="Auto,Auto" ColumnDefinitions="*,Auto" ColumnSpacing="8">
                             <TextBlock Text="{Binding Title}" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" />
-                            <TextBlock Grid.Column="1" Text="{Binding SafeChildren.Count}" FontFamily="Consolas" FontSize="10" Opacity="0.50" />
-                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
+                            <TextBlock Grid.Column="1" Text="{Binding CountLabel}" FontFamily="Consolas" FontSize="10" Opacity="0.50" />
+                            <TextBlock Grid.Row="1" Grid.ColumnSpan="2" Text="{Binding Detail}" IsVisible="{Binding HasVisibleDetail}" FontFamily="Consolas" FontSize="10" TextWrapping="Wrap" Opacity="0.58" />
                           </Grid>
                         </TreeDataTemplate>
                       </TreeView.ItemTemplate>

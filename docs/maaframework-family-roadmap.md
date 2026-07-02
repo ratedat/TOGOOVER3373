@@ -42,7 +42,7 @@ flowchart LR
 ### 4. OCR Strategy
 - 既定: MAA-OCR
 - 任意: GLM-OCR
-- 旧互換: Windows OCR / 単体 PaddleOCR
+- 旧互換OCRは通常導線から外し、保存済み設定だけ `profile` / `maa-ocr` / `glm-ocr` へ正規化する。
 
 ### 5. Upstream Collaboration
 - Issue/Discussion では、再現スクリーンショット、Resource/task JSON、期待結果、実際の結果を添える
@@ -115,7 +115,7 @@ flowchart LR
 - 接続済み: 証跡ツリーのcandidate/task/logノードから対応する候補、Resource task、ログ一覧の選択状態へ連動できる。
 - 接続済み: 既存の候補、Resource task、ログ一覧側の選択から証跡ツリー側の該当ノードを選択できる。
 - 接続済み: 基礎情報スキャンの取得対象を源石錐、等級、分隊、IS特殊値に絞り、希望、耐久値、シールド、指揮LvをMAA Resource生成元、Suki候補化、候補適用から外した。
-- 残作業: 証跡ツリーのノード種別ごとに表示密度と詳細欄の既定表示を調整する。
+- 接続済み: 証跡ツリーのノード種別ごとにセクションをコンパクト表示し、プレビュー直後はSummaryまたは選択差分に対応する候補/task/logノードを既定選択する。
 
 ## First Milestone
 - SukiUI shell が起動する

@@ -215,12 +215,7 @@ public sealed record SukiRunStateSnapshot(
     string Squad = "",
     string SquadRandomEffect = "",
     string Difficulty = "",
-    int Hope = 0,
-    int? MaxHope = null,
     int Ingot = 0,
-    int LifePoints = 0,
-    int Shield = 0,
-    int CommandLevel = 1,
     int Idea = 0,
     IReadOnlyList<SukiSpecialFieldState>? SpecialFields = null,
     string OcrEngine = "profile");

@@ -209,12 +209,7 @@ public static class RhodesRunCatalog
             ResolveSquadDisplayName(dataRoot, campaignId, run),
             ResolveSquadRandomEffectDisplayName(dataRoot, campaignId, run),
             JsonString(run, "difficulty"),
-            JsonInt(run, "hope"),
-            JsonNullableInt(run, "maxHope"),
             JsonInt(run, "ingot"),
-            JsonInt(run, "lifePoints"),
-            JsonInt(run, "shield"),
-            JsonInt(run, "commandLevel"),
             ReadSpecialInt(run, campaignId, "idea"),
             BuildSpecialFieldStates(run, campaigns, selectableEffects),
             SukiOcrEngineCatalog.Normalize(JsonString(preferences, "ocrEngine", "profile")));

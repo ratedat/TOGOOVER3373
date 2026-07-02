@@ -1,6 +1,8 @@
+using System.Reflection;
 using System.Text.Json.Nodes;
 using RhodesSuki.Models;
 using RhodesSuki.Services;
+using RhodesSuki.ViewModels;
 
 var tests = new (string Name, Action Run)[]
 {
@@ -33,6 +35,7 @@ var tests = new (string Name, Action Run)[]
     ("Optional runtime probe parses GLM and Ollama status payloads", OptionalRuntimeStatusParsing),
     ("Hypervisor probe parses Google Play Games readiness states", HypervisorStatusParsing),
     ("MAAFramework runtime probe reports native and VC++ diagnostics", MaaFrameworkRuntimeDiagnostics),
+    ("MAA recognition probe payloads target retained fields", RecognitionProbePayloadsTargetRetainedFields),
     ("MAA task diagnostics summarize counts and OCR previews", TaskDiagnostics),
     ("MAA OCR detail rows expose raw OCR result groups", OcrDetailRowsExposeRawGroups),
     ("MAA ROI detail rows expose rect, roi, and point boxes", RoiDetailRowsExposeRectVariants),
@@ -45,6 +48,7 @@ var tests = new (string Name, Action Run)[]
     ("MAA ROI selection matcher links OCR detail rows to ROI previews", RoiSelectionMatcherLinksOcrRows),
     ("MAA native resource task evidence uses recognition scan shape", MaaNativeEvidenceLog),
     ("Recognition scan history loads API and MAA native evidence logs", RecognitionScanHistoryLoadsUnifiedLogs),
+    ("Evidence preview tree uses compact typed nodes", EvidencePreviewTreeUsesCompactTypedNodes),
     ("Resource task preview exposes source and profile summaries", ResourceTaskSummary),
     ("Resource profile groups keep operational recognition order", ResourceProfileOrder),
     ("Run catalog loads campaigns, operators, relics, and current selections", RunCatalogLoadsChoices),
@@ -1020,6 +1024,32 @@ static void MaaFrameworkRuntimeDiagnostics()
     Equal(true, ok.Detail.Contains("VC++ runtime OK", StringComparison.Ordinal), "ok vc detail");
 }
 
+static void RecognitionProbePayloadsTargetRetainedFields()
+{
+    var payloads = RhodesRecognitionProbe.DefaultPayloads();
+    Equal(5, payloads.Count, "probe payload count");
+    Equal(
+        "FullFrame OCR|Ingot OCR|IS#5 Idea OCR|Operator Name OCR|TemplateMatch",
+        string.Join("|", payloads.Select(item => item.Name)),
+        "probe names");
+    Equal(false, payloads.Any(item => item.Name == "TopBar OCR"), "removed top bar probe");
+    Equal(false, payloads.Any(item => item.Purpose.Contains("希望", StringComparison.Ordinal)), "removed hope probe text");
+
+    var ingot = JsonNode.Parse(payloads.Single(item => item.Name == "Ingot OCR").Payload)!.AsObject();
+    var ingotRoi = ingot["roi"]!.AsArray();
+    Equal(1160, ingotRoi[0]!.GetValue<int>(), "ingot x");
+    Equal(0, ingotRoi[1]!.GetValue<int>(), "ingot y");
+    Equal(90, ingotRoi[2]!.GetValue<int>(), "ingot width");
+    Equal(56, ingotRoi[3]!.GetValue<int>(), "ingot height");
+
+    var idea = JsonNode.Parse(payloads.Single(item => item.Name == "IS#5 Idea OCR").Payload)!.AsObject();
+    var ideaRoi = idea["roi"]!.AsArray();
+    Equal(818, ideaRoi[0]!.GetValue<int>(), "idea x");
+    Equal(655, ideaRoi[1]!.GetValue<int>(), "idea y");
+    Equal(44, ideaRoi[2]!.GetValue<int>(), "idea width");
+    Equal(34, ideaRoi[3]!.GetValue<int>(), "idea height");
+}
+
 static void TaskDiagnostics()
 {
     var diagnostics = RhodesMaaTaskDiagnostics.Summarize(
@@ -1622,6 +1652,81 @@ static void RecognitionScanHistoryLoadsUnifiedLogs()
     }
 }
 
+static void EvidencePreviewTreeUsesCompactTypedNodes()
+{
+    const string json = """
+    {
+      "profileId": "operatorsFull",
+      "source": "suki-maa-native",
+      "status": "completed",
+      "counts": { "candidates": 1, "resourceTasks": 1, "log": 1 },
+      "candidates": [
+        { "kind": "operator", "label": "グム", "value": "gummy", "operatorId": "gummy", "confidence": 0.91 }
+      ],
+      "evidence": {
+        "taskResults": [
+          {
+            "entry": "RhodesOcrRegion_operator_name",
+            "status": "Succeeded",
+            "hit": true,
+            "detail": "ocr detail",
+            "recognitionDetailJson": "{}",
+            "algorithm": "OCR"
+          }
+        ]
+      },
+      "log": [
+        { "event": "maa-task", "entry": "RhodesOcrRegion_operator_name", "status": "Succeeded" }
+      ]
+    }
+    """;
+
+    var buildMethod = typeof(MainWindowViewModel).GetMethod(
+        "BuildRoiRescanEvidencePreviewNodes",
+        BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("BuildRoiRescanEvidencePreviewNodes not found");
+    var nodes = (IReadOnlyList<MaaEvidencePreviewNode>)buildMethod.Invoke(
+        null,
+        [json, null, true, true, true])!;
+
+    Equal("summary", nodes[0].NodeKind, "summary node kind");
+    Equal(true, nodes[0].HasVisibleDetail, "summary detail visible");
+
+    var candidates = nodes.Single(node => node.Title.StartsWith("Candidates", StringComparison.Ordinal));
+    Equal("section", candidates.NodeKind, "candidate section kind");
+    Equal("Candidates · 1", candidates.Title, "candidate section title");
+    Equal("1", candidates.CountLabel, "candidate section count");
+    Equal(false, candidates.HasVisibleDetail, "candidate section detail hidden");
+
+    var candidate = candidates.SafeChildren.Single();
+    Equal("candidate", candidate.NodeKind, "candidate node kind");
+    Equal("", candidate.CountLabel, "leaf count hidden");
+    Equal(true, candidate.HasVisibleDetail, "candidate detail visible");
+    Equal("operator:gummy", candidate.CandidateKey, "candidate key");
+
+    var defaultMethod = typeof(MainWindowViewModel).GetMethod(
+        "DefaultEvidencePreviewNode",
+        BindingFlags.NonPublic | BindingFlags.Static)
+        ?? throw new InvalidOperationException("DefaultEvidencePreviewNode not found");
+    var summaryDefault = (MaaEvidencePreviewNode?)defaultMethod.Invoke(null, [nodes, null]);
+    Equal("summary", summaryDefault?.NodeKind, "default summary node");
+
+    var selectedDefault = (MaaEvidencePreviewNode?)defaultMethod.Invoke(
+        null,
+        [
+            nodes,
+            new MaaRoiRescanComparisonRow(
+                "added",
+                "グム",
+                "",
+                "グム",
+                "",
+                CandidateKey: "operator:gummy")
+        ]);
+    Equal("candidate", selectedDefault?.NodeKind, "default selected candidate node");
+    Equal("operator:gummy", selectedDefault?.CandidateKey, "default selected candidate key");
+}
+
 static void ResourceTaskSummary()
 {
     var manual = new MaaResourceTaskPreview("ManualTask", "Manual", "manual purpose");
@@ -1913,8 +2018,11 @@ static void StateApiReplacement()
 
         var catalog = RhodesRunCatalog.LoadDefault(RhodesRunCatalog.ResolveDataRoot(), statePath);
         Equal("is5_sarkaz", catalog.Current.CampaignId, "api campaign id");
-        Equal(9, catalog.Current.Hope, "api hope");
-        Equal(12, catalog.Current.MaxHope, "api max hope");
+        Equal(null, typeof(SukiRunStateSnapshot).GetProperty("Hope"), "hope snapshot property removed");
+        Equal(null, typeof(SukiRunStateSnapshot).GetProperty("MaxHope"), "max hope snapshot property removed");
+        Equal(null, typeof(SukiRunStateSnapshot).GetProperty("LifePoints"), "life snapshot property removed");
+        Equal(null, typeof(SukiRunStateSnapshot).GetProperty("Shield"), "shield snapshot property removed");
+        Equal(null, typeof(SukiRunStateSnapshot).GetProperty("CommandLevel"), "command level snapshot property removed");
         Equal(4, catalog.Current.Idea, "api idea");
         Equal(true, catalog.Current.SelectedOperatorIds.Contains("gummy"), "api selected operator");
     }
